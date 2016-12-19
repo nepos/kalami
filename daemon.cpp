@@ -19,6 +19,8 @@
 
 #include <QTimer>
 #include <QJsonDocument>
+#include <QJsonObject>
+#include <QByteArray>
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusReply>
 #include <QtDBus/QDBusMessage>
@@ -67,6 +69,19 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     });
 
     udev->addMatchSubsystem("input");
+}
+
+void Daemon::sendUpdate(const QString &type, const QString &element, const QString &value)
+{
+    QJsonObject obj {
+        { "type", type },
+        { "element", element },
+        { "value", value },
+    };
+
+    QByteArray payload = QJsonDocument(obj).toJson();
+
+    socket->sendBinaryMessage(payload);
 }
 
 Daemon::~Daemon()

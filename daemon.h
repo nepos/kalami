@@ -43,6 +43,8 @@ private:
 
     UDevMonitor *udev;
     QDBusInterface *systemd;
+
+    void sendUpdate(const QString &type, const QString &element, const QString &value);
 };
 
 #endif // DAEMON_H
