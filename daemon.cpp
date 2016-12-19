@@ -79,7 +79,7 @@ void Daemon::sendUpdate(const QString &type, const QString &element, const QStri
         { "value", value },
     };
 
-    QByteArray payload = QJsonDocument(obj).toJson();
+    QByteArray payload = QJsonDocument(obj).toJson(QJsonDocument::Compact);
 
     socket->sendBinaryMessage(payload);
 }
