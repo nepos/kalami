@@ -22,6 +22,9 @@
 
 #include <QObject>
 #include <QWebSocket>
+#include <QtDBus/QDBusInterface>
+
+#include "udevmonitor.h"
 
 class Daemon : public QObject
 {
@@ -37,6 +40,9 @@ public slots:
 private:
     QUrl serverUri;
     QWebSocket *socket;
+
+    UDevMonitor *udev;
+    QDBusInterface *systemd;
 };
 
 #endif // DAEMON_H

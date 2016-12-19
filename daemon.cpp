@@ -18,27 +18,60 @@
 ***/
 
 #include <QTimer>
+#include <QJsonDocument>
+#include <QtDBus/QDBusConnection>
+#include <QtDBus/QDBusReply>
+#include <QtDBus/QDBusMessage>
+#include <QtDBus/QDBusError>
+#include <QDebug>
 
 #include "daemon.h"
 
 Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject(parent), serverUri(uri)
 {
+    // WebSocket connection
     socket = new QWebSocket();
 
     QObject::connect(socket, &QWebSocket::connected, [this]() {
     });
 
     QObject::connect(socket, &QWebSocket::disconnected, [this]() {
-        QTimer::singleShot(500, [this]() {
+        QTimer::singleShot(1000, [this]() {
             socket->open(serverUri);
         });
     });
 
     socket->open(serverUri);
+
+    // D-Bus connection
+    QDBusConnection bus = QDBusConnection::systemBus();
+    if (bus.isConnected())
+        qDebug() << "Connected to D-Bus as" << bus.baseService();
+    else
+        qWarning() << "D-Bus connection failed: " << bus.lastError();
+
+    systemd = new QDBusInterface("org.freedesktop.systemd1",
+                                 "/org/freedesktop/systemd1",
+                                 "org.freedesktop.systemd1.Manager",
+                                 bus, this);
+
+    udev = new UDevMonitor();
+
+    QObject::connect(udev, &UDevMonitor::deviceAdded, this, [this](const UDevDevice &d) {
+        qDebug() << "DEVICE ADDED: " << d.getDevPath() << "sysname" << d.getSysName();
+    });
+
+    QObject::connect(udev, &UDevMonitor::deviceRemoved, this, [this](const UDevDevice &d) {
+        qDebug() << "DEVICE REMOVED: " << d.getDevPath() << "sysname" << d.getSysName();
+    });
+
+    udev->addMatchSubsystem("input");
 }
 
 Daemon::~Daemon()
 {
     delete socket;
+    delete systemd;
+    delete udev;
 }

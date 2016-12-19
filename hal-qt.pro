@@ -1,4 +1,4 @@
-QT += core websockets
+QT += core websockets dbus
 QT -= gui
 
 CONFIG += c++11
@@ -11,8 +11,14 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     daemon.cpp \
-    inputdevice.cpp
+    inputdevice.cpp \
+    udevdevice.cpp \
+    udevmonitor.cpp
 
 HEADERS += \
     daemon.h \
-    inputdevice.h
+    inputdevice.h \
+    udevdevice.h \
+    udevmonitor.h
+
+LIBS += -ludev
