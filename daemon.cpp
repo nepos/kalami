@@ -25,6 +25,7 @@
 #include <QtDBus/QDBusReply>
 #include <QtDBus/QDBusMessage>
 #include <QtDBus/QDBusError>
+#include <QtDBus/QDBusObjectPath>
 #include <QDebug>
 
 #include "daemon.h"
@@ -70,19 +71,22 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
                                            "org.freedesktop.systemd1.Manager",
                                            bus, this);
 
-    wpaSupplicantConnection = new QDBusInterface("fi.w1.wpa_supplicant1",
-                                                 "/fi/w1/wpa_supplicant1",
-                                                 "fi.w1.wpa_supplicant1",
-                                                 bus, this);
+    wpaSupplicant = new WpaSupplicant();
+
+    QObject::connect(wpaSupplicant, &WpaSupplicant::interfaceAdded, this, [this](const WpaSupplicantInterface &interface) {
+        qDebug() << "new interface: " << interface.getIfname();
+    });
+
+    wpaSupplicant->start();
 
     udev = new UDevMonitor();
 
     QObject::connect(udev, &UDevMonitor::deviceAdded, this, [this](const UDevDevice &d) {
-        qDebug() << "DEVICE ADDED: " << d.getDevPath() << "sysname" << d.getSysName();
+        //qDebug() << "DEVICE ADDED: " << d.getDevPath() << "sysname" << d.getSysName();
     });
 
     QObject::connect(udev, &UDevMonitor::deviceRemoved, this, [this](const UDevDevice &d) {
-        qDebug() << "DEVICE REMOVED: " << d.getDevPath() << "sysname" << d.getSysName();
+        //qDebug() << "DEVICE REMOVED: " << d.getDevPath() << "sysname" << d.getSysName();
     });
 
     udev->addMatchSubsystem("input");
@@ -110,6 +114,6 @@ Daemon::~Daemon()
 {
     delete socket;
     delete systemdConnection;
-    delete wpaSupplicantConnection;
+    delete wpaSupplicant;
     delete udev;
 }
