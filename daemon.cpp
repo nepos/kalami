@@ -44,6 +44,18 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         });
     });
 
+    QObject::connect(socket, &QWebSocket::textMessageReceived, [this](const QString &message) {
+        QJsonDocument doc = QJsonDocument::fromJson(message.toLocal8Bit());
+
+        if (doc.isObject()) {
+            QJsonObject obj = doc.object();
+
+            dispatchSocketMessage(obj.value("type"),
+                                  obj.value("element"),
+                                  obj.value("value"));
+        }
+    });
+
     socket->open(serverUri);
 
     // D-Bus connection
@@ -71,7 +83,12 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     udev->addMatchSubsystem("input");
 }
 
-void Daemon::sendUpdate(const QString &type, const QString &element, const QString &value)
+void Daemon::dispatchSocketMessage(const QJsonValue &type, const QJsonValue &element, const QJsonValue &value)
+{
+    qDebug() << "type" << type << "element" << element << "value" << value;
+}
+
+void Daemon::sendSocketMessage(const QString &type, const QString &element, const QString &value)
 {
     QJsonObject obj {
         { "type", type },

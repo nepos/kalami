@@ -44,7 +44,8 @@ private:
     UDevMonitor *udev;
     QDBusInterface *systemd;
 
-    void sendUpdate(const QString &type, const QString &element, const QString &value);
+    void dispatchSocketMessage(const QJsonValue &type, const QJsonValue &element, const QJsonValue &value);
+    void sendSocketMessage(const QString &type, const QString &element, const QString &value);
 };
 
 #endif // DAEMON_H
