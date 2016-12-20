@@ -65,10 +65,15 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     else
         qWarning() << "D-Bus connection failed: " << bus.lastError();
 
-    systemd = new QDBusInterface("org.freedesktop.systemd1",
-                                 "/org/freedesktop/systemd1",
-                                 "org.freedesktop.systemd1.Manager",
-                                 bus, this);
+    systemdConnection = new QDBusInterface("org.freedesktop.systemd1",
+                                           "/org/freedesktop/systemd1",
+                                           "org.freedesktop.systemd1.Manager",
+                                           bus, this);
+
+    wpaSupplicantConnection = new QDBusInterface("fi.w1.wpa_supplicant1",
+                                                 "/fi/w1/wpa_supplicant1",
+                                                 "fi.w1.wpa_supplicant1",
+                                                 bus, this);
 
     udev = new UDevMonitor();
 
@@ -104,6 +109,7 @@ void Daemon::sendSocketMessage(const QString &type, const QString &element, cons
 Daemon::~Daemon()
 {
     delete socket;
-    delete systemd;
+    delete systemdConnection;
+    delete wpaSupplicantConnection;
     delete udev;
 }

@@ -42,7 +42,8 @@ private:
     QWebSocket *socket;
 
     UDevMonitor *udev;
-    QDBusInterface *systemd;
+    QDBusInterface *systemdConnection;
+    QDBusInterface *wpaSupplicantConnection;
 
     void dispatchSocketMessage(const QJsonValue &type, const QJsonValue &element, const QJsonValue &value);
     void sendSocketMessage(const QString &type, const QString &element, const QString &value);
