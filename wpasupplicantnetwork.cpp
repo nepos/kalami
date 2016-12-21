@@ -7,6 +7,9 @@ WpaSupplicantNetwork::WpaSupplicantNetwork(const QDBusObjectPath &path, QObject 
                               path.path(),
                               "fi.w1.wpa_supplicant1.Network",
                               QDBusConnection::systemBus(), this);
+
+    if (!dbus->isValid())
+        return;
 }
 
 bool WpaSupplicantNetwork::operator ==(const WpaSupplicantNetwork &other)
