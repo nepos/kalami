@@ -37,6 +37,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 {
     qDBusRegisterMetaType<StringVariantMap>();
     qDBusRegisterMetaType<StringByteArrayMap>();
+    qDBusRegisterMetaType<UnsignedIntList>();
 
     // WebSocket connection
     socket = new QWebSocket();
