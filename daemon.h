@@ -25,7 +25,6 @@
 #include <QtDBus/QDBusInterface>
 
 #include "udevmonitor.h"
-#include "wpasupplicant.h"
 
 class Daemon : public QObject
 {
@@ -43,7 +42,6 @@ private:
     QWebSocket *socket;
 
     UDevMonitor *udev;
-    WpaSupplicant *wpaSupplicant;
     QDBusInterface *systemdConnection;
 
     void dispatchSocketMessage(const QJsonValue &type, const QJsonValue &element, const QJsonValue &value);

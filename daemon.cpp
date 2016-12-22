@@ -26,13 +26,18 @@
 #include <QtDBus/QDBusMessage>
 #include <QtDBus/QDBusError>
 #include <QtDBus/QDBusObjectPath>
+#include <QDBusMetaType>
 #include <QDebug>
 
 #include "daemon.h"
+#include "types.h"
 
 Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject(parent), serverUri(uri)
 {
+    qDBusRegisterMetaType<StringVariantMap>();
+    qDBusRegisterMetaType<StringByteArrayMap>();
+
     // WebSocket connection
     socket = new QWebSocket();
 
@@ -71,13 +76,16 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
                                            "org.freedesktop.systemd1.Manager",
                                            bus, this);
 
-    wpaSupplicant = new WpaSupplicant();
+//    wpaSupplicant = new WpaSupplicant();
+//    qDebug() << wpaSupplicant->getInterfaces();
 
-    QObject::connect(wpaSupplicant, &WpaSupplicant::interfaceAdded, this, [this](const WpaSupplicantInterface &interface) {
-        qDebug() << "new interface: " << interface.getIfname();
-    });
+//    wpaSupplicant->setDebugLevel("info");
 
-    wpaSupplicant->start();
+//    QObject::connect(wpaSupplicant, &WpaSupplicant::interfaceAdded, this, [this](const WpaSupplicantInterface &interface) {
+//        qDebug() << "new interface: " << interface.getIfname();
+//    });
+
+    //wpaSupplicant->start();
 
     udev = new UDevMonitor();
 
@@ -114,6 +122,5 @@ Daemon::~Daemon()
 {
     delete socket;
     delete systemdConnection;
-    delete wpaSupplicant;
     delete udev;
 }

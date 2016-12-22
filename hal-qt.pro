@@ -14,19 +14,23 @@ SOURCES += main.cpp \
     inputdevice.cpp \
     udevdevice.cpp \
     udevmonitor.cpp \
-    wpasupplicant.cpp \
-    wpasupplicantinterface.cpp \
-    wpasupplicantnetwork.cpp \
-    wpasupplicantbss.cpp
+    dbus_fi.w1.wpa_supplicant1.cpp \
+    dbus_fi.w1.wpa_supplicant1.Interface.cpp \
+    dbus_org.freedesktop.DBus.cpp
 
 HEADERS += \
     daemon.h \
     inputdevice.h \
     udevdevice.h \
     udevmonitor.h \
-    wpasupplicant.h \
-    wpasupplicantinterface.h \
-    wpasupplicantnetwork.h \
-    wpasupplicantbss.h
+    dbus_fi.w1.wpa_supplicant1.h \
+    dbus_fi.w1.wpa_supplicant1.Interface.h \
+    dbus_org.freedesktop.DBus.h \
+    types.h
 
 LIBS += -ludev
+
+DISTFILES += \
+    fi.w1.wpa_supplicant1.xml \
+    fi.w1.wpa_supplicant1.Interface.xml \
+    org.freedesktop.DBus.xml
