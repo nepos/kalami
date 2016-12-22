@@ -4,7 +4,7 @@
   <interface name="fi.w1.wpa_supplicant1">
     <method name="CreateInterface">
       <arg name="args" type="a{sv}" direction="in"/>
-      <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="StringVariantMap"/>
+      <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QVariantMap"/>
       <arg name="path" type="o" direction="out"/>
     </method>
     <method name="RemoveInterface">
@@ -17,14 +17,14 @@
     <signal name="InterfaceAdded">
       <arg name="path" type="o"/>
       <arg name="properties" type="a{sv}"/>
-      <annotation name="org.qtproject.QtDBus.QtTypeName.Out1" value="StringVariantMap"/>
+      <annotation name="org.qtproject.QtDBus.QtTypeName.Out1" value="QVariantMap"/>
     </signal>
     <signal name="InterfaceRemoved">
       <arg name="path" type="o"/>
     </signal>
     <signal name="PropertiesChanged">
       <arg name="properties" type="a{sv}"/>
-      <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="StringVariantMap"/>
+      <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
     </signal>
     <property name="DebugLevel" type="s" access="readwrite"/>
     <property name="DebugTimestamp" type="b" access="readwrite"/>

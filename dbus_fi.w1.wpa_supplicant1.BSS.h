@@ -87,7 +87,7 @@ public:
 
 public Q_SLOTS: // METHODS
 Q_SIGNALS: // SIGNALS
-    void PropertiesChanged(StringVariantMap properties);
+    void PropertiesChanged(const QVariantMap &properties);
 };
 
 namespace fi {

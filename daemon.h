@@ -25,6 +25,7 @@
 #include <QtDBus/QDBusInterface>
 
 #include "udevmonitor.h"
+#include "wifimanager.h"
 
 class Daemon : public QObject
 {
@@ -43,6 +44,7 @@ private:
 
     UDevMonitor *udev;
     QDBusInterface *systemdConnection;
+    WifiManager *wifiManager;
 
     void dispatchSocketMessage(const QJsonValue &type, const QJsonValue &element, const QJsonValue &value);
     void sendSocketMessage(const QString &type, const QString &element, const QString &value);

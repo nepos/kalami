@@ -4,7 +4,7 @@
   <interface name="fi.w1.wpa_supplicant1.Network">
     <signal name="PropertiesChanged">
       <arg name="properties" type="a{sv}"/>
-      <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="StringVariantMap"/>
+      <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
     </signal>
     <property name="Properties" type="a{sv}" access="readwrite">
         <annotation name="org.qtproject.QtDBus.QtTypeName" value="StringByteArrayMap"/>

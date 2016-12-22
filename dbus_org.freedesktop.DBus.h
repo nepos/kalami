@@ -70,7 +70,7 @@ public Q_SLOTS: // METHODS
         return asyncCallWithArgumentList(QStringLiteral("Get"), argumentList);
     }
 
-    inline QDBusPendingReply<StringVariantMap> GetAll(const QString &interface)
+    inline QDBusPendingReply<QVariantMap> GetAll(const QString &interface)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(interface);

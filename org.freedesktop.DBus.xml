@@ -15,7 +15,7 @@
     <method name="GetAll">
       <arg name="interface" type="s" direction="in"/>
       <arg name="props" type="a{sv}" direction="out"/>
-      <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="StringVariantMap"/>
+      <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
     </method>
     <method name="Set">
       <arg name="interface" type="s" direction="in"/>

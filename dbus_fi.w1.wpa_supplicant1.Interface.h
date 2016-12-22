@@ -67,9 +67,9 @@ public:
     inline QString bridgeIfname() const
     { return qvariant_cast< QString >(property("BridgeIfname")); }
 
-    Q_PROPERTY(StringVariantMap Capabilities READ capabilities)
-    inline StringVariantMap capabilities() const
-    { return qvariant_cast< StringVariantMap >(property("Capabilities")); }
+    Q_PROPERTY(QVariantMap Capabilities READ capabilities)
+    inline QVariantMap capabilities() const
+    { return qvariant_cast< QVariantMap >(property("Capabilities")); }
 
     Q_PROPERTY(QString Country READ country WRITE setCountry)
     inline QString country() const
@@ -141,7 +141,7 @@ public Q_SLOTS: // METHODS
         return asyncCallWithArgumentList(QStringLiteral("AddBlob"), argumentList);
     }
 
-    inline QDBusPendingReply<QDBusObjectPath> AddNetwork(StringVariantMap args)
+    inline QDBusPendingReply<QDBusObjectPath> AddNetwork(const QVariantMap &args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
@@ -225,7 +225,7 @@ public Q_SLOTS: // METHODS
         return asyncCallWithArgumentList(QStringLiteral("RemoveNetwork"), argumentList);
     }
 
-    inline QDBusPendingReply<> Scan(StringVariantMap args)
+    inline QDBusPendingReply<> Scan(const QVariantMap &args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
@@ -246,7 +246,7 @@ public Q_SLOTS: // METHODS
         return asyncCallWithArgumentList(QStringLiteral("SetPKCS11EngineAndModulePath"), argumentList);
     }
 
-    inline QDBusPendingReply<StringVariantMap> SignalPoll()
+    inline QDBusPendingReply<QVariantMap> SignalPoll()
     {
         QList<QVariant> argumentList;
         return asyncCallWithArgumentList(QStringLiteral("SignalPoll"), argumentList);
@@ -265,18 +265,18 @@ public Q_SLOTS: // METHODS
     }
 
 Q_SIGNALS: // SIGNALS
-    void BSSAdded(const QDBusObjectPath &path, StringVariantMap properties);
+    void BSSAdded(const QDBusObjectPath &path, const QVariantMap &properties);
     void BSSRemoved(const QDBusObjectPath &path);
     void BlobAdded(const QString &name);
     void BlobRemoved(const QString &name);
-    void Certification(StringVariantMap certification);
+    void Certification(QVariantMap certification);
     void EAP(const QString &status, const QString &parameter);
-    void NetworkAdded(const QDBusObjectPath &path, StringVariantMap properties);
+    void NetworkAdded(const QDBusObjectPath &path, const QVariantMap &properties);
     void NetworkRemoved(const QDBusObjectPath &path);
     void NetworkRequest(const QDBusObjectPath &path, const QString &field, const QString &text);
     void NetworkSelected(const QDBusObjectPath &path);
-    void ProbeRequest(StringVariantMap args);
-    void PropertiesChanged(StringVariantMap properties);
+    void ProbeRequest(const QVariantMap &args);
+    void PropertiesChanged(const QVariantMap &properties);
     void ScanDone(bool success);
     void StaAuthorized(const QString &name);
     void StaDeauthorized(const QString &name);
@@ -301,10 +301,10 @@ public:
     inline QDBusObjectPath group() const
     { return qvariant_cast< QDBusObjectPath >(property("Group")); }
 
-    Q_PROPERTY(StringVariantMap P2PDeviceConfig READ p2PDeviceConfig WRITE setP2PDeviceConfig)
-    inline StringVariantMap p2PDeviceConfig() const
-    { return qvariant_cast< StringVariantMap >(property("P2PDeviceConfig")); }
-    inline void setP2PDeviceConfig(StringVariantMap value)
+    Q_PROPERTY(QVariantMap P2PDeviceConfig READ p2PDeviceConfig WRITE setP2PDeviceConfig)
+    inline QVariantMap p2PDeviceConfig() const
+    { return qvariant_cast< QVariantMap >(property("P2PDeviceConfig")); }
+    inline void setP2PDeviceConfig(QVariantMap value)
     { setProperty("P2PDeviceConfig", QVariant::fromValue(value)); }
 
     Q_PROPERTY(QDBusObjectPath PeerGO READ peerGO)
@@ -324,14 +324,14 @@ public:
     { return qvariant_cast< QString >(property("Role")); }
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QDBusObjectPath> AddPersistentGroup(StringVariantMap args)
+    inline QDBusPendingReply<QDBusObjectPath> AddPersistentGroup(const QVariantMap &args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
         return asyncCallWithArgumentList(QStringLiteral("AddPersistentGroup"), argumentList);
     }
 
-    inline QDBusPendingReply<> AddService(StringVariantMap args)
+    inline QDBusPendingReply<> AddService(const QVariantMap &args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
@@ -344,14 +344,14 @@ public Q_SLOTS: // METHODS
         return asyncCallWithArgumentList(QStringLiteral("Cancel"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> Connect(StringVariantMap args)
+    inline QDBusPendingReply<QString> Connect(const QVariantMap &args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
         return asyncCallWithArgumentList(QStringLiteral("Connect"), argumentList);
     }
 
-    inline QDBusPendingReply<> DeleteService(StringVariantMap args)
+    inline QDBusPendingReply<> DeleteService(const QVariantMap &args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
@@ -364,14 +364,14 @@ public Q_SLOTS: // METHODS
         return asyncCallWithArgumentList(QStringLiteral("Disconnect"), argumentList);
     }
 
-    inline QDBusPendingReply<> ExtendedListen(StringVariantMap args)
+    inline QDBusPendingReply<> ExtendedListen(const QVariantMap &args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
         return asyncCallWithArgumentList(QStringLiteral("ExtendedListen"), argumentList);
     }
 
-    inline QDBusPendingReply<> Find(StringVariantMap args)
+    inline QDBusPendingReply<> Find(const QVariantMap &args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
@@ -390,14 +390,14 @@ public Q_SLOTS: // METHODS
         return asyncCallWithArgumentList(QStringLiteral("FlushService"), argumentList);
     }
 
-    inline QDBusPendingReply<> GroupAdd(StringVariantMap args)
+    inline QDBusPendingReply<> GroupAdd(const QVariantMap &args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
         return asyncCallWithArgumentList(QStringLiteral("GroupAdd"), argumentList);
     }
 
-    inline QDBusPendingReply<> Invite(StringVariantMap args)
+    inline QDBusPendingReply<> Invite(const QVariantMap &args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
@@ -411,7 +411,7 @@ public Q_SLOTS: // METHODS
         return asyncCallWithArgumentList(QStringLiteral("Listen"), argumentList);
     }
 
-    inline QDBusPendingReply<> PresenceRequest(StringVariantMap args)
+    inline QDBusPendingReply<> PresenceRequest(const QVariantMap &args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
@@ -438,7 +438,7 @@ public Q_SLOTS: // METHODS
         return asyncCallWithArgumentList(QStringLiteral("RemoveAllPersistentGroups"), argumentList);
     }
 
-    inline QDBusPendingReply<> RemoveClient(StringVariantMap args)
+    inline QDBusPendingReply<> RemoveClient(QVariantMap args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
@@ -466,14 +466,14 @@ public Q_SLOTS: // METHODS
         return asyncCallWithArgumentList(QStringLiteral("ServiceDiscoveryExternal"), argumentList);
     }
 
-    inline QDBusPendingReply<qulonglong> ServiceDiscoveryRequest(StringVariantMap args)
+    inline QDBusPendingReply<qulonglong> ServiceDiscoveryRequest(const QVariantMap &args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
         return asyncCallWithArgumentList(QStringLiteral("ServiceDiscoveryRequest"), argumentList);
     }
 
-    inline QDBusPendingReply<> ServiceDiscoveryResponse(StringVariantMap args)
+    inline QDBusPendingReply<> ServiceDiscoveryResponse(const QVariantMap &args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
@@ -496,15 +496,15 @@ Q_SIGNALS: // SIGNALS
     void DeviceFound(const QDBusObjectPath &path);
     void DeviceLost(const QDBusObjectPath &path);
     void FindStopped();
-    void GONegotiationFailure(StringVariantMap properties);
+    void GONegotiationFailure(QVariantMap properties);
     void GONegotiationRequest(const QDBusObjectPath &path, ushort dev_passwd_id, uchar device_go_intent);
-    void GONegotiationSuccess(StringVariantMap properties);
-    void GroupFinished(StringVariantMap properties);
+    void GONegotiationSuccess(QVariantMap properties);
+    void GroupFinished(QVariantMap properties);
     void GroupFormationFailure(const QString &reason);
-    void GroupStarted(StringVariantMap properties);
-    void InvitationReceived(StringVariantMap properties);
-    void InvitationResult(StringVariantMap invite_result);
-    void PersistentGroupAdded(const QDBusObjectPath &path, StringVariantMap properties);
+    void GroupStarted(QVariantMap properties);
+    void InvitationReceived(QVariantMap properties);
+    void InvitationResult(QVariantMap invite_result);
+    void PersistentGroupAdded(const QDBusObjectPath &path, QVariantMap properties);
     void PersistentGroupRemoved(const QDBusObjectPath &path);
     void ProvisionDiscoveryFailure(const QDBusObjectPath &peer_object, int status);
     void ProvisionDiscoveryPBCRequest(const QDBusObjectPath &peer_object);
@@ -513,9 +513,9 @@ Q_SIGNALS: // SIGNALS
     void ProvisionDiscoveryRequestEnterPin(const QDBusObjectPath &peer_object);
     void ProvisionDiscoveryResponseDisplayPin(const QDBusObjectPath &peer_object, const QString &pin);
     void ProvisionDiscoveryResponseEnterPin(const QDBusObjectPath &peer_object);
-//    void ServiceDiscoveryRequest(StringVariantMap sd_request);
-//    void ServiceDiscoveryResponse(StringVariantMap sd_response);
-    void WpsFailed(const QString &name, StringVariantMap args);
+//    void ServiceDiscoveryRequest(QVariantMap sd_request);
+//    void ServiceDiscoveryResponse(QVariantMap sd_response);
+    void WpsFailed(const QString &name, QVariantMap args);
 };
 
 /*
@@ -552,7 +552,7 @@ public Q_SLOTS: // METHODS
         return asyncCallWithArgumentList(QStringLiteral("Cancel"), argumentList);
     }
 
-    inline QDBusPendingReply<StringVariantMap> Start(StringVariantMap args)
+    inline QDBusPendingReply<QVariantMap> Start(const QVariantMap &args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
@@ -560,20 +560,9 @@ public Q_SLOTS: // METHODS
     }
 
 Q_SIGNALS: // SIGNALS
-    void Credentials(StringVariantMap credentials);
-    void Event(const QString &name, StringVariantMap args);
-    void PropertiesChanged(StringVariantMap properties);
+    void Credentials(const QVariantMap &credentials);
+    void Event(const QString &name, const QVariantMap &args);
+    void PropertiesChanged(const QVariantMap &properties);
 };
 
-namespace fi {
-  namespace w1 {
-    namespace wpa_supplicant1 {
-      //typedef ::FiW1Wpa_supplicant1InterfaceInterface Interface;
-      namespace Interface {
-        typedef ::FiW1Wpa_supplicant1InterfaceP2PDeviceInterface P2PDevice;
-        typedef ::FiW1Wpa_supplicant1InterfaceWPSInterface WPS;
-      }
-    }
-  }
-}
 #endif

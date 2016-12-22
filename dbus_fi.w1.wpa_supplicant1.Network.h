@@ -51,14 +51,7 @@ public:
 
 public Q_SLOTS: // METHODS
 Q_SIGNALS: // SIGNALS
-    void PropertiesChanged(StringVariantMap properties);
+    void PropertiesChanged(const QVariantMap &properties);
 };
 
-namespace fi {
-  namespace w1 {
-    namespace wpa_supplicant1 {
-      typedef ::FiW1Wpa_supplicant1NetworkInterface Network;
-    }
-  }
-}
 #endif

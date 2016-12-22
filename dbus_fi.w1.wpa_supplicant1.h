@@ -68,7 +68,7 @@ public:
     { return qvariant_cast< QList<QDBusObjectPath> >(property("Interfaces")); }
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QDBusObjectPath> CreateInterface(StringVariantMap args)
+    inline QDBusPendingReply<QDBusObjectPath> CreateInterface(QVariantMap args)
     {
         QList<QVariant> argumentList;
         argumentList << QVariant::fromValue(args);
@@ -90,14 +90,9 @@ public Q_SLOTS: // METHODS
     }
 
 Q_SIGNALS: // SIGNALS
-    void InterfaceAdded(const QDBusObjectPath &path, StringVariantMap properties);
+    void InterfaceAdded(const QDBusObjectPath &path, const QVariantMap &properties);
     void InterfaceRemoved(const QDBusObjectPath &path);
-    void PropertiesChanged(StringVariantMap properties);
+    void PropertiesChanged(const QVariantMap &properties);
 };
 
-namespace fi {
-  namespace w1 {
-    typedef ::FiW1Wpa_supplicant1Interface wpa_supplicant1;
-  }
-}
 #endif

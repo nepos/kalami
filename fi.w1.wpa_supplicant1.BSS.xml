@@ -4,7 +4,7 @@
   <interface name="fi.w1.wpa_supplicant1.BSS">
     <signal name="PropertiesChanged">
       <arg name="properties" type="a{sv}"/>
-      <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="StringVariantMap"/>
+      <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
     </signal>
     <property name="SSID" type="ay" access="read"/>
     <property name="BSSID" type="ay" access="read"/>

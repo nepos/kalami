@@ -20,8 +20,10 @@
 #include <QCoreApplication>
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QCommandLineOption>
+#include <QDBusMetaType>
 
 #include "daemon.h"
+#include "types.h"
 
 int main(int argc, char *argv[])
 {
@@ -37,6 +39,12 @@ int main(int argc, char *argv[])
                                     QStringLiteral("server"), QStringLiteral("ws://localhost:3000/channels/hardware"));
     parser.addOption(serverOption);
     parser.process(app);
+
+    qDBusRegisterMetaType<QVariantMap>();
+    qDBusRegisterMetaType<StringByteArrayMap>();
+    qDBusRegisterMetaType<UnsignedIntList>();
+
+    qRegisterMetaType<QVariantMap>();
 
     Daemon d(QUrl(parser.value(serverOption)));
 

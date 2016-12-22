@@ -35,10 +35,6 @@
 Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject(parent), serverUri(uri)
 {
-    qDBusRegisterMetaType<StringVariantMap>();
-    qDBusRegisterMetaType<StringByteArrayMap>();
-    qDBusRegisterMetaType<UnsignedIntList>();
-
     // WebSocket connection
     socket = new QWebSocket();
 
@@ -68,25 +64,16 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     // D-Bus connection
     QDBusConnection bus = QDBusConnection::systemBus();
     if (bus.isConnected())
-        qDebug() << "Connected to D-Bus as" << bus.baseService();
+        qInfo() << "Connected to D-Bus as" << bus.baseService();
     else
         qWarning() << "D-Bus connection failed: " << bus.lastError();
 
-    systemdConnection = new QDBusInterface("org.freedesktop.systemd1",
-                                           "/org/freedesktop/systemd1",
-                                           "org.freedesktop.systemd1.Manager",
-                                           bus, this);
+//    systemdConnection = new QDBusInterface("org.freedesktop.systemd1",
+//                                           "/org/freedesktop/systemd1",
+//                                           "org.freedesktop.systemd1.Manager",
+//                                           bus, this);
 
-//    wpaSupplicant = new WpaSupplicant();
-//    qDebug() << wpaSupplicant->getInterfaces();
-
-//    wpaSupplicant->setDebugLevel("info");
-
-//    QObject::connect(wpaSupplicant, &WpaSupplicant::interfaceAdded, this, [this](const WpaSupplicantInterface &interface) {
-//        qDebug() << "new interface: " << interface.getIfname();
-//    });
-
-    //wpaSupplicant->start();
+    wifiManager = new WifiManager();
 
     udev = new UDevMonitor();
 
@@ -95,7 +82,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     });
 
     QObject::connect(udev, &UDevMonitor::deviceRemoved, this, [this](const UDevDevice &d) {
-        //qDebug() << "DEVICE REMOVED: " << d.getDevPath() << "sysname" << d.getSysName();
+        qDebug() << "DEVICE REMOVED: " << d.getDevPath() << "sysname" << d.getSysName();
     });
 
     udev->addMatchSubsystem("input");
@@ -123,5 +110,6 @@ Daemon::~Daemon()
 {
     delete socket;
     delete systemdConnection;
+    delete wifiManager;
     delete udev;
 }

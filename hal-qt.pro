@@ -18,7 +18,8 @@ SOURCES += main.cpp \
     dbus_fi.w1.wpa_supplicant1.Interface.cpp \
     dbus_org.freedesktop.DBus.cpp \
     dbus_fi.w1.wpa_supplicant1.Network.cpp \
-    dbus_fi.w1.wpa_supplicant1.BSS.cpp
+    dbus_fi.w1.wpa_supplicant1.BSS.cpp \
+    wifimanager.cpp
 
 HEADERS += \
     daemon.h \
@@ -30,7 +31,8 @@ HEADERS += \
     dbus_org.freedesktop.DBus.h \
     types.h \
     dbus_fi.w1.wpa_supplicant1.Network.h \
-    dbus_fi.w1.wpa_supplicant1.BSS.h
+    dbus_fi.w1.wpa_supplicant1.BSS.h \
+    wifimanager.h
 
 LIBS += -ludev
 
