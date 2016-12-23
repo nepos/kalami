@@ -73,13 +73,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
                                            "org.freedesktop.systemd1.Manager",
                                            bus, this);
 
-    wifiManager = new WifiManager();
-    QObject::connect(wifiManager, &WifiManager::networkScanCompleted, this, [this](const QJsonArray &array) {
-        qDebug() << array;
-    });
-
-    wifiManager->scan();
-
     // udev monitor
     udev = new UDevMonitor();
 
@@ -116,6 +109,5 @@ Daemon::~Daemon()
 {
     delete socket;
     delete systemdConnection;
-    delete wifiManager;
     delete udev;
 }
