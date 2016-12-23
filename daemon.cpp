@@ -68,13 +68,19 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     else
         qWarning() << "D-Bus connection failed: " << bus.lastError();
 
-//    systemdConnection = new QDBusInterface("org.freedesktop.systemd1",
-//                                           "/org/freedesktop/systemd1",
-//                                           "org.freedesktop.systemd1.Manager",
-//                                           bus, this);
+    systemdConnection = new QDBusInterface("org.freedesktop.systemd1",
+                                           "/org/freedesktop/systemd1",
+                                           "org.freedesktop.systemd1.Manager",
+                                           bus, this);
 
     wifiManager = new WifiManager();
+    QObject::connect(wifiManager, &WifiManager::networkScanCompleted, this, [this](const QJsonArray &array) {
+        qDebug() << array;
+    });
 
+    wifiManager->scan();
+
+    // udev monitor
     udev = new UDevMonitor();
 
     QObject::connect(udev, &UDevMonitor::deviceAdded, this, [this](const UDevDevice &d) {

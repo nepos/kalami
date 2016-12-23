@@ -21,8 +21,8 @@
 #define WIFIMANAGER_H
 
 #include <QObject>
+#include <QJsonObject>
 
-#include "types.h"
 #include "dbus_fi.w1.wpa_supplicant1.h"
 #include "dbus_fi.w1.wpa_supplicant1.Interface.h"
 #include "dbus_fi.w1.wpa_supplicant1.Network.h"
@@ -35,7 +35,10 @@ public:
     explicit WifiManager(QObject *parent = 0);
     ~WifiManager();
 
+    void scan();
+
 signals:
+    void networkScanCompleted(const QJsonArray &array);
 
 public slots:
 
@@ -44,7 +47,6 @@ private:
     FiW1Wpa_supplicant1Interface *wpaSupplicant;
     QList<FiW1Wpa_supplicant1InterfaceInterface*> interfaces;
 
-    void scan();
     void monitorInterface(FiW1Wpa_supplicant1InterfaceInterface *interface);
 };
 

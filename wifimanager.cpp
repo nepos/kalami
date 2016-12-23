@@ -55,8 +55,6 @@ WifiManager::WifiManager(QObject *parent) :
             }
         }
     });
-
-    scan();
 }
 
 void WifiManager::monitorInterface(FiW1Wpa_supplicant1InterfaceInterface *interface)
@@ -84,17 +82,28 @@ void WifiManager::scan()
         return;
 
     FiW1Wpa_supplicant1InterfaceInterface *interface = interfaces[0];
+    QJsonArray jsonArray;
 
     QList<QDBusObjectPath> list = interface->bSSs();
 
     for (int i = 0; i < list.size(); i++) {
         FiW1Wpa_supplicant1BSSInterface bss("fi.w1.wpa_supplicant1", list.at(i).path(),
                                             QDBusConnection::systemBus(), this);
+
         if (!bss.isValid())
             continue;
 
-        qInfo() << "SSID" << bss.sSID() << "signal" << bss.signal();
+        QJsonObject jsonObject {
+            { "ssid", qPrintable(bss.sSID()) },
+            { "bssid", qPrintable(bss.bSSID().toHex()) },
+            { "signal", bss.signal() },
+            { "privacy", bss.privacy() },
+        };
+
+        jsonArray << jsonObject;
     }
+
+    emit networkScanCompleted(jsonArray);
 }
 
 WifiManager::~WifiManager()
