@@ -22,6 +22,7 @@
 
 #include <QObject>
 #include <QWebSocket>
+#include <QNetworkConfigurationManager>
 #include <QtDBus/QDBusInterface>
 
 #include "udevmonitor.h"
@@ -43,6 +44,7 @@ private:
 
     UDevMonitor *udev;
     QDBusInterface *systemdConnection;
+    QNetworkConfigurationManager *networkManager;
 
     void dispatchSocketMessage(const QJsonValue &type, const QJsonValue &element, const QJsonValue &value);
     void sendSocketMessage(const QString &type, const QString &element, const QString &value);

@@ -13,15 +13,20 @@ SOURCES += main.cpp \
     daemon.cpp \
     inputdevice.cpp \
     udevdevice.cpp \
-    udevmonitor.cpp
+    udevmonitor.cpp \
+    connmanagentadaptor.cpp \
+    connmanagent.cpp
 
 HEADERS += \
     daemon.h \
     inputdevice.h \
     udevdevice.h \
     udevmonitor.h \
-    types.h
+    types.h \
+    connmanagentadaptor.h \
+    connmanagent.h
 
 LIBS += -ludev
 
-DISTFILES +=
+DISTFILES += \
+    io.nepos.connman.Agent

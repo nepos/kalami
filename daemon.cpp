@@ -29,6 +29,7 @@
 #include <QDBusMetaType>
 #include <QDebug>
 
+#include "connmanagent.h"
 #include "daemon.h"
 #include "types.h"
 
@@ -67,6 +68,33 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qInfo() << "Connected to D-Bus as" << bus.baseService();
     else
         qWarning() << "D-Bus connection failed: " << bus.lastError();
+
+    // QNetworkConfigurationManager
+    networkManager = new QNetworkConfigurationManager(this);
+    QList<QNetworkConfiguration> configs = networkManager->allConfigurations(QNetworkConfiguration::Undefined);
+
+    for (int i = 0; i < configs.size(); i++) {
+        QNetworkConfiguration config = configs[i];
+        qDebug() << "EXISTING:" << config.name() << " - " << config.identifier() << "valid? " << config.isValid();
+    }
+
+    qDebug() << "online?" << networkManager->isOnline();
+
+    QObject::connect(networkManager, &QNetworkConfigurationManager::configurationAdded, this, [this](const QNetworkConfiguration &config) {
+        qDebug() << "NEW:" << config.name() << " - " << config.identifier() << "valid? " << config.isValid();
+    });
+
+    QObject::connect(networkManager, &QNetworkConfigurationManager::configurationChanged, this, [this](const QNetworkConfiguration &config) {
+        qDebug() << "CHANGED:" << config.name() << " - " << config.identifier() << "valid? " << config.isValid();
+    });
+
+    QObject::connect(networkManager, &QNetworkConfigurationManager::configurationRemoved, this, [this](const QNetworkConfiguration &config) {
+        qDebug() << "REMOVED:" << config.name() << " - " << config.identifier() << "valid? " << config.isValid();
+    });
+
+    ConnmanAgent *c = new ConnmanAgent();
+    bool success = QDBusConnection::systemBus().registerObject("/io/nepos/connman/Agent", c);
+    qDebug() << "success?" << success;
 
     systemdConnection = new QDBusInterface("org.freedesktop.systemd1",
                                            "/org/freedesktop/systemd1",
@@ -109,5 +137,6 @@ Daemon::~Daemon()
 {
     delete socket;
     delete systemdConnection;
+    delete networkManager;
     delete udev;
 }
