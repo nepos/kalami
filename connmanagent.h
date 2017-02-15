@@ -15,9 +15,9 @@ signals:
 public slots:
     void Cancel();
     void Release();
-    void ReportError(const QDBusObjectPath &in0, const QString &in1);
-    void RequestBrowser(const QDBusObjectPath &in0, const QString &in1);
-    QVariantMap RequestInput(const QDBusObjectPath &in0, const QVariantMap &in1);
+    void ReportError(const QDBusObjectPath &service, const QString &error);
+    void RequestBrowser(const QDBusObjectPath &service, const QString &url);
+    QVariantMap RequestInput(const QDBusObjectPath &servicePath, const QVariantMap &fields);
 
 private:
     ConnmanAgentAdaptor adaptor;

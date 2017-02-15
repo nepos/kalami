@@ -29,7 +29,7 @@
 #include <QDBusMetaType>
 #include <QDebug>
 
-#include "connmanagent.h"
+#include "connman.h"
 #include "daemon.h"
 #include "types.h"
 
@@ -67,7 +67,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     if (bus.isConnected())
         qInfo() << "Connected to D-Bus as" << bus.baseService();
     else
-        qWarning() << "D-Bus connection failed: " << bus.lastError();
+        qWarning() << "D-Bus connection failed:" << bus.lastError();
 
     // QNetworkConfigurationManager
     networkManager = new QNetworkConfigurationManager(this);
@@ -92,9 +92,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qDebug() << "REMOVED:" << config.name() << " - " << config.identifier() << "valid? " << config.isValid();
     });
 
-    ConnmanAgent *c = new ConnmanAgent();
-    bool success = QDBusConnection::systemBus().registerObject("/io/nepos/connman/Agent", c);
-    qDebug() << "success?" << success;
+    Connman *c = new Connman();
 
     systemdConnection = new QDBusInterface("org.freedesktop.systemd1",
                                            "/org/freedesktop/systemd1",
@@ -105,11 +103,11 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     udev = new UDevMonitor();
 
     QObject::connect(udev, &UDevMonitor::deviceAdded, this, [this](const UDevDevice &d) {
-        //qDebug() << "DEVICE ADDED: " << d.getDevPath() << "sysname" << d.getSysName();
+        qDebug() << "Linux device added:" << d.getDevPath() << "sysname" << d.getSysName();
     });
 
     QObject::connect(udev, &UDevMonitor::deviceRemoved, this, [this](const UDevDevice &d) {
-        qDebug() << "DEVICE REMOVED: " << d.getDevPath() << "sysname" << d.getSysName();
+        qDebug() << "Linux device removed:" << d.getDevPath() << "sysname" << d.getSysName();
     });
 
     udev->addMatchSubsystem("input");
@@ -123,9 +121,9 @@ void Daemon::dispatchSocketMessage(const QJsonValue &type, const QJsonValue &ele
 void Daemon::sendSocketMessage(const QString &type, const QString &element, const QString &value)
 {
     QJsonObject obj {
-        { "type", type },
+        { "type",    type },
         { "element", element },
-        { "value", value },
+        { "value",   value },
     };
 
     QByteArray payload = QJsonDocument(obj).toJson(QJsonDocument::Compact);

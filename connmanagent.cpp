@@ -31,20 +31,32 @@ void ConnmanAgent::Cancel()
 
 void ConnmanAgent::Release()
 {
-
+    qInfo() << "RELEASE";
 }
 
-void ConnmanAgent::ReportError(const QDBusObjectPath &in0, const QString &in1)
+void ConnmanAgent::ReportError(const QDBusObjectPath &service, const QString &error)
 {
-
+    qInfo() << "ERROR";
 }
 
-void ConnmanAgent::RequestBrowser(const QDBusObjectPath &in0, const QString &in1)
+void ConnmanAgent::RequestBrowser(const QDBusObjectPath &service, const QString &url)
 {
-
+    qInfo() << "BROWSER";
 }
 
-QVariantMap ConnmanAgent::RequestInput(const QDBusObjectPath &in0, const QVariantMap &in1)
+QVariantMap ConnmanAgent::RequestInput(const QDBusObjectPath &servicePath, const QVariantMap &fields)
 {
+    qInfo() << "REQUESTINPUT";
 
+    QVariantMap response;
+
+    if (fields.keys().contains("Passphrase"))
+        response["Passphrase"] = "beineschwacke";
+
+    if (fields.keys().contains("SSID") || fields.keys().contains("Name")) {
+        response["SSID"] = "Zambaramba";
+        response["Name"] = "Zambaramba";
+    }
+
+    return response;
 }
