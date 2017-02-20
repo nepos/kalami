@@ -6,4 +6,4 @@ Requires=connman
 ExecStart=/app/hal-qt/hal-qt
 Restart=always
 PrivateTmp=yes
-
+InaccessiblePaths=/internal
