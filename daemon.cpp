@@ -34,33 +34,13 @@
 #include "types.h"
 
 Daemon::Daemon(QUrl uri, QObject *parent) :
-    QObject(parent), serverUri(uri)
+    QObject(parent)
 {
-    // WebSocket connection
-    socket = new QWebSocket();
-
-    QObject::connect(socket, &QWebSocket::connected, [this]() {
+    // Redux/websocket connection
+    redux = new ReduxProxy(uri);
+    QObject::connect(redux, &ReduxProxy::stateUpdated, this, [this](const QJsonObject &state) {
+        qDebug() << "STATE:" << state;
     });
-
-    QObject::connect(socket, &QWebSocket::disconnected, [this]() {
-        QTimer::singleShot(1000, [this]() {
-            socket->open(serverUri);
-        });
-    });
-
-    QObject::connect(socket, &QWebSocket::textMessageReceived, [this](const QString &message) {
-        QJsonDocument doc = QJsonDocument::fromJson(message.toLocal8Bit());
-
-        if (doc.isObject()) {
-            QJsonObject obj = doc.object();
-
-            dispatchSocketMessage(obj.value("type"),
-                                  obj.value("element"),
-                                  obj.value("value"));
-        }
-    });
-
-    socket->open(serverUri);
 
     // D-Bus connection
     QDBusConnection bus = QDBusConnection::systemBus();
@@ -113,27 +93,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     udev->addMatchSubsystem("input");
 }
 
-void Daemon::dispatchSocketMessage(const QJsonValue &type, const QJsonValue &element, const QJsonValue &value)
-{
-    qDebug() << "type" << type << "element" << element << "value" << value;
-}
-
-void Daemon::sendSocketMessage(const QString &type, const QString &element, const QString &value)
-{
-    QJsonObject obj {
-        { "type",    type },
-        { "element", element },
-        { "value",   value },
-    };
-
-    QByteArray payload = QJsonDocument(obj).toJson(QJsonDocument::Compact);
-
-    socket->sendBinaryMessage(payload);
-}
-
 Daemon::~Daemon()
 {
-    delete socket;
     delete systemdConnection;
     delete networkManager;
     delete udev;

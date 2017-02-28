@@ -1,5 +1,5 @@
 /***
-  Copyright (c) 2016 Nepos GmbH
+  Copyright (c) 2017 Nepos GmbH
 
   Authors: Daniel Mack <daniel@nepos.io>
 
@@ -25,6 +25,7 @@
 #include <QNetworkConfigurationManager>
 #include <QtDBus/QDBusInterface>
 
+#include "reduxproxy.h"
 #include "udevmonitor.h"
 
 class Daemon : public QObject
@@ -39,15 +40,10 @@ signals:
 public slots:
 
 private:
-    QUrl serverUri;
-    QWebSocket *socket;
-
+    ReduxProxy *redux;
     UDevMonitor *udev;
     QDBusInterface *systemdConnection;
     QNetworkConfigurationManager *networkManager;
-
-    void dispatchSocketMessage(const QJsonValue &type, const QJsonValue &element, const QJsonValue &value);
-    void sendSocketMessage(const QString &type, const QString &element, const QString &value);
 };
 
 #endif // DAEMON_H

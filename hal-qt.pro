@@ -11,6 +11,7 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     daemon.cpp \
+    reduxproxy.cpp \
     inputdevice.cpp \
     udevdevice.cpp \
     udevmonitor.cpp \
@@ -20,6 +21,7 @@ SOURCES += main.cpp \
 
 HEADERS += \
     daemon.h \
+    reduxproxy.h \
     inputdevice.h \
     udevdevice.h \
     udevmonitor.h \
