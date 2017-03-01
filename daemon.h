@@ -25,6 +25,7 @@
 #include <QNetworkConfigurationManager>
 #include <QtDBus/QDBusInterface>
 
+#include "connman.h"
 #include "reduxproxy.h"
 #include "udevmonitor.h"
 
@@ -40,10 +41,10 @@ signals:
 public slots:
 
 private:
+    Connman *connman;
     ReduxProxy *redux;
     UDevMonitor *udev;
     QDBusInterface *systemdConnection;
-    QNetworkConfigurationManager *networkManager;
 };
 
 #endif // DAEMON_H

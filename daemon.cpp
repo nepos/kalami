@@ -29,7 +29,6 @@
 #include <QDBusMetaType>
 #include <QDebug>
 
-#include "connman.h"
 #include "daemon.h"
 #include "types.h"
 
@@ -40,6 +39,15 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     redux = new ReduxProxy(uri);
     QObject::connect(redux, &ReduxProxy::stateUpdated, this, [this](const QJsonObject &state) {
         qDebug() << "STATE:" << state;
+
+        if (state.contains("Network")) {
+            QJsonObject network = state["Network"].toObject();
+
+            if (network.contains("knownWifis")) {
+                QJsonArray knownWifis = network["knownWifis"].toArray();
+                connman->updateKnownWifis(knownWifis);
+            }
+        }
     });
 
     // D-Bus connection
@@ -49,35 +57,21 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     else
         qWarning() << "D-Bus connection failed:" << bus.lastError();
 
-    // QNetworkConfigurationManager
-    networkManager = new QNetworkConfigurationManager(this);
-    QList<QNetworkConfiguration> configs = networkManager->allConfigurations(QNetworkConfiguration::Undefined);
-
-    for (int i = 0; i < configs.size(); i++) {
-        QNetworkConfiguration config = configs[i];
-        qDebug() << "EXISTING:" << config.name() << " - " << config.identifier() << "valid? " << config.isValid();
-    }
-
-    qDebug() << "online?" << networkManager->isOnline();
-
-    QObject::connect(networkManager, &QNetworkConfigurationManager::configurationAdded, this, [this](const QNetworkConfiguration &config) {
-        qDebug() << "NEW:" << config.name() << " - " << config.identifier() << "valid? " << config.isValid();
-    });
-
-    QObject::connect(networkManager, &QNetworkConfigurationManager::configurationChanged, this, [this](const QNetworkConfiguration &config) {
-        qDebug() << "CHANGED:" << config.name() << " - " << config.identifier() << "valid? " << config.isValid();
-    });
-
-    QObject::connect(networkManager, &QNetworkConfigurationManager::configurationRemoved, this, [this](const QNetworkConfiguration &config) {
-        qDebug() << "REMOVED:" << config.name() << " - " << config.identifier() << "valid? " << config.isValid();
-    });
-
-    Connman *c = new Connman();
-
     systemdConnection = new QDBusInterface("org.freedesktop.systemd1",
                                            "/org/freedesktop/systemd1",
                                            "org.freedesktop.systemd1.Manager",
                                            bus, this);
+
+    // Connman connection
+    connman = new Connman();
+    QObject::connect(connman, &Connman::availableWifisUpdated, this, [this](const QJsonArray &list) {
+        QJsonObject action {
+            { "type",           "NETWORK:UPDATE_AVAILABLE_WIFIS" },
+            { "availableWifis", list },
+        };
+
+        redux->dispatchAction(action);
+    });
 
     // udev monitor
     udev = new UDevMonitor();
@@ -96,6 +90,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 Daemon::~Daemon()
 {
     delete systemdConnection;
-    delete networkManager;
+    delete connman;
     delete udev;
+    delete redux;
 }

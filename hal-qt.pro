@@ -15,8 +15,6 @@ SOURCES += main.cpp \
     inputdevice.cpp \
     udevdevice.cpp \
     udevmonitor.cpp \
-    connmanagentadaptor.cpp \
-    connmanagent.cpp \
     connman.cpp
 
 HEADERS += \
@@ -26,8 +24,6 @@ HEADERS += \
     udevdevice.h \
     udevmonitor.h \
     types.h \
-    connmanagentadaptor.h \
-    connmanagent.h \
     connman.h
 
 LIBS += -ludev

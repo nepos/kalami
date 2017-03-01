@@ -34,7 +34,7 @@ signals:
     void stateUpdated(const QJsonObject &state);
 
 public slots:
-    void dispatch(const QJsonObject &action);
+    void dispatchAction(const QJsonObject &action);
 
 private:
     void sendJson(const QJsonObject &msg);

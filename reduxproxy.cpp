@@ -62,7 +62,7 @@ void ReduxProxy::sendJson(const QJsonObject &msg)
     socket.sendBinaryMessage(payload);
 }
 
-void ReduxProxy::dispatch(const QJsonObject &action)
+void ReduxProxy::dispatchAction(const QJsonObject &action)
 {
     QJsonObject msg = {
         { "action", action },
