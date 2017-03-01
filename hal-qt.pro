@@ -15,7 +15,8 @@ SOURCES += main.cpp \
     inputdevice.cpp \
     udevdevice.cpp \
     udevmonitor.cpp \
-    connman.cpp
+    connman.cpp \
+    linuxled.cpp
 
 HEADERS += \
     daemon.h \
@@ -24,7 +25,8 @@ HEADERS += \
     udevdevice.h \
     udevmonitor.h \
     types.h \
-    connman.h
+    connman.h \
+    linuxled.h
 
 LIBS += -ludev
 LIBS += -lqconnman

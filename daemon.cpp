@@ -37,18 +37,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 {
     // Redux/websocket connection
     redux = new ReduxProxy(uri);
-    QObject::connect(redux, &ReduxProxy::stateUpdated, this, [this](const QJsonObject &state) {
-        qDebug() << "STATE:" << state;
-
-        if (state.contains("Network")) {
-            QJsonObject network = state["Network"].toObject();
-
-            if (network.contains("knownWifis")) {
-                QJsonArray knownWifis = network["knownWifis"].toArray();
-                connman->updateKnownWifis(knownWifis);
-            }
-        }
-    });
+    QObject::connect(redux, &ReduxProxy::stateUpdated, this, &Daemon::reduxStateUpdated);
 
     // D-Bus connection
     QDBusConnection bus = QDBusConnection::systemBus();
@@ -84,12 +73,39 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qDebug() << "Linux device removed:" << d.getDevPath() << "sysname" << d.getSysName();
     });
 
+    // LEDs
+    homeButtonLED = new LinuxLED("apq8016-sbc:green:user4");
+
     udev->addMatchSubsystem("input");
+}
+
+void Daemon::reduxStateUpdated(const QJsonObject &state)
+{
+    qDebug() << "STATE:" << state;
+
+    if (state.contains("Network")) {
+        QJsonObject network = state["Network"].toObject();
+
+        if (network.contains("knownWifis")) {
+            QJsonArray knownWifis = network["knownWifis"].toArray();
+            connman->updateKnownWifis(knownWifis);
+        }
+    }
+
+    if (state.contains("hardware")) {
+        QJsonObject hardware = state["hardware"].toObject();
+
+        if (hardware.contains("homebutton")) {
+            QJsonObject homebutton = hardware["homebutton"].toObject();
+            homeButtonLED->setBrightness(homebutton["value"].toDouble());
+        }
+    }
 }
 
 Daemon::~Daemon()
 {
     delete systemdConnection;
+    delete homeButtonLED;
     delete connman;
     delete udev;
     delete redux;

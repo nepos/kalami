@@ -26,6 +26,7 @@
 #include <QtDBus/QDBusInterface>
 
 #include "connman.h"
+#include "linuxled.h"
 #include "reduxproxy.h"
 #include "udevmonitor.h"
 
@@ -40,7 +41,11 @@ signals:
 
 public slots:
 
+private slots:
+    void reduxStateUpdated(const QJsonObject &state);
+
 private:
+    LinuxLED *homeButtonLED;
     Connman *connman;
     ReduxProxy *redux;
     UDevMonitor *udev;
