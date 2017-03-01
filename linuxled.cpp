@@ -46,7 +46,6 @@ void LinuxLED::setBrightness(float value)
 {
     if (brightnessFile.isOpen()) {
         QString str = QString::number(value * (float) maxBrightness);
-        brightnessFile.reset();
-        brightnessFile.write(str.toLocal8Bit());
+        brightnessFile.write(str.toLocal8Bit() + "\n");
     }
 }
