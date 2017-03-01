@@ -62,6 +62,15 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         redux->dispatchAction(action);
     });
 
+    QObject::connect(connman, &Connman::connectedWifiChanged, this, [this](const QJsonObject &wifi) {
+        QJsonObject action {
+            { "type", "NETWORK:CONNECTED_WIFI_CHANGED" },
+            { "wifi", wifi },
+        };
+
+        redux->dispatchAction(action);
+    });
+
     // udev monitor
     udev = new UDevMonitor();
 

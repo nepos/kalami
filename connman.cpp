@@ -152,6 +152,21 @@ void Connman::agentPassphraseRequested()
     emit availableWifisUpdated(d->availableWifis);
 }
 
+void Connman::sendConnectedService()
+{
+    Q_D(Connman);
+
+    Service *service = d->manager->connectedService();
+    if (!service)
+        return;
+
+    QJsonObject wifi {
+        { "SSID", service->name() },
+    };
+
+    emit connectedWifiChanged(wifi);
+}
+
 Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
 {
     Q_D(Connman);
@@ -166,6 +181,11 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
 
     QObject::connect(d->manager, &Manager::offlineModeChanged, [this, d]() {
         qDebug() << "connman: offlineModeChanged" << d->manager->offlineMode();
+    });
+
+    QObject::connect(d->manager, &Manager::connectedServiceChanged, [this]() {
+        qDebug() << "connman: connectedServiceChanged";
+        sendConnectedService();
     });
 
     // Must use the deprecated SIGNAL/SLOT macros as Manager::serviceChanged is overloaded
@@ -185,4 +205,5 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
     }
 
     iterateServices();
+    sendConnectedService();
 }

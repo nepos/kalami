@@ -16,12 +16,14 @@ public:
     void updateKnownWifis(QJsonArray &list);
 
 signals:
-    void availableWifisUpdated(QJsonArray &list);
+    void availableWifisUpdated(const QJsonArray &list);
+    void connectedWifiChanged(const QJsonObject &wifi);
 
 private slots:
     void iterateServices();
     void connectToKnownWifi();
     void agentPassphraseRequested();
+    void sendConnectedService();
 
 private:
     ConnmanPrivate *d_ptr;
