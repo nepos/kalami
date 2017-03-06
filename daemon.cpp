@@ -85,6 +85,10 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     // LEDs
     homeButtonLED = new LinuxLED("apq8016-sbc:green:user4");
 
+    // ALSA
+    mixer = new ALSAMixer("hw:0");
+    qDebug() << "Current master volume:" << mixer->getMasterVolume();
+
     udev->addMatchSubsystem("input");
 }
 
@@ -113,6 +117,7 @@ void Daemon::reduxStateUpdated(const QJsonObject &state)
 
 Daemon::~Daemon()
 {
+    delete mixer;
     delete systemdConnection;
     delete homeButtonLED;
     delete connman;

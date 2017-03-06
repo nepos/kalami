@@ -25,6 +25,7 @@
 #include <QNetworkConfigurationManager>
 #include <QtDBus/QDBusInterface>
 
+#include "alsamixer.h"
 #include "connman.h"
 #include "linuxled.h"
 #include "reduxproxy.h"
@@ -45,6 +46,7 @@ private slots:
     void reduxStateUpdated(const QJsonObject &state);
 
 private:
+    ALSAMixer *mixer;
     LinuxLED *homeButtonLED;
     Connman *connman;
     ReduxProxy *redux;

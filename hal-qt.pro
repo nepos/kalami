@@ -16,7 +16,8 @@ SOURCES += main.cpp \
     udevdevice.cpp \
     udevmonitor.cpp \
     connman.cpp \
-    linuxled.cpp
+    linuxled.cpp \
+    alsamixer.cpp
 
 HEADERS += \
     daemon.h \
@@ -26,10 +27,12 @@ HEADERS += \
     udevmonitor.h \
     types.h \
     connman.h \
-    linuxled.h
+    linuxled.h \
+    alsamixer.h
 
 LIBS += -ludev
 LIBS += -lqconnman
+LIBS += -lasound
 
 DISTFILES += \
     io.nepos.connman.Agent
