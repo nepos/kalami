@@ -71,6 +71,9 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         redux->dispatchAction(action);
     });
 
+    // Machine
+    machine = new Machine();
+
     // udev monitor
     udev = new UDevMonitor();
 
@@ -123,4 +126,5 @@ Daemon::~Daemon()
     delete connman;
     delete udev;
     delete redux;
+    delete machine;
 }

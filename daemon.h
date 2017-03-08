@@ -28,6 +28,7 @@
 #include "alsamixer.h"
 #include "connman.h"
 #include "linuxled.h"
+#include "machine.h"
 #include "reduxproxy.h"
 #include "udevmonitor.h"
 
