@@ -31,6 +31,7 @@
 #include "machine.h"
 #include "reduxproxy.h"
 #include "udevmonitor.h"
+#include "updater.h"
 
 class Daemon : public QObject
 {
@@ -48,11 +49,13 @@ private slots:
 
 private:
     ALSAMixer *mixer;
-    LinuxLED *homeButtonLED;
     Connman *connman;
+    LinuxLED *homeButtonLED;
+    Machine *machine;
+    QDBusInterface *systemdConnection;
     ReduxProxy *redux;
     UDevMonitor *udev;
-    QDBusInterface *systemdConnection;
+    Updater *updater;
 };
 
 #endif // DAEMON_H

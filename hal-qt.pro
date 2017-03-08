@@ -1,4 +1,4 @@
-QT += core websockets dbus
+QT += core websockets dbus network
 QT -= gui
 
 CONFIG += c++11
@@ -17,7 +17,9 @@ SOURCES += main.cpp \
     udevmonitor.cpp \
     connman.cpp \
     linuxled.cpp \
-    alsamixer.cpp
+    updater.cpp \
+    alsamixer.cpp \
+    machine.cpp
 
 HEADERS += \
     daemon.h \
@@ -28,7 +30,9 @@ HEADERS += \
     types.h \
     connman.h \
     linuxled.h \
-    alsamixer.h
+    updater.h \
+    alsamixer.h \
+    machine.h
 
 LIBS += -ludev
 LIBS += -lqconnman

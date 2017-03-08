@@ -74,6 +74,12 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     // Machine
     machine = new Machine();
 
+    // Updater logic
+    updater = new Updater(machine, "latest");
+    QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
+       qDebug() << "new update available, version" << version;
+    });
+
     // udev monitor
     udev = new UDevMonitor();
 
@@ -97,7 +103,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
 void Daemon::reduxStateUpdated(const QJsonObject &state)
 {
-    qDebug() << "STATE:" << state;
+    //qDebug() << "STATE:" << state;
 
     if (state.contains("Network")) {
         QJsonObject network = state["Network"].toObject();
@@ -125,6 +131,7 @@ Daemon::~Daemon()
     delete homeButtonLED;
     delete connman;
     delete udev;
+    delete updater;
     delete redux;
     delete machine;
 }
