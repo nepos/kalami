@@ -35,6 +35,9 @@
 Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject(parent)
 {
+    // Machine
+    machine = new Machine();
+
     // Redux/websocket connection
     redux = new ReduxProxy(uri);
     QObject::connect(redux, &ReduxProxy::stateUpdated, this, &Daemon::reduxStateUpdated);
@@ -50,6 +53,12 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
                                            "/org/freedesktop/systemd1",
                                            "org.freedesktop.systemd1.Manager",
                                            bus, this);
+
+    // Updater logic
+    updater = new Updater(machine, "latest");
+    QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
+       qDebug() << "New update available, version" << version;
+    });
 
     // Connman connection
     connman = new Connman();
@@ -71,14 +80,11 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         redux->dispatchAction(action);
     });
 
-    // Machine
-    machine = new Machine();
-
-    // Updater logic
-    updater = new Updater(machine, "latest");
-    QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
-       qDebug() << "new update available, version" << version;
+    QObject::connect(connman, &Connman::goneOnline, this, [this]() {
+        updater->check();
     });
+
+    connman->start();
 
     // udev monitor
     udev = new UDevMonitor();

@@ -16,10 +16,13 @@ public:
         SAPHIRA,
     };
 
-    enum Model getModel()            const { return model;        }
-    unsigned long getOsVersion()     const { return osVersion;    }
-    const QString &getModelName()    const { return modelName;    }
-    const QString &getArchitecture() const { return architecture; }
+    enum Model getModel()              const { return model;          }
+    unsigned long getOsVersion()       const { return osVersion;      }
+    const QString &getModelName()      const { return modelName;      }
+    const QString &getArchitecture()   const { return architecture;   }
+    const QString &getMachineId()      const { return machineId;      }
+    const QString &getDeviceRevision() const { return deviceRevision; }
+    const QString &getDeviceSerial()   const { return deviceSerial;   }
 
     void restart();
     void powerOff();
@@ -29,6 +32,9 @@ private:
     QString modelName;
     QString architecture;
     QString kernelVersion;
+    QString machineId;
+    QString deviceRevision;
+    QString deviceSerial;
     unsigned int osVersion;
 };
 

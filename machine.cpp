@@ -57,6 +57,17 @@ Machine::Machine(QObject *parent) : QObject(parent)
             if (line.startsWith("VERSION_ID="))
                 osVersion = line.mid(12).toUInt();
         }
+
+        os.close();
+    }
+
+    QFile machineIdFile("/etc/machine-id");
+    if (machineIdFile.open(QIODevice::ReadOnly)) {
+        machineId = machineIdFile.readLine();
+        machineIdFile.close();
+
+        while (machineId.endsWith('\n'))
+            machineId.chop(1);
     }
 
     qInfo() << "Detected Hardware:" << architecture << "architecture,"

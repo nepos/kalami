@@ -177,6 +177,8 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
 
     QObject::connect(d->manager, &Manager::stateChanged, [this, d]() {
         qDebug() << "connman: stateChanged" << d->manager->state();
+        if (d->manager->state() == Manager::Online)
+            emit goneOnline();
     });
 
     QObject::connect(d->manager, &Manager::offlineModeChanged, [this, d]() {
@@ -193,6 +195,11 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
 
     d->agent = new Agent("/io/nepos/ConnmanAgent", d->manager);
     QObject::connect(d->agent, &Agent::passphraseRequested, this, &Connman::agentPassphraseRequested);
+}
+
+void Connman::start()
+{
+    Q_D(Connman);
 
     d->manager->setOfflineMode(false);
 
@@ -206,4 +213,9 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
 
     iterateServices();
     sendConnectedService();
+
+    qDebug() << "MANAGWR STATE" << d->manager->state();
+
+    if (d->manager->state() == Manager::Online)
+        emit goneOnline();
 }
