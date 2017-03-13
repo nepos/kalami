@@ -1,9 +1,0 @@
-[Unit]
-Description=Nepos Hardware abstraction layer
-Requires=connman
-
-[Service]
-ExecStart=/app/hal-qt/hal-qt
-Restart=always
-PrivateTmp=yes
-InaccessiblePaths=/internal
