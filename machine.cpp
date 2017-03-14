@@ -70,9 +70,67 @@ Machine::Machine(QObject *parent) : QObject(parent)
             machineId.chop(1);
     }
 
+    deviceRevision = "a";
+    deviceSerial = "xxx";
+
     qInfo() << "Detected Hardware:" << architecture << "architecture,"
                << "model name" << modelName
-               << "os version" << QString::number(osVersion);
+               << "revision" << deviceRevision
+               << "os version" << QString::number(osVersion)
+               << "serial" << deviceSerial;
+
+    QFile cmdlineFile("/proc/cmdline");
+    if (cmdlineFile.open(QIODevice::ReadOnly)) {
+        QStringList cmdline = QString(cmdlineFile.readLine().data()).split(' ');
+        cmdlineFile.close();
+
+        for (int i = 0; i < cmdline.size(); ++i) {
+            QString c = cmdline.at(i);
+
+            if (c.startsWith("root="))
+                currentRootfsDevice = c.mid(5);
+        }
+    }
+
+    bootDevPrefix = currentRootfsDevice.mid(0, strlen("/dev/mmcblk0"));
+
+    if (currentRootfsDevice.endsWith("p12")) {
+        altRootfsDevice = bootDevPrefix + "p13";
+        currentBootDevice = bootDevPrefix + "p10";
+        altBootDevice = bootDevPrefix + "p11";
+    } else {
+        altRootfsDevice = bootDevPrefix + "p12";
+        currentBootDevice = bootDevPrefix + "p11";
+        altBootDevice = bootDevPrefix + "p10";
+    }
+
+    QFile bootConfigFile(bootDevPrefix + "p7");
+    if (bootConfigFile.open(QIODevice::ReadOnly)) {
+        char b;
+
+        bootConfigFile.read(&b, sizeof(b));
+        bootConfigFile.close();
+
+        bootConfig = b == 'A' ? Machine::BOOT_A : Machine::BOOT_B;
+    }
+}
+
+bool Machine::setAltBootConfig()
+{
+    QFile bootConfigFile(bootDevPrefix + "p7");
+    if (!bootConfigFile.open(QIODevice::WriteOnly))
+        return false;
+
+    char b = bootConfig == Machine::BOOT_A ? 'b' : 'a';
+
+    bootConfigFile.write(&b, sizeof(b));
+    bootConfigFile.close();
+
+    return true;
+}
+
+void Machine::verifyBootConfig()
+{
 }
 
 void Machine::restart()

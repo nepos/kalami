@@ -58,7 +58,25 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     updater = new Updater(machine, "latest");
     QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
        qDebug() << "New update available, version" << version;
+       updater->install();
     });
+
+    QObject::connect(updater, &Updater::alreadyUpToDate, this, [this]() {
+       qDebug() << "Already up-to-date!";
+    });
+
+    QObject::connect(updater, &Updater::checkFailed, this, [this]() {
+       qDebug() << "Update check failed!";
+    });
+
+    QObject::connect(updater, &Updater::updateSucceeded, this, [this]() {
+       qDebug() << "Update succeeded!";
+    });
+
+    QObject::connect(updater, &Updater::updateFailed, this, [this]() {
+       qDebug() << "Update failed!";
+    });
+
 
     // Connman connection
     connman = new Connman();

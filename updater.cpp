@@ -4,11 +4,18 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QJsonParseError>
+#include <QProcess>
+#include <QFile>
+#include <QEventLoop>
+#include <QTimer>
+#include <QFileInfo>
 #include "updater.h"
 
 Updater::Updater(const Machine *machine, const QString &updateChannel, QObject *parent) :
     QObject(parent), machine(machine), updateChannel(updateChannel), networkAccessManager(this)
 {
+    pendingReply = NULL;
+    thread = NULL;
 }
 
 Updater::~Updater()
@@ -17,14 +24,51 @@ Updater::~Updater()
         pendingReply->abort();
 }
 
+const QString &Updater::getUpdateSeed(Updater::ImageType type) const
+{
+    switch (type) {
+    case Updater::IMAGE_TYPE_BOOTIMG:
+        return machine->getAltBootDevice();
+
+    case Updater::IMAGE_TYPE_ROOTFS:
+        return machine->getAltRootfsDevice();
+    }
+
+    return NULL;
+}
+
+const QString &Updater::getUpdateTarget(Updater::ImageType type) const
+{
+    switch (type) {
+    case Updater::IMAGE_TYPE_BOOTIMG:
+        return machine->getCurrentBootDevice();
+
+    case Updater::IMAGE_TYPE_ROOTFS:
+        return machine->getCurrentRootfsDevice();
+    }
+
+    return NULL;
+}
+
 void Updater::check()
 {
     QUrlQuery query;
     QString currentVersion = QString::number(machine->getOsVersion());
+    QString model;
+
+    switch (machine->getModel()) {
+    case Machine::DT410C_EVALBOARD:
+    case Machine::SAPHIRA:
+        model = "saphira";
+        break;
+
+    default:
+        model = "unknown";
+    }
 
     query.addQueryItem("current", currentVersion);
 
-    QUrl url("http://os.nepos.io/updates/" + updateChannel + ".json");
+    QUrl url("http://os.nepos.io/updates/" + model + "/" + updateChannel + ".json");
     url.setQuery(query);
 
     qInfo() << "Checking for updates on" << url;
@@ -48,12 +92,7 @@ void Updater::check()
         QJsonDocument doc = QJsonDocument::fromJson(content, &error);
 
         if (error.error != QJsonParseError::NoError) {
-            qWarning() << "Unable to parse Json content from update server:" << error.errorString();
-            return;
-        }
-
-        if (!doc.isObject()) {
-            qWarning() << "Huh!? No content from update server?";
+            emit checkFailed("Unable to parse Json content from update server:" + error.errorString());
             return;
         }
 
@@ -61,18 +100,164 @@ void Updater::check()
         availableUpdate.version = json["build_id"].toString().toULong();
         availableUpdate.rootfsUrl = QUrl(json["rootfs"].toString());
         availableUpdate.bootimgUrl = QUrl(json["bootimg"].toString());
+        availableUpdate.casyncStore = QUrl(json["casync_store"].toString());
 
-        if (availableUpdate.version < machine->getOsVersion())
+        if (availableUpdate.version > machine->getOsVersion())
             emit updateAvailable(QString::number(availableUpdate.version));
+        else
+            emit alreadyUpToDate();
     });
 }
 
-int Updater::installAvailableUpdate()
+void Updater::install()
 {
-    if (availableUpdate->version == 0)
-        return -ENOENT;
+    if (availableUpdate.version == 0) {
+        emit updateFailed();
+        return;
+    }
 
-    // TODO
+    if (thread) {
+        thread->quit();
+        thread->deleteLater();
+        thread = NULL;
+    }
 
-    return 0;
+    thread = new UpdateThread(this);
+
+    QObject::connect(thread, &UpdateThread::succeeded, this, [this]() {
+        emit updateSucceeded();
+    });
+
+    QObject::connect(thread, &UpdateThread::failed, this, [this]() {
+        emit updateFailed();
+    });
+
+    thread->start();
+}
+
+UpdateThread::UpdateThread(const Updater *updater, QObject *parent) : QThread(parent), updater(updater)
+{
+}
+
+bool UpdateThread::downloadFile(const QUrl &url, const QString &path)
+{
+    QNetworkAccessManager networkAccessManager;
+    QNetworkRequest request(url);
+    QNetworkReply *reply = networkAccessManager.get(request);
+    QEventLoop loop;
+    QTimer timer;
+    bool ret = false;
+
+    timer.setSingleShot(true);
+
+    qDebug() << "downloading" << url << "to" << path;
+
+    QObject::connect(reply, &QNetworkReply::finished, this, [this, path, &loop, &ret]() {
+        QNetworkReply *data = (QNetworkReply *) sender();
+        QFile localFile(path);
+        if (!localFile.open(QIODevice::WriteOnly)) {
+            qWarning() << "Unable to open file" << path << "for writing!";
+            loop.quit();
+            return;
+        }
+
+        localFile.write(data->readAll());
+        localFile.close();
+        data->deleteLater();
+        ret = true;
+        loop.quit();
+    });
+
+    QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+    timer.start(60 * 1000);
+
+    loop.exec();
+    return ret;
+}
+
+bool UpdateThread::verifySignature(const QString &content, const QString &signature)
+{
+    QProcess gpg;
+    QStringList arguments;
+
+    arguments << "--quiet" << "--verify" << signature << content;
+
+    gpg.start("/usr/bin/gpg", arguments);
+    if (!gpg.waitForFinished())
+        return false;
+
+    return gpg.exitCode() == 0;
+}
+
+bool UpdateThread::casync(const QString &caibx, const QString &dest, const QString &seed, const QUrl &store)
+{
+    QProcess casync;
+    QStringList arguments;
+
+    arguments << "extract"
+                << caibx
+                << "--seed" << seed
+                << "--store" << store.toString()
+                << dest;
+
+    casync.start("/usr/bin/casync", arguments);
+    if (!casync.waitForFinished())
+        return false;
+
+    if (casync.exitCode() != 0) {
+        qWarning() << "casync failed:";
+        qWarning() << "-----------------------------";
+        qWarning() << casync.readAllStandardOutput();
+        qWarning() << casync.readAllStandardError();
+        qWarning() << "-----------------------------";
+        return false;
+    }
+
+    return true;
+}
+
+void UpdateThread::run()
+{
+    const AvailableUpdate *update = updater->getAvailableUpdate();
+    QString tmp("/tmp/");
+    bool success = false;
+
+    QUrl bootimgSigUrl(update->bootimgUrl);
+    bootimgSigUrl.setPath(bootimgSigUrl.path() + ".sig");
+    QFileInfo bootimgSigInfo(bootimgSigUrl.path());
+    QString bootimgSigLocalFile(tmp + bootimgSigInfo.fileName());
+
+    QFileInfo bootimgInfo(update->bootimgUrl.path());
+    QString bootimgLocalFile(tmp + bootimgInfo.fileName());
+
+    QUrl rootfsSigUrl(update->rootfsUrl);
+    rootfsSigUrl.setPath(rootfsSigUrl.path() + ".sig");
+    QFileInfo rootfsSigInfo(rootfsSigUrl.path());
+    QString rootfsSigLocalFile(tmp + rootfsSigInfo.fileName());
+
+    QFileInfo rootfsInfo(update->rootfsUrl.path());
+    QString rootfsLocalFile(tmp + rootfsInfo.fileName());
+
+    if (downloadFile(update->bootimgUrl, bootimgLocalFile) &&
+        downloadFile(bootimgSigUrl, bootimgSigLocalFile) &&
+        downloadFile(update->rootfsUrl, rootfsLocalFile) &&
+        downloadFile(rootfsSigUrl, rootfsSigLocalFile)) {
+
+        if (verifySignature(bootimgLocalFile, bootimgSigLocalFile)) {
+            if (casync(bootimgLocalFile, updater->getUpdateTarget(Updater::IMAGE_TYPE_BOOTIMG), updater->getUpdateSeed(Updater::IMAGE_TYPE_BOOTIMG), update->casyncStore) &&
+                casync(rootfsLocalFile, updater->getUpdateTarget(Updater::IMAGE_TYPE_ROOTFS), updater->getUpdateSeed(Updater::IMAGE_TYPE_ROOTFS), update->casyncStore)) {
+                success = true;
+            }
+        }
+    }
+
+    QFile::remove(bootimgLocalFile);
+    QFile::remove(bootimgSigLocalFile);
+    QFile::remove(rootfsLocalFile);
+    QFile::remove(rootfsSigLocalFile);
+
+    if (success)
+        emit succeeded();
+    else
+        emit failed();
 }
