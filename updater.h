@@ -5,8 +5,11 @@
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QThread>
+#include <QtCore/QLoggingCategory>
 
 #include "machine.h"
+
+Q_DECLARE_LOGGING_CATEGORY(UpdaterLog)
 
 struct AvailableUpdate {
     unsigned long version;

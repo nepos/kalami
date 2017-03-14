@@ -30,7 +30,8 @@
 #include <QDebug>
 
 #include "daemon.h"
-#include "types.h"
+
+Q_LOGGING_CATEGORY(DaemonLog, "Daemon")
 
 Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject(parent)
@@ -45,9 +46,9 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     // D-Bus connection
     QDBusConnection bus = QDBusConnection::systemBus();
     if (bus.isConnected())
-        qInfo() << "Connected to D-Bus as" << bus.baseService();
+        qInfo(DaemonLog) << "Connected to D-Bus as" << bus.baseService();
     else
-        qWarning() << "D-Bus connection failed:" << bus.lastError();
+        qWarning(DaemonLog) << "D-Bus connection failed:" << bus.lastError();
 
     systemdConnection = new QDBusInterface("org.freedesktop.systemd1",
                                            "/org/freedesktop/systemd1",
@@ -57,24 +58,24 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     // Updater logic
     updater = new Updater(machine, "latest");
     QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
-       qDebug() << "New update available, version" << version;
+       qDebug(DaemonLog) << "New update available, version" << version;
        updater->install();
     });
 
     QObject::connect(updater, &Updater::alreadyUpToDate, this, [this]() {
-       qDebug() << "Already up-to-date!";
+       qDebug(DaemonLog) << "Already up-to-date!";
     });
 
     QObject::connect(updater, &Updater::checkFailed, this, [this]() {
-       qDebug() << "Update check failed!";
+       qDebug(DaemonLog) << "Update check failed!";
     });
 
     QObject::connect(updater, &Updater::updateSucceeded, this, [this]() {
-       qDebug() << "Update succeeded!";
+       qDebug(DaemonLog) << "Update succeeded!";
     });
 
     QObject::connect(updater, &Updater::updateFailed, this, [this]() {
-       qDebug() << "Update failed!";
+       qDebug(DaemonLog) << "Update failed!";
     });
 
 
@@ -108,11 +109,11 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     udev = new UDevMonitor();
 
     QObject::connect(udev, &UDevMonitor::deviceAdded, this, [this](const UDevDevice &d) {
-        qDebug() << "Linux device added:" << d.getDevPath() << "sysname" << d.getSysName();
+        qDebug(DaemonLog) << "Linux device added:" << d.getDevPath() << "sysname" << d.getSysName();
     });
 
     QObject::connect(udev, &UDevMonitor::deviceRemoved, this, [this](const UDevDevice &d) {
-        qDebug() << "Linux device removed:" << d.getDevPath() << "sysname" << d.getSysName();
+        qDebug(DaemonLog) << "Linux device removed:" << d.getDevPath() << "sysname" << d.getSysName();
     });
 
     // LEDs
@@ -120,7 +121,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     // ALSA
     mixer = new ALSAMixer("hw:0");
-    qDebug() << "Current master volume:" << mixer->getMasterVolume();
+    qDebug(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
 
     udev->addMatchSubsystem("input");
 }

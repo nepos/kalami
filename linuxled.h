@@ -22,6 +22,9 @@
 
 #include <QObject>
 #include <QFile>
+#include <QtCore/QLoggingCategory>
+
+Q_DECLARE_LOGGING_CATEGORY(LinuxLEDLog)
 
 class LinuxLED : public QObject
 {

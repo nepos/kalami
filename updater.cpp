@@ -11,6 +11,8 @@
 #include <QFileInfo>
 #include "updater.h"
 
+Q_LOGGING_CATEGORY(UpdaterLog, "Updater")
+
 Updater::Updater(const Machine *machine, const QString &updateChannel, QObject *parent) :
     QObject(parent), machine(machine), updateChannel(updateChannel), networkAccessManager(this)
 {
@@ -71,7 +73,7 @@ void Updater::check()
     QUrl url("http://os.nepos.io/updates/" + model + "/" + updateChannel + ".json");
     url.setQuery(query);
 
-    qInfo() << "Checking for updates on" << url;
+    qInfo(UpdaterLog) << "Checking for updates on" << url;
 
     QNetworkRequest request(url);
     request.setRawHeader(QString("X-nepos-current").toLocal8Bit(), currentVersion.toLocal8Bit());
@@ -150,13 +152,13 @@ bool UpdateThread::downloadFile(const QUrl &url, const QString &path)
 
     timer.setSingleShot(true);
 
-    qDebug() << "downloading" << url << "to" << path;
+    qDebug(UpdaterLog) << "downloading" << url << "to" << path;
 
     QObject::connect(reply, &QNetworkReply::finished, this, [this, path, &loop, &ret]() {
         QNetworkReply *data = (QNetworkReply *) sender();
         QFile localFile(path);
         if (!localFile.open(QIODevice::WriteOnly)) {
-            qWarning() << "Unable to open file" << path << "for writing!";
+            qWarning(UpdaterLog) << "Unable to open file" << path << "for writing!";
             loop.quit();
             return;
         }
@@ -205,11 +207,11 @@ bool UpdateThread::casync(const QString &caibx, const QString &dest, const QStri
         return false;
 
     if (casync.exitCode() != 0) {
-        qWarning() << "casync failed:";
-        qWarning() << "-----------------------------";
-        qWarning() << casync.readAllStandardOutput();
-        qWarning() << casync.readAllStandardError();
-        qWarning() << "-----------------------------";
+        qWarning(UpdaterLog) << "casync failed:";
+        qWarning(UpdaterLog) << "-----------------------------";
+        qWarning(UpdaterLog) << casync.readAllStandardOutput();
+        qWarning(UpdaterLog) << casync.readAllStandardError();
+        qWarning(UpdaterLog) << "-----------------------------";
         return false;
     }
 

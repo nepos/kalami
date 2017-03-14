@@ -22,6 +22,8 @@
 #include <linux/input.h>
 #include "inputdevice.h"
 
+Q_LOGGING_CATEGORY(InputDeviceLog, "InputDevice")
+
 #define BITS_PER_LONG   (sizeof(long) * 8)
 #define NBITS(x)        ((((x)-1)/BITS_PER_LONG)+1)
 #define OFF(x)          ((x)%BITS_PER_LONG)
@@ -33,7 +35,7 @@ InputDevice::InputDevice(const QString &path, QObject *parent) :
     QObject(parent), device(path)
 {
     if (!device.open(QIODevice::ReadWrite | QIODevice::Unbuffered)) {
-        qWarning() << "Unable to open file " << path << ":" << device.errorString();
+        qWarning(InputDeviceLog) << "Unable to open file " << path << ":" << device.errorString();
         return;
     }
 
@@ -45,7 +47,7 @@ InputDevice::InputDevice(const QString &path, QObject *parent) :
         if (r == sizeof(ev))
             emit inputEvent(ev.type, ev.code, ev.value);
         else
-            qWarning() << "Short read from device " << device.fileName();
+            qWarning(InputDeviceLog) << "Short read from device " << device.fileName();
     });
 }
 
@@ -63,7 +65,7 @@ void InputDevice::emitCurrent()
 
     ret = ioctl(fd, EVIOCGBIT(0, EV_MAX), bit[0]);
     if (ret < 0) {
-        qWarning() << "ioctl(EVIOCGBIT) failed for " << device.fileName() << ":" << device.errorString();
+        qWarning(InputDeviceLog) << "ioctl(EVIOCGBIT) failed for " << device.fileName() << ":" << device.errorString();
         return;
     }
 

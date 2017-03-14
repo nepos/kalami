@@ -25,6 +25,8 @@
 #include <qconnman/manager.h>
 #include <qconnman/technology.h>
 
+Q_LOGGING_CATEGORY(ConnmanLog, "Connman")
+
 struct ConnmanPrivate {
     ConnmanPrivate() {};
     Manager *manager;
@@ -50,7 +52,7 @@ void Connman::connectToKnownWifi()
             if (service->name() == knownWifi["SSID"].toString() &&
                 service->state() == Service::IdleState) {
                 service->connect();
-                qDebug() << "Connecting to known wifi" << service->name();
+                qDebug(ConnmanLog) << "Connecting to known wifi" << service->name();
                 return;
             }
         }
@@ -132,7 +134,6 @@ void Connman::agentPassphraseRequested()
         if (service->name() == knownWifi["SSID"].toString() && knownWifi.contains("Passphrase")) {
             request->response.name = service->name();
             request->response.passphrase = knownWifi["Passphrase"].toString();
-            qDebug() << "XXX Sending pass" << request->response.passphrase << "for" << request->response.name;
             return;
         }
     }
@@ -176,17 +177,17 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
     d->availableWifis = QJsonArray();
 
     QObject::connect(d->manager, &Manager::stateChanged, [this, d]() {
-        qDebug() << "connman: stateChanged" << d->manager->state();
+        qDebug(ConnmanLog) << "connman: stateChanged" << d->manager->state();
         if (d->manager->state() == Manager::Online)
             emit goneOnline();
     });
 
     QObject::connect(d->manager, &Manager::offlineModeChanged, [this, d]() {
-        qDebug() << "connman: offlineModeChanged" << d->manager->offlineMode();
+        qDebug(ConnmanLog) << "connman: offlineModeChanged" << d->manager->offlineMode();
     });
 
     QObject::connect(d->manager, &Manager::connectedServiceChanged, [this]() {
-        qDebug() << "connman: connectedServiceChanged";
+        qDebug(ConnmanLog) << "connman: connectedServiceChanged";
         sendConnectedService();
     });
 
@@ -204,7 +205,7 @@ void Connman::start()
     d->manager->setOfflineMode(false);
 
     foreach (Technology *technology, d->manager->technologies()) {
-        qDebug() << "tech name" << technology->name() << "type" << technology->type();
+        qDebug(ConnmanLog) << "tech name" << technology->name() << "type" << technology->type();
         if (technology->name() == "WiFi") {
             technology->setPowered(true);
             technology->scan();
@@ -213,8 +214,6 @@ void Connman::start()
 
     iterateServices();
     sendConnectedService();
-
-    qDebug() << "MANAGWR STATE" << d->manager->state();
 
     if (d->manager->state() == Manager::Online)
         emit goneOnline();

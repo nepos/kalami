@@ -22,9 +22,12 @@
 
 #include <QObject>
 #include <QSocketNotifier>
+#include <QtCore/QLoggingCategory>
 
 #include <libudev.h>
 #include "udevdevice.h"
+
+Q_DECLARE_LOGGING_CATEGORY(UDevMonitorLog)
 
 class UDevMonitor : public QObject
 {

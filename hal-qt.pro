@@ -27,7 +27,6 @@ HEADERS += \
     inputdevice.h \
     udevdevice.h \
     udevmonitor.h \
-    types.h \
     connman.h \
     linuxled.h \
     updater.h \

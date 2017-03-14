@@ -22,6 +22,9 @@
 
 #include <QObject>
 #include <libudev.h>
+#include <QtCore/QLoggingCategory>
+
+Q_DECLARE_LOGGING_CATEGORY(UDevDeviceLog)
 
 class UDevDevice : public QObject
 {

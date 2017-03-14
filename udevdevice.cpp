@@ -19,6 +19,8 @@
 
 #include "udevdevice.h"
 
+Q_LOGGING_CATEGORY(UDevDeviceLog, "UDevDevice")
+
 UDevDevice::UDevDevice(struct udev_device *udev_device, QObject *parent) :
     QObject(parent)
 {

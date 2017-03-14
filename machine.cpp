@@ -8,6 +8,8 @@
 
 #include "machine.h"
 
+Q_LOGGING_CATEGORY(MachineLog, "Machine")
+
 Machine::Machine(QObject *parent) : QObject(parent)
 {
     struct utsname uts;

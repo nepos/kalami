@@ -20,6 +20,8 @@
 #include <QDebug>
 #include "linuxled.h"
 
+Q_LOGGING_CATEGORY(LinuxLEDLog, "LinuxLED")
+
 LinuxLED::LinuxLED(const QString &name, QObject *parent) :
     QObject(parent), brightnessFile()
 {

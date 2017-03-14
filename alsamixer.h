@@ -1,7 +1,10 @@
 #ifndef ALSAMIXER_H
 #define ALSAMIXER_H
 
+#include <QtCore/QLoggingCategory>
 #include <QObject>
+
+Q_DECLARE_LOGGING_CATEGORY(ALSAMixerLog)
 
 struct ALSAMixerPrivate;
 

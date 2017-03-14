@@ -3,6 +3,8 @@
 #include <math.h>
 #include "alsamixer.h"
 
+Q_LOGGING_CATEGORY(ALSAMixerLog, "ALSAMixer")
+
 struct ALSAMixerPrivate {
     ALSAMixerPrivate() {};
 
@@ -23,20 +25,20 @@ ALSAMixer::ALSAMixer(const QString &deviceName, QObject *parent) :
 
     ret = snd_mixer_open(&d->handle, 0);
     if (ret < 0) {
-        qInfo() << "Unable to open ALSA mixer interface:" << strerror(-errno);
+        qInfo(ALSAMixerLog) << "Unable to open ALSA mixer interface:" << strerror(-errno);
         return;
     }
 
     ret = snd_mixer_attach(d->handle, deviceName.toLocal8Bit().constData());
     if (ret < 0) {
-        qInfo() << "Unable to open ALSA mixer device handle:" << strerror(-errno);
+        qInfo(ALSAMixerLog) << "Unable to open ALSA mixer device handle:" << strerror(-errno);
         return;
     }
 
     snd_mixer_selem_register(d->handle, NULL, NULL);
     snd_mixer_load(d->handle);
 
-    qDebug() << "ALSA mixer interface opened for" << deviceName;
+    qDebug(ALSAMixerLog) << "ALSA mixer interface opened for" << deviceName;
 
     snd_mixer_selem_id_t *sid;
     snd_mixer_selem_id_alloca(&sid);
@@ -44,7 +46,7 @@ ALSAMixer::ALSAMixer(const QString &deviceName, QObject *parent) :
     snd_mixer_selem_id_set_name(sid, "Master");
     d->masterElement = snd_mixer_find_selem(d->handle, sid);
     if (!d->masterElement) {
-        qInfo() << "Unable to find ALSA mixer element for master volume:" << strerror(-errno);
+        qInfo(ALSAMixerLog) << "Unable to find ALSA mixer element for master volume:" << strerror(-errno);
         return;
     }
 

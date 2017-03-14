@@ -20,6 +20,8 @@
 #include <QDebug>
 #include "udevmonitor.h"
 
+Q_LOGGING_CATEGORY(UDevMonitorLog, "UDevMonitor")
+
 UDevMonitor::UDevMonitor(QObject *parent) :
     QObject(parent)
 {

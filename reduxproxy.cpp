@@ -22,6 +22,8 @@
 #include <QJsonDocument>
 #include "reduxproxy.h"
 
+Q_LOGGING_CATEGORY(ReduxProxyLog, "ReduxProxy")
+
 ReduxProxy::ReduxProxy(const QUrl &uri, const QStringList &filter, QObject *parent) :
     QObject(parent), socket()
 {
@@ -32,11 +34,11 @@ ReduxProxy::ReduxProxy(const QUrl &uri, const QStringList &filter, QObject *pare
 
         sendJson(msg);
 
-        qInfo() << "Redux proxy now connected to" << socket.requestUrl();
+        qInfo(ReduxProxyLog) << "Redux proxy now connected to" << socket.requestUrl();
     });
 
     QObject::connect(&socket, &QWebSocket::disconnected, [this, uri]() {
-        qInfo() << "Redux proxy disconnected, trying to reconnect ...";
+        qWarning(ReduxProxyLog) << "Redux proxy disconnected, trying to reconnect ...";
 
         QTimer::singleShot(1000, [this, uri]() {
             socket.open(uri);

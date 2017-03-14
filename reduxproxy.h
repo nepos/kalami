@@ -23,6 +23,9 @@
 #include <QObject>
 #include <QJsonObject>
 #include <QWebSocket>
+#include <QtCore/QLoggingCategory>
+
+Q_DECLARE_LOGGING_CATEGORY(ReduxProxyLog)
 
 class ReduxProxy : public QObject
 {

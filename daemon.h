@@ -24,6 +24,7 @@
 #include <QWebSocket>
 #include <QNetworkConfigurationManager>
 #include <QtDBus/QDBusInterface>
+#include <QtCore/QLoggingCategory>
 
 #include "alsamixer.h"
 #include "connman.h"
@@ -32,6 +33,8 @@
 #include "reduxproxy.h"
 #include "udevmonitor.h"
 #include "updater.h"
+
+Q_DECLARE_LOGGING_CATEGORY(DaemonLog)
 
 class Daemon : public QObject
 {

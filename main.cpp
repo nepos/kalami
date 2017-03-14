@@ -20,16 +20,16 @@
 #include <QCoreApplication>
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QCommandLineOption>
-#include <QDBusMetaType>
 
 #include "daemon.h"
-#include "types.h"
+#include "machine.h"
+#include "updater.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-
     QCommandLineParser parser;
+
     parser.setApplicationDescription("Hardware abstraction layer for Nepos embedded devices");
     parser.addHelpOption();
 
@@ -39,12 +39,6 @@ int main(int argc, char *argv[])
                                     QStringLiteral("server"), QStringLiteral("ws://localhost:3000/redux"));
     parser.addOption(serverOption);
     parser.process(app);
-
-    qDBusRegisterMetaType<QVariantMap>();
-    qDBusRegisterMetaType<StringByteArrayMap>();
-    qDBusRegisterMetaType<UnsignedIntList>();
-
-    qRegisterMetaType<QVariantMap>();
 
     Daemon d(QUrl(parser.value(serverOption)));
 
