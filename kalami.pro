@@ -3,9 +3,11 @@ QT -= gui
 
 CONFIG += c++11
 
-TARGET = hal-qt
+TARGET = kalami
 CONFIG += console
 CONFIG -= app_bundle
+
+DEFINES += QT_NO_DEBUG_OUTPUT
 
 TEMPLATE = app
 
@@ -36,6 +38,3 @@ HEADERS += \
 LIBS += -ludev
 LIBS += -lqconnman
 LIBS += -lasound
-
-DISTFILES += \
-    io.nepos.connman.Agent

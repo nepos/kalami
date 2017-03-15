@@ -71,5 +71,5 @@ moc_*
 # --------
 *.dll
 *.exe
-hal-qt
+kalami
 
