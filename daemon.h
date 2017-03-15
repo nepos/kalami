@@ -22,7 +22,6 @@
 
 #include <QObject>
 #include <QWebSocket>
-#include <QNetworkConfigurationManager>
 #include <QtDBus/QDBusInterface>
 #include <QtCore/QLoggingCategory>
 

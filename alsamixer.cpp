@@ -38,7 +38,7 @@ ALSAMixer::ALSAMixer(const QString &deviceName, QObject *parent) :
     snd_mixer_selem_register(d->handle, NULL, NULL);
     snd_mixer_load(d->handle);
 
-    qDebug(ALSAMixerLog) << "ALSA mixer interface opened for" << deviceName;
+    qInfo(ALSAMixerLog) << "ALSA mixer interface opened for" << deviceName;
 
     snd_mixer_selem_id_t *sid;
     snd_mixer_selem_id_alloca(&sid);

@@ -52,7 +52,7 @@ void Connman::connectToKnownWifi()
             if (service->name() == knownWifi["SSID"].toString() &&
                 service->state() == Service::IdleState) {
                 service->connect();
-                qDebug(ConnmanLog) << "Connecting to known wifi" << service->name();
+                qInfo(ConnmanLog) << "Connecting to known wifi" << service->name();
                 return;
             }
         }
@@ -177,17 +177,17 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
     d->availableWifis = QJsonArray();
 
     QObject::connect(d->manager, &Manager::stateChanged, [this, d]() {
-        qDebug(ConnmanLog) << "connman: stateChanged" << d->manager->state();
+        qInfo(ConnmanLog) << "connman: stateChanged" << d->manager->state();
         if (d->manager->state() == Manager::Online)
             emit goneOnline();
     });
 
     QObject::connect(d->manager, &Manager::offlineModeChanged, [this, d]() {
-        qDebug(ConnmanLog) << "connman: offlineModeChanged" << d->manager->offlineMode();
+        qInfo(ConnmanLog) << "connman: offlineModeChanged" << d->manager->offlineMode();
     });
 
     QObject::connect(d->manager, &Manager::connectedServiceChanged, [this]() {
-        qDebug(ConnmanLog) << "connman: connectedServiceChanged";
+        qInfo(ConnmanLog) << "connman: connectedServiceChanged";
         sendConnectedService();
     });
 
@@ -205,7 +205,7 @@ void Connman::start()
     d->manager->setOfflineMode(false);
 
     foreach (Technology *technology, d->manager->technologies()) {
-        qDebug(ConnmanLog) << "tech name" << technology->name() << "type" << technology->type();
+        qInfo(ConnmanLog) << "tech name" << technology->name() << "type" << technology->type();
         if (technology->name() == "WiFi") {
             technology->setPowered(true);
             technology->scan();

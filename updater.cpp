@@ -152,7 +152,7 @@ bool UpdateThread::downloadFile(const QUrl &url, const QString &path)
 
     timer.setSingleShot(true);
 
-    qDebug(UpdaterLog) << "downloading" << url << "to" << path;
+    qInfo(UpdaterLog) << "downloading" << url << "to" << path;
 
     QObject::connect(reply, &QNetworkReply::finished, this, [this, path, &loop, &ret]() {
         QNetworkReply *data = (QNetworkReply *) sender();

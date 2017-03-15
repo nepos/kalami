@@ -58,26 +58,25 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     // Updater logic
     updater = new Updater(machine, "latest");
     QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
-       qDebug(DaemonLog) << "New update available, version" << version;
+       qInfo(DaemonLog) << "New update available, version" << version;
        updater->install();
     });
 
     QObject::connect(updater, &Updater::alreadyUpToDate, this, [this]() {
-       qDebug(DaemonLog) << "Already up-to-date!";
+       qInfo(DaemonLog) << "Already up-to-date!";
     });
 
     QObject::connect(updater, &Updater::checkFailed, this, [this]() {
-       qDebug(DaemonLog) << "Update check failed!";
+       qInfo(DaemonLog) << "Update check failed!";
     });
 
     QObject::connect(updater, &Updater::updateSucceeded, this, [this]() {
-       qDebug(DaemonLog) << "Update succeeded!";
+       qInfo(DaemonLog) << "Update succeeded!";
     });
 
     QObject::connect(updater, &Updater::updateFailed, this, [this]() {
-       qDebug(DaemonLog) << "Update failed!";
+       qInfo(DaemonLog) << "Update failed!";
     });
-
 
     // Connman connection
     connman = new Connman();
@@ -109,11 +108,11 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     udev = new UDevMonitor();
 
     QObject::connect(udev, &UDevMonitor::deviceAdded, this, [this](const UDevDevice &d) {
-        qDebug(DaemonLog) << "Linux device added:" << d.getDevPath() << "sysname" << d.getSysName();
+        qInfo(DaemonLog) << "Linux device added:" << d.getDevPath() << "sysname" << d.getSysName();
     });
 
     QObject::connect(udev, &UDevMonitor::deviceRemoved, this, [this](const UDevDevice &d) {
-        qDebug(DaemonLog) << "Linux device removed:" << d.getDevPath() << "sysname" << d.getSysName();
+        qInfo(DaemonLog) << "Linux device removed:" << d.getDevPath() << "sysname" << d.getSysName();
     });
 
     // LEDs
@@ -121,14 +120,14 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     // ALSA
     mixer = new ALSAMixer("hw:0");
-    qDebug(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
+    qInfo(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
 
     udev->addMatchSubsystem("input");
 }
 
 void Daemon::reduxStateUpdated(const QJsonObject &state)
 {
-    //qDebug() << "STATE:" << state;
+    //qInfo() << "STATE:" << state;
 
     if (state.contains("Network")) {
         QJsonObject network = state["Network"].toObject();
