@@ -107,6 +107,8 @@ void Connman::iterateServices()
             { "state",    state },
         };
 
+        //qInfo(ConnmanLog) << "Wifi" << service->name() << "Strength" << service->strength() << "State" << state;
+
         d->availableWifis.append(wifi);
     }
 
@@ -214,6 +216,8 @@ void Connman::start()
 
     iterateServices();
     sendConnectedService();
+
+    qInfo() << "Manager state" << d->manager->state();
 
     if (d->manager->state() == Manager::Online)
         emit goneOnline();

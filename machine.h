@@ -26,7 +26,6 @@ public:
     };
 
     enum Model getModel()                   const { return model;          }
-    enum BootConfig getBootConfig()         const { return bootConfig;     }
     unsigned long getOsVersion()            const { return osVersion;      }
     const QString &getModelName()           const { return modelName;      }
     const QString &getArchitecture()        const { return architecture;   }
@@ -42,11 +41,11 @@ public:
     void powerOff();
 
     bool setAltBootConfig();
-    void verifyBootConfig();
+    bool verifyBootConfig();
 
 private:
     enum Model model;
-    enum BootConfig bootConfig;
+    enum BootConfig currentBootConfig;
     unsigned int osVersion;
     QString modelName;
     QString architecture;

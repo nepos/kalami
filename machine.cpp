@@ -7,6 +7,7 @@
 #include <sys/utsname.h>
 
 #include "machine.h"
+#include "gptparser.h"
 
 Q_LOGGING_CATEGORY(MachineLog, "Machine")
 
@@ -16,9 +17,8 @@ Machine::Machine(QObject *parent) : QObject(parent)
     int ret;
 
     ret = uname(&uts);
-    if (ret < 0) {
+    if (ret < 0)
         qInfo() << "Unable to get uname():" << strerror(-errno);
-    }
 
     architecture = uts.machine;
     kernelVersion = uts.release;
@@ -96,24 +96,18 @@ Machine::Machine(QObject *parent) : QObject(parent)
 
     bootDevPrefix = currentRootfsDevice.mid(0, strlen("/dev/mmcblk0"));
 
+    //GPTParser parser(bootDevPrefix);
+
     if (currentRootfsDevice.endsWith("p12")) {
         altRootfsDevice = bootDevPrefix + "p13";
         currentBootDevice = bootDevPrefix + "p10";
         altBootDevice = bootDevPrefix + "p11";
+        currentBootConfig = Machine::BOOT_A;
     } else {
         altRootfsDevice = bootDevPrefix + "p12";
         currentBootDevice = bootDevPrefix + "p11";
         altBootDevice = bootDevPrefix + "p10";
-    }
-
-    QFile bootConfigFile(bootDevPrefix + "p7");
-    if (bootConfigFile.open(QIODevice::ReadOnly)) {
-        char b;
-
-        bootConfigFile.read(&b, sizeof(b));
-        bootConfigFile.close();
-
-        bootConfig = b == 'A' ? Machine::BOOT_A : Machine::BOOT_B;
+        currentBootConfig = Machine::BOOT_B;
     }
 }
 
@@ -123,7 +117,7 @@ bool Machine::setAltBootConfig()
     if (!bootConfigFile.open(QIODevice::WriteOnly))
         return false;
 
-    char b = bootConfig == Machine::BOOT_A ? 'b' : 'a';
+    char b = currentBootConfig == Machine::BOOT_A ? 'b' : 'a';
 
     bootConfigFile.write(&b, sizeof(b));
     bootConfigFile.close();
@@ -131,8 +125,27 @@ bool Machine::setAltBootConfig()
     return true;
 }
 
-void Machine::verifyBootConfig()
+bool Machine::verifyBootConfig()
 {
+    QFile bootConfigFile(bootDevPrefix + "p7");
+    if (!bootConfigFile.open(QIODevice::ReadWrite))
+        return false;
+
+    char b;
+    bootConfigFile.read(&b, sizeof(b));
+    bootConfigFile.reset();
+
+    if (b == 'a') {
+        b = 'A';
+        bootConfigFile.write(&b, sizeof(b));
+    } else if (b == 'b') {
+        b = 'B';
+        bootConfigFile.write(&b, sizeof(b));
+    }
+
+    bootConfigFile.close();
+
+    return true;
 }
 
 void Machine::restart()

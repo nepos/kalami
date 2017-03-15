@@ -21,7 +21,8 @@ SOURCES += main.cpp \
     linuxled.cpp \
     updater.cpp \
     alsamixer.cpp \
-    machine.cpp
+    machine.cpp \
+    gptparser.cpp
 
 HEADERS += \
     daemon.h \
@@ -33,7 +34,8 @@ HEADERS += \
     linuxled.h \
     updater.h \
     alsamixer.h \
-    machine.h
+    machine.h \
+    gptparser.h
 
 LIBS += -ludev
 LIBS += -lqconnman
