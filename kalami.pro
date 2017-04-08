@@ -22,7 +22,9 @@ SOURCES += main.cpp \
     updater.cpp \
     alsamixer.cpp \
     machine.cpp \
-    gptparser.cpp
+    gptparser.cpp \
+    i2cclient.cpp \
+    fring.cpp
 
 HEADERS += \
     daemon.h \
@@ -35,7 +37,9 @@ HEADERS += \
     updater.h \
     alsamixer.h \
     machine.h \
-    gptparser.h
+    gptparser.h \
+    i2cclient.h \
+    fring.h
 
 LIBS += -ludev
 LIBS += -lqconnman
