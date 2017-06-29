@@ -1,4 +1,4 @@
-QT += core websockets dbus network
+QT += core websockets dbus network nfc
 QT -= gui
 
 CONFIG += c++11
@@ -24,7 +24,8 @@ SOURCES += main.cpp \
     machine.cpp \
     gptparser.cpp \
     i2cclient.cpp \
-    fring.cpp
+    fring.cpp \
+    nfc.cpp
 
 HEADERS += \
     daemon.h \
@@ -39,7 +40,8 @@ HEADERS += \
     machine.h \
     gptparser.h \
     i2cclient.h \
-    fring.h
+    fring.h \
+    nfc.h
 
 LIBS += -ludev
 LIBS += -lqconnman

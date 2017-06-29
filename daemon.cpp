@@ -34,7 +34,8 @@
 Q_LOGGING_CATEGORY(DaemonLog, "Daemon")
 
 Daemon::Daemon(QUrl uri, QObject *parent) :
-    QObject(parent)
+    QObject(parent),
+    nfc(new Nfc(this))
 {
     // Machine
     machine = new Machine();

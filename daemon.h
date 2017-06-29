@@ -32,6 +32,7 @@
 #include "reduxproxy.h"
 #include "udevmonitor.h"
 #include "updater.h"
+#include "nfc.h"
 
 Q_DECLARE_LOGGING_CATEGORY(DaemonLog)
 
@@ -58,6 +59,7 @@ private:
     ReduxProxy *redux;
     UDevMonitor *udev;
     Updater *updater;
+    Nfc *nfc;
 };
 
 #endif // DAEMON_H
