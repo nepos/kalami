@@ -30,7 +30,7 @@ Nfc::Nfc(QObject *parent) :
     manager(new QNearFieldManager(this))
 {
     if (!manager->isAvailable()) {
-        qWarning() << "NFC not available";
+        qWarning(NfcLog) << "NFC not available";
         return;
     }
 
@@ -45,7 +45,7 @@ Nfc::Nfc(QObject *parent) :
                                                      SLOT(handleMessage(QNdefMessage, QNearFieldTarget*)));
 
     if (result < 0)
-        qWarning() << "Platform does not support NDEF message handler registration";
+        qWarning(NfcLog) << "Platform does not support NDEF message handler registration";
 
     manager->startTargetDetection();
     connect(manager, SIGNAL(targetDetected(QNearFieldTarget*)),
@@ -60,7 +60,7 @@ void Nfc::targetDetected(QNearFieldTarget *target)
     if (!target)
         return;
 
-    qInfo() << "Found Tag: " << target->uid();
+    qInfo(NfcLog) << "Found Tag: " << target->uid();
 
     connect(target, SIGNAL(ndefMessageRead(QNdefMessage)), this, SLOT(handlePolledNdefMessage(QNdefMessage)));
     target->readNdefMessages();
@@ -69,7 +69,7 @@ void Nfc::targetDetected(QNearFieldTarget *target)
 void Nfc::targetLost(QNearFieldTarget *target)
 {
     if (target) {
-        qInfo() << "Lost Tag: " << target->uid();
+        qInfo(NfcLog) << "Lost Tag: " << target->uid();
 
         target->deleteLater();
     }
@@ -77,5 +77,5 @@ void Nfc::targetLost(QNearFieldTarget *target)
 
 void Nfc::handlePolledNdefMessage(QNdefMessage message)
 {
-    qInfo() << "Message Received: " << message.toByteArray();
+    qInfo(NfcLog) << "Message Received: " << message.toByteArray();
 }
