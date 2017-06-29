@@ -52,13 +52,13 @@ private slots:
 
 private:
     ALSAMixer *mixer;
+    Updater *updater;
     Connman *connman;
     LinuxLED *homeButtonLED;
     Machine *machine;
     QDBusInterface *systemdConnection;
     ReduxProxy *redux;
     UDevMonitor *udev;
-    Updater *updater;
     Nfc *nfc;
 };
 

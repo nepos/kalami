@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     parser.addOption(serverOption);
     parser.process(app);
 
-    Daemon d(QUrl(parser.value(serverOption)));
+    Daemon d(QUrl(parser.value(serverOption)), &app);
 
     return app.exec();
 }

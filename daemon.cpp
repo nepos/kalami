@@ -35,52 +35,47 @@ Q_LOGGING_CATEGORY(DaemonLog, "Daemon")
 
 Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject(parent),
+    mixer(new ALSAMixer("hw:0", this)),
+    updater(new Updater(machine, "latest", this)),
+    connman(new Connman(this)),
+    homeButtonLED(new LinuxLED("apq8016-sbc:green:user4", this)),
+    machine(new Machine(this)),
+    systemdConnection(new QDBusInterface("org.freedesktop.systemd1",
+                                         "/org/freedesktop/systemd1",
+                                         "org.freedesktop.systemd1.Manager",
+                                         QDBusConnection::systemBus(), this)),
+    redux(new ReduxProxy(uri, QStringList(), this)),
+    udev(new UDevMonitor(this)),
     nfc(new Nfc(this))
 {
-    // Machine
-    machine = new Machine();
+    // ALSA
+    qInfo(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
 
-    // Redux/websocket connection
-    redux = new ReduxProxy(uri);
-    QObject::connect(redux, &ReduxProxy::stateUpdated, this, &Daemon::reduxStateUpdated);
-
-    // D-Bus connection
-    QDBusConnection bus = QDBusConnection::systemBus();
-    if (bus.isConnected())
-        qInfo(DaemonLog) << "Connected to D-Bus as" << bus.baseService();
-    else
-        qWarning(DaemonLog) << "D-Bus connection failed:" << bus.lastError();
-
-    systemdConnection = new QDBusInterface("org.freedesktop.systemd1",
-                                           "/org/freedesktop/systemd1",
-                                           "org.freedesktop.systemd1.Manager",
-                                           bus, this);
 
     // Updater logic
-    updater = new Updater(machine, "latest");
     QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
-       qInfo(DaemonLog) << "New update available, version" << version;
-       updater->install();
+        qInfo(DaemonLog) << "New update available, version" << version;
+        updater->install();
     });
 
     QObject::connect(updater, &Updater::alreadyUpToDate, this, [this]() {
-       qInfo(DaemonLog) << "Already up-to-date!";
+        qInfo(DaemonLog) << "Already up-to-date!";
     });
 
     QObject::connect(updater, &Updater::checkFailed, this, [this]() {
-       qInfo(DaemonLog) << "Update check failed!";
+        qInfo(DaemonLog) << "Update check failed!";
     });
 
     QObject::connect(updater, &Updater::updateSucceeded, this, [this]() {
-       qInfo(DaemonLog) << "Update succeeded!";
+        qInfo(DaemonLog) << "Update succeeded!";
     });
 
     QObject::connect(updater, &Updater::updateFailed, this, [this]() {
-       qInfo(DaemonLog) << "Update failed!";
+        qInfo(DaemonLog) << "Update failed!";
     });
 
+
     // Connman connection
-    connman = new Connman();
     QObject::connect(connman, &Connman::availableWifisUpdated, this, [this](const QJsonArray &list) {
         QJsonObject action {
             { "type",           "NETWORK:UPDATE_AVAILABLE_WIFIS" },
@@ -106,8 +101,20 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     connman->start();
 
+    // Redux/websocket connection
+    QObject::connect(redux, &ReduxProxy::stateUpdated, this, &Daemon::reduxStateUpdated);
+
+
+    // D-Bus connection
+    QDBusConnection bus = QDBusConnection::systemBus();
+    if (bus.isConnected())
+        qInfo(DaemonLog) << "Connected to D-Bus as" << bus.baseService();
+    else
+        qWarning(DaemonLog) << "D-Bus connection failed:" << bus.lastError();
+
+
     // udev monitor
-    udev = new UDevMonitor();
+    udev->addMatchSubsystem("input");
 
     QObject::connect(udev, &UDevMonitor::deviceAdded, this, [this](const UDevDevice &d) {
         qInfo(DaemonLog) << "Linux device added:" << d.getDevPath() << "sysname" << d.getSysName();
@@ -117,14 +124,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qInfo(DaemonLog) << "Linux device removed:" << d.getDevPath() << "sysname" << d.getSysName();
     });
 
-    // LEDs
-    homeButtonLED = new LinuxLED("apq8016-sbc:green:user4");
-
-    // ALSA
-    mixer = new ALSAMixer("hw:0");
-    qInfo(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
-
-    udev->addMatchSubsystem("input");
 }
 
 void Daemon::reduxStateUpdated(const QJsonObject &state)
@@ -152,12 +151,4 @@ void Daemon::reduxStateUpdated(const QJsonObject &state)
 
 Daemon::~Daemon()
 {
-    delete mixer;
-    delete systemdConnection;
-    delete homeButtonLED;
-    delete connman;
-    delete udev;
-    delete updater;
-    delete redux;
-    delete machine;
 }
