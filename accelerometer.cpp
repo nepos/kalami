@@ -42,10 +42,15 @@ void Accelerometer::update(int type, int code, int value)
 void Accelerometer::evaluate()
 {
     //TODO: Figure out, if we changed, and if so, emit orientationChanged()
-    qInfo(AccelerometerLog) << "("
-                           << currentAxes[0] << "|"
-                           << currentAxes[1] << "|"
-                           << currentAxes[2] << ")";
+    static int c = 0;
+
+    if (c++ > 300) {
+        c = 0;
+        qInfo(AccelerometerLog) << "("
+                                << currentAxes[0] << "|"
+                                << currentAxes[1] << "|"
+                                << currentAxes[2] << ")";
+    }
 
     oldAxes[0] = currentAxes[0];
     oldAxes[1] = currentAxes[1];
