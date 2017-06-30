@@ -31,9 +31,12 @@ class InputDevice : public QObject
     Q_OBJECT
 public:
     explicit InputDevice(const QString &path, QObject *parent = 0);
-    ~InputDevice();
+    virtual ~InputDevice();
 
     void emitCurrent();
+
+protected:
+    virtual void update(int type, int code, int value);
 
 signals:
     void inputEvent(int type, int code, int value);

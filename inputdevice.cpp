@@ -18,6 +18,8 @@
 ***/
 
 #include <QDebug>
+#include <QObject>
+#include <QSocketNotifier>
 
 #include <linux/input.h>
 #include "inputdevice.h"
@@ -39,16 +41,24 @@ InputDevice::InputDevice(const QString &path, QObject *parent) :
         return;
     }
 
-    QObject::connect(&device, &QIODevice::readyRead, [this]() {
+    auto sn = new QSocketNotifier(device.handle(), QSocketNotifier::Read, this);
+    connect(sn, SIGNAL(activated(int)), this, SLOT(doRead(int)));
+
+    QObject::connect(sn, &QSocketNotifier::activated, [this](){
         struct input_event ev;
         qint64 r;
 
         r = device.read((char *) &ev, (qint64) sizeof(ev));
         if (r == sizeof(ev))
-            emit inputEvent(ev.type, ev.code, ev.value);
+            update(ev.type, ev.code, ev.value);
         else
             qWarning(InputDeviceLog) << "Short read from device " << device.fileName();
     });
+}
+
+void InputDevice::update(int type, int code, int value)
+{
+    emit inputEvent(type, code, value);
 }
 
 void InputDevice::emitCurrent()

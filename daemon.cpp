@@ -46,11 +46,11 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
                                          QDBusConnection::systemBus(), this)),
     redux(new ReduxProxy(uri, QStringList(), this)),
     udev(new UDevMonitor(this)),
-    nfc(new Nfc(this))
+    nfc(new Nfc(this)),
+    accelerometer(new Accelerometer("/dev/input/by-path/platform-lis3lv02d-event", this))
 {
     // ALSA
     qInfo(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
-
 
     // Updater logic
     QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
