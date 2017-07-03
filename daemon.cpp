@@ -124,6 +124,11 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qInfo(DaemonLog) << "Linux device removed:" << d.getDevPath() << "sysname" << d.getSysName();
     });
 
+    // accelerometer
+    QObject::connect(accelerometer, &Accelerometer::orientationChaned, [this](Accelerometer::Orientation o){
+        qInfo(DaemonLog) << "Orientation changed: " <<
+                            (o == Accelerometer::Standing ? "Standing" : "Laying");
+    });
 }
 
 void Daemon::reduxStateUpdated(const QJsonObject &state)

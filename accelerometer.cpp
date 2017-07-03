@@ -24,8 +24,12 @@
 Q_LOGGING_CATEGORY(AccelerometerLog, "Accelerometer")
 
 Accelerometer::Accelerometer(const QString &path, QObject *parent) :
-    InputDevice(path, parent)
-{}
+    InputDevice(path, parent),
+    currentOrientation(Orientation::Undefined),
+    currentAxes{0}
+{
+    emit orientationChaned(currentOrientation);
+}
 
 Accelerometer::~Accelerometer()
 {}
@@ -41,18 +45,29 @@ void Accelerometer::update(int type, int code, int value)
 
 void Accelerometer::evaluate()
 {
-    //TODO: Figure out, if we changed, and if so, emit orientationChanged()
-    static int c = 0;
+    // Sensor reports int 1000th of g
+    const static int gRef = 981;
+    // Accept 5% deviation
+    const static int upperLimit = 1.05 * gRef;
+    const static int lowerLimit = 0.95 * gRef;
 
-    if (c++ > 300) {
-        c = 0;
-        qInfo(AccelerometerLog) << "("
-                                << currentAxes[0] << "|"
-                                << currentAxes[1] << "|"
-                                << currentAxes[2] << ")";
+    //TODO: Put correct axes here.
+    //      This is all pretty basic. Do some proper testing with the
+    //      real device!
+    qreal *ptrLayingAxis = &currentAxes[0];
+    qreal *ptrStandingAxis = &currentAxes[1];
+
+    // Is layingAxis at ~ 1g and currentOrientation != laying
+    if (*ptrLayingAxis <= upperLimit && *ptrLayingAxis >= lowerLimit &&
+            currentOrientation != Orientation::Laying) {
+        currentOrientation = Orientation::Laying;
+        emit orientationChaned(currentOrientation);
     }
 
-    oldAxes[0] = currentAxes[0];
-    oldAxes[1] = currentAxes[1];
-    oldAxes[2] = currentAxes[2];
+    // Is standingAxis at ~ 1g and currentOrientation != standing
+    if (*ptrStandingAxis <= upperLimit && *ptrStandingAxis >= lowerLimit &&
+            currentOrientation != Orientation::Standing) {
+        currentOrientation = Orientation::Standing;
+        emit orientationChaned(currentOrientation);
+    }
 }

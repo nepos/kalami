@@ -32,7 +32,6 @@ private:
 
     Orientation currentOrientation;
     qreal currentAxes[3];
-    qreal oldAxes[3];
 
 };
 
