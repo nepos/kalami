@@ -42,7 +42,6 @@ InputDevice::InputDevice(const QString &path, QObject *parent) :
     }
 
     auto sn = new QSocketNotifier(device.handle(), QSocketNotifier::Read, this);
-    connect(sn, SIGNAL(activated(int)), this, SLOT(doRead(int)));
 
     QObject::connect(sn, &QSocketNotifier::activated, [this](){
         struct input_event ev;

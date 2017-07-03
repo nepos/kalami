@@ -125,9 +125,15 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     });
 
     // accelerometer
-    QObject::connect(accelerometer, &Accelerometer::orientationChaned, [this](Accelerometer::Orientation o){
-        qInfo(DaemonLog) << "Orientation changed: " <<
-                            (o == Accelerometer::Standing ? "Standing" : "Laying");
+    QObject::connect(accelerometer, &Accelerometer::orientationChaned, this, [this](Accelerometer::Orientation o) {
+
+        QString strOrientation;
+
+        if (o == Accelerometer::Standing) strOrientation = "Standing";
+        if (o == Accelerometer::Laying) strOrientation = "Laying";
+        if (o == Accelerometer::Undefined) strOrientation = "Undefined";
+
+        qInfo(DaemonLog) << "Orientation changed: " << strOrientation;
     });
 }
 

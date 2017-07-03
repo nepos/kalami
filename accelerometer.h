@@ -15,7 +15,7 @@ public:
     enum Orientation {
         Standing		= 0,
         Laying  		= 1,
-        Undefined		= 5	//Sentinell
+        Undefined		= 2	//Sentinell
     };
 
     explicit Accelerometer(const QString &path, QObject *parent = 0);
@@ -32,6 +32,7 @@ private:
 
     Orientation currentOrientation;
     qreal currentAxes[3];
+    qreal oldAxes[3];
 
 };
 
