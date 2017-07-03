@@ -34,6 +34,7 @@ Nfc::Nfc(QObject *parent) :
         return;
     }
 
+    /*
     QNdefFilter filter;
 
     //filter.setOrderMatch(false);
@@ -47,6 +48,7 @@ Nfc::Nfc(QObject *parent) :
 
     if (result < 0)
         qWarning(NfcLog) << "Platform does not support NDEF message handler registration";
+    */
 
     if (!manager->startTargetDetection()) {
         qWarning(NfcLog) << "Can not start target Detection";
@@ -77,6 +79,8 @@ void Nfc::targetLost(QNearFieldTarget *target)
 
         target->deleteLater();
     }
+
+    manager->startTargetDetection();
 }
 
 void Nfc::handlePolledNdefMessage(QNdefMessage message)
