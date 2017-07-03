@@ -66,9 +66,9 @@ void Accelerometer::evaluate()
     //      This is all pretty basic. Do some proper testing with the
     //      real device!
     qreal *a1 = &currentAxes[0];
-    qreal *a2= &currentAxes[1];
+    qreal *a2= &currentAxes[2];
     qreal *a1Old = &oldAxes[0];
-    qreal *a2Old = &oldAxes[1];
+    qreal *a2Old = &oldAxes[2];
 
     // Add something like a hysteresis
     if (fabs(*a1 - *a1Old) < 98.1 ||
