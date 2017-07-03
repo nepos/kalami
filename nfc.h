@@ -11,6 +11,7 @@ class QUrl;
 class QPixmap;
 class QNearFieldManager;
 class QNearFieldTarget;
+class QNearFieldTarget;
 
 class Nfc : public QObject
 {
@@ -26,6 +27,7 @@ public slots:
     void targetDetected(QNearFieldTarget *target);
     void targetLost(QNearFieldTarget *target);
     void handlePolledNdefMessage(QNdefMessage message);
+    void handleMessage(QNdefMessage message, QNearFieldTarget *target);
 private:
     QNearFieldManager *manager;
 };

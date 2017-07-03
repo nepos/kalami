@@ -35,6 +35,7 @@ Nfc::Nfc(QObject *parent) :
     }
 
     QNdefFilter filter;
+
     //filter.setOrderMatch(false);
     //filter.appendRecord<QNdefNfcTextRecord>(1, UINT_MAX);
     //filter.appendRecord<QNdefNfcUriRecord>();
@@ -47,7 +48,10 @@ Nfc::Nfc(QObject *parent) :
     if (result < 0)
         qWarning(NfcLog) << "Platform does not support NDEF message handler registration";
 
-    manager->startTargetDetection();
+    if (!manager->startTargetDetection()) {
+        qWarning(NfcLog) << "Can not start target Detection";
+    }
+
     connect(manager, SIGNAL(targetDetected(QNearFieldTarget*)),
             this, SLOT(targetDetected(QNearFieldTarget*)));
     connect(manager, SIGNAL(targetLost(QNearFieldTarget*)),
@@ -78,4 +82,12 @@ void Nfc::targetLost(QNearFieldTarget *target)
 void Nfc::handlePolledNdefMessage(QNdefMessage message)
 {
     qInfo(NfcLog) << "Message Received: " << message.toByteArray();
+}
+
+void Nfc::handleMessage(QNdefMessage message, QNearFieldTarget *target)
+{
+    qInfo(NfcLog) << "Message Received: " << message.toByteArray();
+
+    if (target)
+        qInfo(NfcLog) << "handle Message Tag: " << target->uid();
 }
