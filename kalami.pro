@@ -26,7 +26,8 @@ SOURCES += main.cpp \
     i2cclient.cpp \
     fring.cpp \
     nfc.cpp \
-    accelerometer.cpp
+    accelerometer.cpp \
+    gpio.cpp
 
 HEADERS += \
     daemon.h \
@@ -43,7 +44,8 @@ HEADERS += \
     i2cclient.h \
     fring.h \
     nfc.h \
-    accelerometer.h
+    accelerometer.h \
+    gpio.h
 
 LIBS += -ludev
 LIBS += -lqconnman

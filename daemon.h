@@ -34,6 +34,7 @@
 #include "updater.h"
 #include "nfc.h"
 #include "accelerometer.h"
+#include "gpio.h"
 
 Q_DECLARE_LOGGING_CATEGORY(DaemonLog)
 
@@ -62,6 +63,7 @@ private:
     UDevMonitor *udev;
     Nfc *nfc;
     Accelerometer *accelerometer;
+    GPIO *gpio;
 
 };
 

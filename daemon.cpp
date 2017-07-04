@@ -47,7 +47,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     redux(new ReduxProxy(uri, QStringList(), this)),
     udev(new UDevMonitor(this)),
     nfc(new Nfc(this)),
-    accelerometer(new Accelerometer("/dev/input/by-path/platform-lis3lv02d-event", this))
+    accelerometer(new Accelerometer("/dev/input/by-path/platform-lis3lv02d-event", this)),
+    gpio(new GPIO(8, this))
 {
     // ALSA
     qInfo(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
@@ -135,6 +136,15 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
         qInfo(DaemonLog) << "Orientation changed: " << strOrientation;
     });
+
+    // gpio
+    gpio->setDirection(GPIO::DirectionIn);
+    gpio->setEdge(GPIO::EdgeRising);
+    QObject::connect(gpio, &GPIO::onDataReady, this, [this](int fd) {
+
+        qInfo(DaemonLog) << "Int on fd:" << fd;
+    });
+
 }
 
 void Daemon::reduxStateUpdated(const QJsonObject &state)
