@@ -9,7 +9,7 @@ const QString GPIO::basePath = "/sys/class/gpio";
 
 GPIO::GPIO(int number, QObject *parent) :
     QObject(parent),
-    gpioPath(GPIO::basePath + "/gpio" + number),
+    gpioPath(GPIO::basePath + "/gpio" + QString::number(number)),
     number(number),
     pathExport(GPIO::basePath + "/export"),
     pathUnexport(GPIO::basePath + "/unexport")
@@ -53,6 +53,8 @@ void GPIO::setDirection(Direction io)
 
     } else {
         f.write("out", 3);
+
+        openValueFile(QFile::WriteOnly);
     }
 }
 
