@@ -2,6 +2,7 @@
 
 #include <QFile>
 #include <QSocketNotifier>
+#include <QFile>
 
 Q_LOGGING_CATEGORY(GPIOLog, "GPIO")
 
@@ -52,8 +53,15 @@ void GPIO::setDirection(Direction io)
         openValueFile(QFile::ReadOnly);
 
         auto sn = new QSocketNotifier(valueFile.handle(), QSocketNotifier::Read, this);
-        connect(sn, SIGNAL(activated(int)), this, SIGNAL(onDataReady(int)));
 
+        QObject::connect(sn, &QSocketNotifier::activated, this, [this](int fd) {
+            QFile f;
+            if (!f.open(fd, QFile::ReadOnly)) {
+                qWarning(GPIOLog) << "Can not open value file for seeking after an interrupt occured";
+            } else {
+                f.seek(0);
+            }
+        });
     } else {
         f.write("out", 3);
         f.flush();
