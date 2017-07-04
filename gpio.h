@@ -31,7 +31,7 @@ public:
     };
 
 signals:
-    void onDataReady(int fd);
+    void onDataReady(Value v);
 
 public slots:
     void set(GPIO::Value v);

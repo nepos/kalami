@@ -137,8 +137,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     // gpio
     gpio->setEdge(GPIO::EdgeRising);
     gpio->setDirection(GPIO::DirectionIn);
-    QObject::connect(gpio, &GPIO::onDataReady, this, [this](int fd) {
-        qInfo(DaemonLog) << "Int on fd:" << fd;
+    QObject::connect(gpio, &GPIO::onDataReady, this, [this](GPIO::Value v) {
+        qInfo(DaemonLog) << "Interrupt on GPIO8: " << (v == GPIO::ValueHi ? "1" : "0");
     });
 
 }
