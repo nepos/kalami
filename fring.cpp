@@ -1,6 +1,12 @@
 #include "fring.h"
+#include "gpio.h"
 
-Fring::Fring(QObject *parent) : QObject(parent), client()
+const int Fring::GPIONr = 8;
+
+Fring::Fring(QObject *parent) :
+    QObject(parent),
+    client(this),
+    interruptGpio(Fring::GPIONr, this)
 {
 }
 
@@ -10,4 +16,12 @@ bool Fring::initialize()
         return false;
 
     return true;
+}
+
+
+void Fring::onInterrupt(int fd)
+{
+
+
+
 }

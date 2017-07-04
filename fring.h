@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "i2cclient.h"
+#include "gpio.h"
 
 class Fring : public QObject
 {
@@ -15,8 +16,15 @@ signals:
 
 public slots:
 
+
+private slots:
+    void onInterrupt(int fd);
+
 private:
+    static const int GPIONr;
+
     I2CClient client;
+    GPIO interruptGpio;
 };
 
 #endif // FRING_H
