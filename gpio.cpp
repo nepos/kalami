@@ -59,6 +59,8 @@ void GPIO::setDirection(Direction io)
                 qWarning(GPIOLog) << "Can not open value file for seeking after an interrupt occured";
             } else {
                 qInfo(GPIOLog) << "Interrupt...";
+                f.readAll();
+
                 f.seek(0);
             }
         });
