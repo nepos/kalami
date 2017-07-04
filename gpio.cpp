@@ -20,6 +20,7 @@ GPIO::GPIO(int number, QObject *parent) :
         return;
     }
     f.write(QString::number(number).toLocal8Bit());
+    f.flush();
 }
 
 GPIO::~GPIO()
@@ -32,6 +33,7 @@ GPIO::~GPIO()
         return;
     }
     f.write(QString::number(number).toLocal8Bit());
+    f.flush();
 }
 
 void GPIO::setDirection(Direction io)
@@ -45,6 +47,7 @@ void GPIO::setDirection(Direction io)
 
     if (direction == GPIO::DirectionIn) {
         f.write("in", 2);
+        f.flush();
 
         openValueFile(QFile::ReadOnly);
 
@@ -53,6 +56,7 @@ void GPIO::setDirection(Direction io)
 
     } else {
         f.write("out", 3);
+        f.flush();
 
         openValueFile(QFile::WriteOnly);
     }
@@ -93,6 +97,7 @@ void GPIO::setEdge(Edge e)
     }
 
     f.write(data.toLocal8Bit());
+    f.flush();
 }
 
 void GPIO::openValueFile(QIODevice::OpenModeFlag f)
