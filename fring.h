@@ -5,6 +5,8 @@
 #include "i2cclient.h"
 #include "gpio.h"
 
+Q_DECLARE_LOGGING_CATEGORY(FringLog)
+
 class Fring : public QObject
 {
     Q_OBJECT
@@ -18,10 +20,11 @@ public slots:
 
 
 private slots:
-    void onInterrupt(int fd);
+    void onInterrupt(GPIO::Value v);
 
 private:
     static const int GPIONr;
+    static const int I2CAddr;
 
     I2CClient client;
     GPIO interruptGpio;
