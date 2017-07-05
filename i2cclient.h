@@ -1,5 +1,4 @@
-#ifndef I2CCLIENT_H
-#define I2CCLIENT_H
+#pragma once
 
 #include <QObject>
 #include <QFile>
@@ -19,5 +18,3 @@ private:
     int address;
     QFile file;
 };
-
-#endif // I2CCLIENT_H

@@ -1,5 +1,4 @@
-#ifndef GPTPARSER_H
-#define GPTPARSER_H
+#pragma once
 
 #include <QObject>
 #include <QFile>
@@ -25,4 +24,3 @@ private:
     uint32_t numEntries;
 };
 
-#endif // GPTPARSER_H

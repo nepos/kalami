@@ -1,5 +1,4 @@
-#ifndef MACHINE_H
-#define MACHINE_H
+#pragma once
 
 #include <QObject>
 #include <QtCore/QLoggingCategory>
@@ -59,5 +58,3 @@ private:
     QString altRootfsDevice;
     QString bootDevPrefix;
 };
-
-#endif // MACHINE_H

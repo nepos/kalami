@@ -1,5 +1,4 @@
-#ifndef NFC_H
-#define NFC_H
+#pragma once
 
 #include <QObject>
 #include <QtCore/QLoggingCategory>
@@ -31,5 +30,3 @@ public slots:
 private:
     QNearFieldManager *manager;
 };
-
-#endif // NFC_H

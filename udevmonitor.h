@@ -17,8 +17,7 @@
   along with this program; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
-#ifndef UDEVCLIENT_H
-#define UDEVCLIENT_H
+#pragma once
 
 #include <QObject>
 #include <QSocketNotifier>
@@ -50,5 +49,3 @@ private:
 
     QList<UDevDevice *> devices;
 };
-
-#endif // UDEVCLIENT_H

@@ -17,8 +17,7 @@
   along with this software; If not, see <http://www.gnu.org/licenses/>.
 ***/
 
-#ifndef DAEMON_H
-#define DAEMON_H
+#pragma once
 
 #include <QObject>
 #include <QWebSocket>
@@ -66,5 +65,3 @@ private:
     GPIO *gpio;
 
 };
-
-#endif // DAEMON_H

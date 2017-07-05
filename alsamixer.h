@@ -1,5 +1,4 @@
-#ifndef ALSAMIXER_H
-#define ALSAMIXER_H
+#pragma once
 
 #include <QtCore/QLoggingCategory>
 #include <QObject>
@@ -24,5 +23,3 @@ private:
     ALSAMixerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(ALSAMixer);
 };
-
-#endif // ALSAMIXER_H

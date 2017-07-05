@@ -1,5 +1,4 @@
-#ifndef UPDATER_H
-#define UPDATER_H
+#pragma once
 
 #include <QUrl>
 #include <QObject>
@@ -75,5 +74,3 @@ private:
     struct AvailableUpdate availableUpdate;
     UpdateThread *thread;
 };
-
-#endif // UPDATER_H

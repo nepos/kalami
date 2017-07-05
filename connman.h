@@ -1,5 +1,4 @@
-#ifndef CONNMAN_H
-#define CONNMAN_H
+#pragma once
 
 #include <QObject>
 #include <QJsonArray>
@@ -34,5 +33,3 @@ private:
     ConnmanPrivate *d_ptr;
     Q_DECLARE_PRIVATE(Connman);
 };
-
-#endif // CONNMAN_H

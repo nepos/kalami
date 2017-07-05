@@ -1,5 +1,4 @@
-#ifndef ACCELEROMETER_H
-#define ACCELEROMETER_H
+#pragma once
 
 #include <QtCore/QLoggingCategory>
 #include <QObject>
@@ -36,4 +35,3 @@ private:
 
 };
 
-#endif // ACCELEROMETER_H

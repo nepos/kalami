@@ -17,8 +17,7 @@
   along with this program; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
-#ifndef REDUXPROXY_H
-#define REDUXPROXY_H
+#pragma once
 
 #include <QObject>
 #include <QJsonObject>
@@ -44,5 +43,3 @@ private:
 
     QWebSocket socket;
 };
-
-#endif // REDUXPROXY_H

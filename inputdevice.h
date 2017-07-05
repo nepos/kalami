@@ -17,8 +17,7 @@
   along with this software; If not, see <http://www.gnu.org/licenses/>.
 ***/
 
-#ifndef INPUTDEVICE_H
-#define INPUTDEVICE_H
+#pragma once
 
 #include <QObject>
 #include <QFile>
@@ -44,5 +43,3 @@ signals:
 private:
     QFile device;
 };
-
-#endif // INPUTDEVICE_H

@@ -17,8 +17,7 @@
   along with this program; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
-#ifndef LED_H
-#define LED_H
+#pragma once
 
 #include <QObject>
 #include <QFile>
@@ -39,5 +38,3 @@ private:
     QFile brightnessFile;
     int maxBrightness;
 };
-
-#endif // LED_H

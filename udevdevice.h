@@ -17,8 +17,7 @@
   along with this program; if not, see <http://www.gnu.org/licenses/>.
 ***/
 
-#ifndef UDEVDEVICE_H
-#define UDEVDEVICE_H
+#pragma once
 
 #include <QObject>
 #include <libudev.h>
@@ -50,5 +49,3 @@ public:
 private:
     struct udev_device *dev;
 };
-
-#endif // UDEVDEVICE_H

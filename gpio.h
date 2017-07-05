@@ -1,5 +1,4 @@
-#ifndef GPIO_H
-#define GPIO_H
+#pragma once
 
 #include <QObject>
 #include <QtCore/QLoggingCategory>
@@ -53,5 +52,3 @@ private:
 
     QFile valueFile;
 };
-
-#endif // GPIO_H

@@ -1,5 +1,4 @@
-#ifndef FRING_H
-#define FRING_H
+#pragma once
 
 #include <QObject>
 #include "i2cclient.h"
@@ -29,5 +28,3 @@ private:
     I2CClient client;
     GPIO interruptGpio;
 };
-
-#endif // FRING_H
