@@ -26,7 +26,6 @@
 
 #include "alsamixer.h"
 #include "connman.h"
-#include "linuxled.h"
 #include "machine.h"
 #include "polyphantconnection.h"
 #include "udevmonitor.h"
@@ -54,7 +53,6 @@ private:
     ALSAMixer *mixer;
     Updater *updater;
     Connman *connman;
-    LinuxLED *homeButtonLED;
     Machine *machine;
     QDBusInterface *systemdConnection;
     PolyphantConnection *polyphant;

@@ -38,7 +38,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     mixer(new ALSAMixer("hw:0", this)),
     updater(new Updater(machine, "latest", this)),
     connman(new Connman(this)),
-    homeButtonLED(new LinuxLED("apq8016-sbc:green:user4", this)),
     machine(new Machine(this)),
     systemdConnection(new QDBusInterface("org.freedesktop.systemd1",
                                          "/org/freedesktop/systemd1",

@@ -17,7 +17,6 @@ SOURCES += main.cpp \
     udevdevice.cpp \
     udevmonitor.cpp \
     connman.cpp \
-    linuxled.cpp \
     updater.cpp \
     alsamixer.cpp \
     machine.cpp \
@@ -35,7 +34,6 @@ HEADERS += \
     udevdevice.h \
     udevmonitor.h \
     connman.h \
-    linuxled.h \
     updater.h \
     alsamixer.h \
     machine.h \
