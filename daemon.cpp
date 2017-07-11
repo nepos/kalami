@@ -47,7 +47,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     redux(new ReduxProxy(uri, QStringList(), this)),
     udev(new UDevMonitor(this)),
     nfc(new Nfc(this)),
-    accelerometer(new Accelerometer("/dev/input/by-path/platform-lis3lv02d-event", this)),
     gpio(new GPIO(8, this))
 {
     // ALSA
@@ -123,15 +122,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     QObject::connect(udev, &UDevMonitor::deviceRemoved, this, [this](const UDevDevice &d) {
         qInfo(DaemonLog) << "Linux device removed:" << d.getDevPath() << "sysname" << d.getSysName();
-    });
-
-    // accelerometer
-    QObject::connect(accelerometer, &Accelerometer::orientationChaned, this, [this](Accelerometer::Orientation o) {
-        QString strOrientation;
-        if (o == Accelerometer::Standing) strOrientation = "Standing";
-        if (o == Accelerometer::Laying) strOrientation = "Laying";
-        if (o == Accelerometer::Undefined) strOrientation = "Undefined";
-        qInfo(DaemonLog) << "Orientation changed: " << strOrientation;
     });
 
     // gpio
