@@ -44,7 +44,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
                                          "/org/freedesktop/systemd1",
                                          "org.freedesktop.systemd1.Manager",
                                          QDBusConnection::systemBus(), this)),
-    redux(new ReduxProxy(uri, QStringList(), this)),
+    polyphant(new PolyphantConnection(uri, this)),
     udev(new UDevMonitor(this)),
     nfc(new Nfc(this)),
     gpio(new GPIO(8, this))
@@ -74,7 +74,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qInfo(DaemonLog) << "Update failed!";
     });
 
-
     // Connman connection
     QObject::connect(connman, &Connman::availableWifisUpdated, this, [this](const QJsonArray &list) {
         QJsonObject action {
@@ -82,7 +81,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             { "availableWifis", list },
         };
 
-        redux->dispatchAction(action);
+        //redux->dispatchAction(action);
     });
 
     QObject::connect(connman, &Connman::connectedWifiChanged, this, [this](const QJsonObject &wifi) {
@@ -91,7 +90,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             { "wifi", wifi },
         };
 
-        redux->dispatchAction(action);
+        //redux->dispatchAction(action);
     });
 
     QObject::connect(connman, &Connman::goneOnline, this, [this]() {
@@ -102,7 +101,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     connman->start();
 
     // Redux/websocket connection
-    QObject::connect(redux, &ReduxProxy::stateUpdated, this, &Daemon::reduxStateUpdated);
+    QObject::connect(polyphant, &PolyphantConnection::messageReceived, this, &Daemon::polyphantMessageReceived);
 
 
     // D-Bus connection
@@ -133,27 +132,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
 }
 
-void Daemon::reduxStateUpdated(const QJsonObject &state)
+void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
 {
-    //qInfo() << "STATE:" << state;
-
-    if (state.contains("Network")) {
-        QJsonObject network = state["Network"].toObject();
-
-        if (network.contains("knownWifis")) {
-            QJsonArray knownWifis = network["knownWifis"].toArray();
-            connman->updateKnownWifis(knownWifis);
-        }
-    }
-
-    if (state.contains("hardware")) {
-        QJsonObject hardware = state["hardware"].toObject();
-
-        if (hardware.contains("homebutton")) {
-            QJsonObject homebutton = hardware["homebutton"].toObject();
-            homeButtonLED->setBrightness(homebutton["value"].toDouble());
-        }
-    }
 }
 
 Daemon::~Daemon()

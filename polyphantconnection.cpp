@@ -20,25 +20,19 @@
 #include <QTimer>
 #include <QJsonArray>
 #include <QJsonDocument>
-#include "reduxproxy.h"
+#include "polyphantconnection.h"
 
-Q_LOGGING_CATEGORY(ReduxProxyLog, "ReduxProxy")
+Q_LOGGING_CATEGORY(PolyphantConnectionLog, "PolyphantConnection")
 
-ReduxProxy::ReduxProxy(const QUrl &uri, const QStringList &filter, QObject *parent) :
+PolyphantConnection::PolyphantConnection(const QUrl &uri, QObject *parent) :
     QObject(parent), socket()
 {
-    QObject::connect(&socket, &QWebSocket::connected, [this, filter]() {
-        QJsonObject msg = {
-            { "subscribe", QJsonArray::fromStringList(filter) },
-        };
-
-        sendJson(msg);
-
-        qInfo(ReduxProxyLog) << "Redux proxy now connected to" << socket.requestUrl();
+    QObject::connect(&socket, &QWebSocket::connected, [this]() {
+        qInfo(PolyphantConnectionLog) << "Now connected to polyphant at" << socket.requestUrl();
     });
 
     QObject::connect(&socket, &QWebSocket::disconnected, [this, uri]() {
-        qWarning(ReduxProxyLog) << "Redux proxy disconnected, trying to reconnect ...";
+        qWarning(PolyphantConnectionLog) << "Polyphant disconnected, trying to reconnect ...";
 
         QTimer::singleShot(1000, [this, uri]() {
             socket.open(uri);
@@ -49,26 +43,18 @@ ReduxProxy::ReduxProxy(const QUrl &uri, const QStringList &filter, QObject *pare
         QJsonDocument doc = QJsonDocument::fromJson(message.toLocal8Bit());
 
         if (doc.isObject()) {
-            QJsonObject json = doc.object();
-            if (json.contains("state"))
-                emit stateUpdated(json["state"].toObject());
+            const PolyphantMessage pmessage(doc.object());
+            emit messageReceived(pmessage);
         }
     });
 
     socket.open(uri);
 }
 
-void ReduxProxy::sendJson(const QJsonObject &msg)
+void PolyphantConnection::sendMessage(const PolyphantMessage &message)
 {
-    QByteArray payload = QJsonDocument(msg).toJson(QJsonDocument::Compact);
+    const QJsonObject obj = message.toJson();
+    QByteArray payload = QJsonDocument(obj).toJson(QJsonDocument::Compact);
     socket.sendBinaryMessage(payload);
 }
 
-void ReduxProxy::dispatchAction(const QJsonObject &action)
-{
-    QJsonObject msg = {
-        { "action", action },
-    };
-
-    sendJson(msg);
-}

@@ -23,23 +23,22 @@
 #include <QJsonObject>
 #include <QWebSocket>
 #include <QtCore/QLoggingCategory>
+#include "polyphantmessage.h"
 
-Q_DECLARE_LOGGING_CATEGORY(ReduxProxyLog)
+Q_DECLARE_LOGGING_CATEGORY(PolyphantConnectionLog)
 
-class ReduxProxy : public QObject
+class PolyphantConnection : public QObject
 {
     Q_OBJECT
 public:
-    explicit ReduxProxy(const QUrl &uri, const QStringList &filter = QStringList(), QObject *parent = 0);
+    explicit PolyphantConnection(const QUrl &uri, QObject *parent = 0);
 
 signals:
-    void stateUpdated(const QJsonObject &state);
+    void messageReceived(const PolyphantMessage &message);
 
 public slots:
-    void dispatchAction(const QJsonObject &action);
+    void sendMessage(const PolyphantMessage &message);
 
 private:
-    void sendJson(const QJsonObject &msg);
-
     QWebSocket socket;
 };

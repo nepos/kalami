@@ -13,7 +13,6 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     daemon.cpp \
-    reduxproxy.cpp \
     inputdevice.cpp \
     udevdevice.cpp \
     udevmonitor.cpp \
@@ -26,11 +25,12 @@ SOURCES += main.cpp \
     i2cclient.cpp \
     fring.cpp \
     nfc.cpp \
-    gpio.cpp
+    gpio.cpp \
+    polyphantmessage.cpp \
+    polyphantconnection.cpp
 
 HEADERS += \
     daemon.h \
-    reduxproxy.h \
     inputdevice.h \
     udevdevice.h \
     udevmonitor.h \
@@ -43,7 +43,9 @@ HEADERS += \
     i2cclient.h \
     fring.h \
     nfc.h \
-    gpio.h
+    gpio.h \
+    polyphantmessage.h \
+    polyphantconnection.h
 
 LIBS += -ludev
 LIBS += -lqconnman

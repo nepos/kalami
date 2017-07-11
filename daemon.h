@@ -28,7 +28,7 @@
 #include "connman.h"
 #include "linuxled.h"
 #include "machine.h"
-#include "reduxproxy.h"
+#include "polyphantconnection.h"
 #include "udevmonitor.h"
 #include "updater.h"
 #include "nfc.h"
@@ -48,7 +48,7 @@ signals:
 public slots:
 
 private slots:
-    void reduxStateUpdated(const QJsonObject &state);
+    void polyphantMessageReceived(const PolyphantMessage &message);
 
 private:
     ALSAMixer *mixer;
@@ -57,7 +57,7 @@ private:
     LinuxLED *homeButtonLED;
     Machine *machine;
     QDBusInterface *systemdConnection;
-    ReduxProxy *redux;
+    PolyphantConnection *polyphant;
     UDevMonitor *udev;
     Nfc *nfc;
     GPIO *gpio;

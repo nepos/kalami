@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     QCommandLineOption serverOption(QStringList() <<
                                     "s" << "server",
                                     "Websocket URI to connect to",
-                                    QStringLiteral("server"), QStringLiteral("ws://localhost:3000/redux"));
+                                    QStringLiteral("server"), QStringLiteral("ws://localhost:3000/ws/kalami"));
     parser.addOption(serverOption);
     parser.process(app);
 
