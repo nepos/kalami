@@ -48,8 +48,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     fring(new Fring()),
     polyphant(new PolyphantConnection(uri, this)),
     udev(new UDevMonitor(this)),
-    nfc(new Nfc(this)),
-    gpio(new GPIO(8, this))
+    nfc(new Nfc(this))
 {
     // ALSA
     qInfo(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
@@ -135,15 +134,13 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qInfo(DaemonLog) << "Linux device removed:" << d.getDevPath() << "sysname" << d.getSysName();
     });
 
-    // gpio
-    gpio->setEdge(GPIO::EdgeRising);
-    gpio->setDirection(GPIO::DirectionIn);
-    QObject::connect(gpio, &GPIO::onDataReady, this, [this](GPIO::Value v) {
-        qInfo(DaemonLog) << "Interrupt on GPIO8: " << (v == GPIO::ValueHi ? "1" : "0");
-    });
-
     // fring
-    QObject::connect(fring, &Fring::homeButtonChanged, this, [this](bool) {
+    QObject::connect(fring, &Fring::homeButtonChanged, this, [this](bool state) {
+        PolyphantMessage msg("homebutton/STATE_CHANGED", QJsonObject {
+                                 { "id", "home" },
+                                 { "state", state },
+                             }, 0);
+        polyphant->sendMessage(msg);
     });
 }
 

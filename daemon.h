@@ -29,7 +29,6 @@
 #include "brightnesscontrol.h"
 #include "connman.h"
 #include "fring.h"
-#include "gpio.h"
 #include "machine.h"
 #include "nfc.h"
 #include "polyphantconnection.h"
@@ -64,5 +63,4 @@ private:
     PolyphantConnection *polyphant;
     UDevMonitor *udev;
     Nfc *nfc;
-    GPIO *gpio;
 };
