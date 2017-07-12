@@ -233,7 +233,8 @@ bool Fring::readDeviceStatus()
         batteryLevel = rdCmd.deviceStatus.batteryLevel;
         batteryChargeCurrent = rdCmd.deviceStatus.batteryChargeCurrent;
         batteryDischargeCurrent = rdCmd.deviceStatus.batteryDischargeCurrent;
-        emit batteryStateChanged(batteryLevel, batteryChargeCurrent, batteryDischargeCurrent);
+
+        emit batteryStateChanged(255.0 / batteryLevel, (float) batteryChargeCurrent, (float) batteryDischargeCurrent);
     }
 
     return true;

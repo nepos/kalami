@@ -142,10 +142,47 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
                              }, 0);
         polyphant->sendMessage(msg);
     });
+
+    QObject::connect(fring, &Fring::batteryStateChanged, this, [this](float level, float chargeCurrent, float dischargeCurrent) {
+        PolyphantMessage msg("battery/STATE_CHANGED", QJsonObject {
+                                 { "level", level },
+                                 { "chargeCurrent", chargeCurrent },
+                                 { "dischargeCurrent", dischargeCurrent },
+                             }, 0);
+        polyphant->sendMessage(msg);
+    });
 }
 
 void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
 {
+    bool ret = true;
+
+    if (message.type() == "display/SET_BRIGHTNESS") {
+        QJsonObject payload = message.payload();
+        displayBrightness->setBrightness(payload["value"].toDouble());
+    }
+
+    if (message.type() == "led/SET_STATE") {
+        QJsonObject payload = message.payload();
+        QJsonObject color = payload["color"].toObject();
+        int id = payload["id"] == "videocall" ? 0 : 1;
+
+        if (payload["mode"] == "off")
+            ret = fring->setLedOff(id);
+
+        if (payload["mode"] == "on")
+            ret = fring->setLedOn(id, color["red"].toDouble(), color["green"].toDouble(), color["blue"].toDouble());
+
+        if (payload["mode"] == "blink")
+            ret = fring->setLedFlashing(id, color["red"].toDouble(), color["green"].toDouble(), color["blue"].toDouble(),
+                                        payload["onPhase"].toDouble(), payload["offPhase"].toDouble());
+
+        if (payload["mode"] == "pulse")
+            ret = fring->setLedPulsating(id, color["red"].toDouble(), color["green"].toDouble(), color["blue"].toDouble(),
+                                         payload["frequency"].toDouble());
+    }
+
+    Q_UNUSED(ret);
 }
 
 Daemon::~Daemon()

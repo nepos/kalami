@@ -18,7 +18,7 @@ public:
 
 signals:
     void homeButtonChanged(bool state);
-    void batteryStateChanged(int level, int chargeCurrent, int dischargeCurrent);
+    void batteryStateChanged(float level, float chargeCurrent, float dischargeCurrent);
 
 public slots:
     bool setLedOff(int id);
