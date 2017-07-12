@@ -26,7 +26,8 @@ SOURCES += main.cpp \
     nfc.cpp \
     gpio.cpp \
     polyphantmessage.cpp \
-    polyphantconnection.cpp
+    polyphantconnection.cpp \
+    ambientlightsensor.cpp
 
 HEADERS += \
     daemon.h \
@@ -43,7 +44,8 @@ HEADERS += \
     nfc.h \
     gpio.h \
     polyphantmessage.h \
-    polyphantconnection.h
+    polyphantconnection.h \
+    ambientlightsensor.h
 
 LIBS += -ludev
 LIBS += -lqconnman

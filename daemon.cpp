@@ -36,6 +36,7 @@ Q_LOGGING_CATEGORY(DaemonLog, "Daemon")
 Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject(parent),
     mixer(new ALSAMixer("hw:0", this)),
+    lightSensor(new AmbientLightSensor("/sys/bus/iio/devices/iio:device0/in_illuminance0_input")),
     updater(new Updater(machine, "latest", this)),
     connman(new Connman(this)),
     machine(new Machine(this)),
@@ -99,9 +100,15 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     connman->start();
 
-    // Redux/websocket connection
+    // Websocket connection
     QObject::connect(polyphant, &PolyphantConnection::messageReceived, this, &Daemon::polyphantMessageReceived);
 
+    // light sensor
+    QObject::connect(lightSensor, &AmbientLightSensor::valueChanged, this, [this](float value) {
+        qInfo() << "Ambient light changed:" << value;
+    });
+
+    lightSensor->start();
 
     // D-Bus connection
     QDBusConnection bus = QDBusConnection::systemBus();

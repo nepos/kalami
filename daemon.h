@@ -25,6 +25,7 @@
 #include <QtCore/QLoggingCategory>
 
 #include "alsamixer.h"
+#include "ambientlightsensor.h"
 #include "connman.h"
 #include "machine.h"
 #include "polyphantconnection.h"
@@ -51,6 +52,7 @@ private slots:
 
 private:
     ALSAMixer *mixer;
+    AmbientLightSensor *lightSensor;
     Updater *updater;
     Connman *connman;
     Machine *machine;
