@@ -37,6 +37,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject(parent),
     mixer(new ALSAMixer("hw:0", this)),
     lightSensor(new AmbientLightSensor("/sys/bus/iio/devices/iio:device0/in_illuminance0_input")),
+    displayBrightness(new BrightnessControl("/sys/class/backlight/1a98000.dsi.0")),
     updater(new Updater(machine, "latest", this)),
     connman(new Connman(this)),
     machine(new Machine(this)),
@@ -135,7 +136,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject::connect(gpio, &GPIO::onDataReady, this, [this](GPIO::Value v) {
         qInfo(DaemonLog) << "Interrupt on GPIO8: " << (v == GPIO::ValueHi ? "1" : "0");
     });
-
 }
 
 void Daemon::polyphantMessageReceived(const PolyphantMessage &message)

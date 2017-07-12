@@ -27,7 +27,8 @@ SOURCES += main.cpp \
     gpio.cpp \
     polyphantmessage.cpp \
     polyphantconnection.cpp \
-    ambientlightsensor.cpp
+    ambientlightsensor.cpp \
+    brightnesscontrol.cpp
 
 HEADERS += \
     daemon.h \
@@ -45,7 +46,8 @@ HEADERS += \
     gpio.h \
     polyphantmessage.h \
     polyphantconnection.h \
-    ambientlightsensor.h
+    ambientlightsensor.h \
+    brightnesscontrol.h
 
 LIBS += -ludev
 LIBS += -lqconnman

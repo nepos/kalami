@@ -26,6 +26,7 @@
 
 #include "alsamixer.h"
 #include "ambientlightsensor.h"
+#include "brightnesscontrol.h"
 #include "connman.h"
 #include "machine.h"
 #include "polyphantconnection.h"
@@ -53,6 +54,7 @@ private slots:
 private:
     ALSAMixer *mixer;
     AmbientLightSensor *lightSensor;
+    BrightnessControl *displayBrightness;
     Updater *updater;
     Connman *connman;
     Machine *machine;

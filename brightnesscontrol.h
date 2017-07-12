@@ -19,34 +19,22 @@
 
 #pragma once
 
-#include <QtCore/QLoggingCategory>
 #include <QObject>
 #include <QFile>
-#include <QBasicTimer>
+#include <QtCore/QLoggingCategory>
 
-Q_DECLARE_LOGGING_CATEGORY(AmbientLightSensorLog)
+Q_DECLARE_LOGGING_CATEGORY(BrightnessControlLog)
 
-class AmbientLightSensor : public QObject
+class BrightnessControl : public QObject
 {
     Q_OBJECT
+
 public:
-    explicit AmbientLightSensor(QString illuminanceFile, float threshold = 1.0, QObject *parent = 0);
-
-    void start(int interval = 1000);
-    void stop();
-
-signals:
-    void valueChanged(float value);
-
-protected:
-    void timerEvent(QTimerEvent *event) override;
+    BrightnessControl(const QString &rootPath, QObject *parent = 0);
+    ~BrightnessControl();
+    void setBrightness(float value);
 
 private:
-    QFile input;
-    QBasicTimer timer;
-    int interval;
-    float threshold;
-    float luminance;
-
-    float read();
+    QFile brightnessFile;
+    int maxBrightness;
 };
