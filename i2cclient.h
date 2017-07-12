@@ -12,7 +12,7 @@ public:
 
     bool open(int bus, int address);
     bool ping();
-    bool transfer(unsigned char *sendBuf, size_t sendSize, unsigned char *receiveBuf, size_t receiveSize);
+    bool transfer(uint8_t *sendBuf, size_t sendSize, uint8_t *receiveBuf, size_t receiveSize);
 
 private:
     int address;
