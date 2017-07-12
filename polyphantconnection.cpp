@@ -55,6 +55,7 @@ void PolyphantConnection::sendMessage(const PolyphantMessage &message)
 {
     const QJsonObject obj = message.toJson();
     QByteArray payload = QJsonDocument(obj).toJson(QJsonDocument::Compact);
+    qInfo() << "XXX SENDING TO POLYPHANT:" << QString(payload);
     socket.sendBinaryMessage(payload);
 }
 

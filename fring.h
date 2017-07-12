@@ -13,7 +13,7 @@ class Fring : public QObject
 {
     Q_OBJECT
 public:
-    explicit Fring(QObject *parent = 0);   
+    explicit Fring(QObject *parent = 0);
     bool initialize();
 
 signals:

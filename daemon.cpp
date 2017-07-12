@@ -45,6 +45,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
                                          "/org/freedesktop/systemd1",
                                          "org.freedesktop.systemd1.Manager",
                                          QDBusConnection::systemBus(), this)),
+    fring(new Fring()),
     polyphant(new PolyphantConnection(uri, this)),
     udev(new UDevMonitor(this)),
     nfc(new Nfc(this)),
@@ -106,7 +107,11 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     // light sensor
     QObject::connect(lightSensor, &AmbientLightSensor::valueChanged, this, [this](float value) {
-        qInfo() << "Ambient light changed:" << value;
+        PolyphantMessage msg("ambientlight/STATE_CHANGED", QJsonObject {
+                                 { "id", "primary" },
+                                 { "value", value },
+                             }, 0);
+        polyphant->sendMessage(msg);
     });
 
     lightSensor->start();
@@ -135,6 +140,10 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     gpio->setDirection(GPIO::DirectionIn);
     QObject::connect(gpio, &GPIO::onDataReady, this, [this](GPIO::Value v) {
         qInfo(DaemonLog) << "Interrupt on GPIO8: " << (v == GPIO::ValueHi ? "1" : "0");
+    });
+
+    // fring
+    QObject::connect(fring, &Fring::homeButtonChanged, this, [this](bool) {
     });
 }
 

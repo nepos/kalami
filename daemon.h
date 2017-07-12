@@ -28,12 +28,13 @@
 #include "ambientlightsensor.h"
 #include "brightnesscontrol.h"
 #include "connman.h"
+#include "fring.h"
+#include "gpio.h"
 #include "machine.h"
+#include "nfc.h"
 #include "polyphantconnection.h"
 #include "udevmonitor.h"
 #include "updater.h"
-#include "nfc.h"
-#include "gpio.h"
 
 Q_DECLARE_LOGGING_CATEGORY(DaemonLog)
 
@@ -56,6 +57,7 @@ private:
     AmbientLightSensor *lightSensor;
     BrightnessControl *displayBrightness;
     Updater *updater;
+    Fring *fring;
     Connman *connman;
     Machine *machine;
     QDBusInterface *systemdConnection;

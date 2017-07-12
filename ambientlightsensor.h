@@ -34,6 +34,7 @@ public:
 
     void start(int interval = 1000);
     void stop();
+    float read();
 
 signals:
     void valueChanged(float value);
@@ -47,6 +48,4 @@ private:
     int interval;
     float threshold;
     float luminance;
-
-    float read();
 };
