@@ -1,16 +1,16 @@
 #ifndef FRINGPROTOCOL_H
 #define FRINGPROTOCOL_H
 
-const int FRING_REG_ID                   = 0x01;
-const int FRING_REG_VERSION              = 0x02;
-const int FRING_REG_BOARD_REVISION       = 0x03;
-const int FRING_REG_INTERRUPT_STATUS     = 0x04;
-const int FRING_REG_SET_LED              = 0x05;
-const int FRING_REG_READ_DEVICE_STATUS   = 0x06;
-const int FRING_REG_PUSH_FIRMWARE_UPDATE = 0x07;
-const int FRING_REG_FLASH_REBOOT         = 0x08;
+const int FRING_REG_ID                    = 0x01;
+const int FRING_REG_READ_BOOT_INFO        = 0x02;
+const int FRING_REG_READ_BOARD_REVISION   = 0x03;
+const int FRING_REG_READ_INTERRUPT_STATUS = 0x04;
+const int FRING_REG_SET_LED               = 0x05;
+const int FRING_REG_READ_DEVICE_STATUS    = 0x06;
+const int FRING_REG_PUSH_FIRMWARE_UPDATE  = 0x07;
+const int FRING_REG_FLASH_REBOOT          = 0x08;
 
-const int FRING_INTERRUPT_DEVICE_STATUS  = 0x01;
+const int FRING_INTERRUPT_DEVICE_STATUS   = 0x01;
 
 const int FRING_LED_MODE_OFF = 0;
 const int FRING_LED_MODE_ON  = 1;
@@ -29,7 +29,7 @@ struct FringCommandRead {
             uint32_t version;
             uint32_t uptime;
             uint8_t bootedFirmware;
-        } version;
+        } version _packed_;
 
         struct {
             uint8_t boardRevisionA;

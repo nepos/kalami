@@ -43,13 +43,13 @@ bool Fring::initialize()
         return false;
     }
 
-    wrCmd.reg = FRING_REG_VERSION;
+    wrCmd.reg = FRING_REG_READ_BOOT_INFO;
     if (!transfer(&wrCmd, &rdCmd))
         return false;
 
     firmwareVersion = qFromLittleEndian(rdCmd.version.version);
 
-    wrCmd.reg = FRING_REG_BOARD_REVISION;
+    wrCmd.reg = FRING_REG_READ_BOARD_REVISION;
     if (!transfer(&wrCmd, &rdCmd))
         return false;
 
@@ -162,7 +162,7 @@ void Fring::onInterrupt(GPIO::Value v)
     struct FringCommandRead rdCmd = {};
     struct FringCommandWrite wrCmd = {};
 
-    wrCmd.reg = FRING_REG_INTERRUPT_STATUS;
+    wrCmd.reg = FRING_REG_READ_INTERRUPT_STATUS;
     if (!transfer(&wrCmd, &rdCmd))
         return;
 
