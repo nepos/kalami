@@ -47,7 +47,8 @@ HEADERS += \
     polyphantmessage.h \
     polyphantconnection.h \
     ambientlightsensor.h \
-    brightnesscontrol.h
+    brightnesscontrol.h \
+    fring-protocol.h
 
 LIBS += -ludev
 LIBS += -lqconnman
