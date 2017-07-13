@@ -155,6 +155,23 @@ bool Fring::readDeviceStatus()
     return true;
 }
 
+bool Fring::readLogMessage()
+{
+    struct FringCommandWrite wrCmd = {};
+    char buf[256];
+
+    wrCmd.reg = FRING_REG_READ_LOG_MESSAGE;
+
+    if (!client.transfer((uint8_t *) &wrCmd, sizeof(wrCmd), (uint8_t *) buf, sizeof(buf))) {
+        qWarning(FringLog) << "Unable to transfer command!";
+        return false;
+    }
+
+    emit logMessageReceived(QString(buf));
+
+    return true;
+}
+
 void Fring::onInterrupt(GPIO::Value v)
 {
     Q_UNUSED(v);
@@ -170,5 +187,8 @@ void Fring::onInterrupt(GPIO::Value v)
 
     if (status & FRING_INTERRUPT_DEVICE_STATUS)
         readDeviceStatus();
+
+    if (status & FRING_INTERRUPT_LOG_MESSAGE)
+        readLogMessage();
 }
 

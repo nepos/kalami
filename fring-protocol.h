@@ -9,8 +9,10 @@ const int FRING_REG_SET_LED               = 0x05;
 const int FRING_REG_READ_DEVICE_STATUS    = 0x06;
 const int FRING_REG_PUSH_FIRMWARE_UPDATE  = 0x07;
 const int FRING_REG_FLASH_REBOOT          = 0x08;
+const int FRING_REG_READ_LOG_MESSAGE      = 0x09;
 
 const int FRING_INTERRUPT_DEVICE_STATUS   = 0x01;
+const int FRING_INTERRUPT_LOG_MESSAGE     = 0x02;
 
 const int FRING_LED_MODE_OFF = 0;
 const int FRING_LED_MODE_ON  = 1;

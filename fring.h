@@ -19,6 +19,7 @@ public:
 signals:
     void homeButtonChanged(bool state);
     void batteryStateChanged(float level, float chargeCurrent, float dischargeCurrent);
+    void logMessageReceived(const QString &message);
 
 public slots:
     bool setLedOff(int id);
@@ -48,4 +49,5 @@ private:
 
     bool transfer(const struct FringCommandWrite *wrCmd, const FringCommandRead *rdCmd = 0);
     bool readDeviceStatus();
+    bool readLogMessage();
 };
