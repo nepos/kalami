@@ -77,21 +77,11 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     // Connman connection
     QObject::connect(connman, &Connman::availableWifisUpdated, this, [this](const QJsonArray &list) {
-        QJsonObject action {
-            { "type",           "NETWORK:UPDATE_AVAILABLE_WIFIS" },
-            { "availableWifis", list },
-        };
-
-        //redux->dispatchAction(action);
+        PolyphantMessage msg("wifi/SCAN_RESULT", list, 0);
+        polyphant->sendMessage(msg);
     });
 
     QObject::connect(connman, &Connman::connectedWifiChanged, this, [this](const QJsonObject &wifi) {
-        QJsonObject action {
-            { "type", "NETWORK:CONNECTED_WIFI_CHANGED" },
-            { "wifi", wifi },
-        };
-
-        //redux->dispatchAction(action);
     });
 
     QObject::connect(connman, &Connman::goneOnline, this, [this]() {
@@ -158,12 +148,12 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
     bool ret = true;
 
     if (message.type() == "display/SET_BRIGHTNESS") {
-        QJsonObject payload = message.payload();
+        QJsonObject payload = message.payload().toObject();
         displayBrightness->setBrightness(payload["value"].toDouble());
     }
 
     if (message.type() == "led/SET_STATE") {
-        QJsonObject payload = message.payload();
+        QJsonObject payload = message.payload().toObject();
         QJsonObject color = payload["color"].toObject();
         int id = payload["id"] == "videocall" ? 0 : 1;
 
@@ -180,6 +170,13 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
         if (payload["mode"] == "pulse")
             ret = fring->setLedPulsating(id, color["red"].toDouble(), color["green"].toDouble(), color["blue"].toDouble(),
                                          payload["frequency"].toDouble());
+    }
+
+    if (message.type() == "wifi/CONNECT") {
+    }
+
+    if (message.type() == "wifi/DISCONNECT") {
+
     }
 
     Q_UNUSED(ret);

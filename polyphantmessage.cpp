@@ -7,7 +7,7 @@ PolyphantMessage::PolyphantMessage(const QJsonObject json, QObject *parent) : QO
     _meta = json["meta"].toObject();
 }
 
-PolyphantMessage::PolyphantMessage(const QString type, const QJsonObject payload, int requestId, const QJsonObject meta, QObject *parent) :
+PolyphantMessage::PolyphantMessage(const QString type, const QJsonValue payload, int requestId, const QJsonObject meta, QObject *parent) :
     QObject(parent),
     _type(type),
     _payload(payload),

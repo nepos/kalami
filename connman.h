@@ -16,7 +16,8 @@ class Connman : public QObject
 public:
     explicit Connman(QObject *parent = 0);
     void start();
-    void updateKnownWifis(QJsonArray &list);
+    bool connectToWifi(const QString &wifiId, const QString &passphrase);
+    bool disconnectFromWifi(const QString &wifiId);
 
 signals:
     void availableWifisUpdated(const QJsonArray &list);

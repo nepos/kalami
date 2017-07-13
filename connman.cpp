@@ -31,8 +31,9 @@ struct ConnmanPrivate {
     ConnmanPrivate() {};
     Manager *manager;
     Agent *agent;
-    QJsonArray knownWifis;
     QJsonArray availableWifis;
+    QString cachedPassphrase;
+    QString cachedWifiId;
 };
 
 void Connman::connectToKnownWifi()
@@ -45,17 +46,6 @@ void Connman::connectToKnownWifi()
     foreach (Service *service, d->manager->services()) {
         if (service->type() != "wifi")
             continue;
-
-        foreach (const QJsonValue value, d->knownWifis) {
-            const QJsonObject knownWifi = value.toObject();
-
-            if (service->name() == knownWifi["SSID"].toString() &&
-                service->state() == Service::IdleState) {
-                service->connect();
-                qInfo(ConnmanLog) << "Connecting to known wifi" << service->name();
-                return;
-            }
-        }
     }
 }
 
@@ -100,7 +90,10 @@ void Connman::iterateServices()
             break;
         }
 
+        QString id = service->name().toUtf8().toBase64();
+
         QJsonObject wifi {
+            { "id",       id, },
             { "SSID",     service->name() },
             { "security", service->security().join(" ") },
             { "strength", service->strength() / 100.0 },
@@ -115,44 +108,20 @@ void Connman::iterateServices()
     emit availableWifisUpdated(d->availableWifis);
 }
 
-void Connman::updateKnownWifis(QJsonArray &list)
-{
-    Q_D(Connman);
-
-    d->knownWifis = list;
-    connectToKnownWifi();
-}
-
 void Connman::agentPassphraseRequested()
 {
     Q_D(Connman);
 
     Agent::InputRequest *request = d->agent->currentInputRequest();
     Service *service = d->manager->service(request->service);
+    QString id = service->name().toUtf8().toBase64();
 
-    foreach (const QJsonValue value, d->knownWifis) {
-        const QJsonObject knownWifi = value.toObject();
-
-        if (service->name() == knownWifi["SSID"].toString() && knownWifi.contains("Passphrase")) {
-            request->response.name = service->name();
-            request->response.passphrase = knownWifi["Passphrase"].toString();
-            return;
-        }
+    if (id == d->cachedWifiId) {
+        request->response.name = service->name();
+        request->response.passphrase = d->cachedPassphrase;
+    } else {
+        request->cancel = true;
     }
-
-    // The wifi we're looking for is not in 'knownWifis', so let's augment the 'availableWifis' array.
-    foreach (QJsonValue value, d->availableWifis) {
-        QJsonObject availableWifi = value.toObject();
-
-        if (service->name() == availableWifi["SSID"].toString()) {
-            availableWifi["PassphraseRequired"] = true;
-            break;
-        }
-    }
-
-    request->cancel = true;
-
-    emit availableWifisUpdated(d->availableWifis);
 }
 
 void Connman::sendConnectedService()
@@ -175,7 +144,6 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
     Q_D(Connman);
 
     d->manager = new Manager(this);
-    d->knownWifis = QJsonArray();
     d->availableWifis = QJsonArray();
 
     QObject::connect(d->manager, &Manager::stateChanged, [this, d]() {
@@ -221,4 +189,45 @@ void Connman::start()
 
     if (d->manager->state() == Manager::Online)
         emit goneOnline();
+}
+
+bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
+{
+    Q_D(Connman);
+
+    d->cachedPassphrase = passphrase;
+    d->cachedWifiId = wifiId;
+
+    foreach (Service *service, d->manager->services()) {
+        if (service->type() != "wifi")
+            continue;
+
+        QString id = service->name().toUtf8().toBase64();
+
+        if (id == wifiId) {
+            service->connect();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Connman::disconnectFromWifi(const QString &wifiId)
+{
+    Q_D(Connman);
+
+    foreach (Service *service, d->manager->services()) {
+        if (service->type() != "wifi")
+            continue;
+
+        QString id = service->name().toUtf8().toBase64();
+
+        if (id == wifiId) {
+            service->disconnect();
+            return true;
+        }
+    }
+
+    return false;
 }
