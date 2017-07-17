@@ -26,6 +26,7 @@ public slots:
     bool setLedOn(int id, float r, float g, float b);
     bool setLedFlashing(int id, float r, float g, float b, float onPhase, float offPhase);
     bool setLedPulsating(int id, float r, float g, float b, float period);
+    bool updateFirmware(const QString filename);
 
 private slots:
     void onInterrupt(GPIO::Value v);
@@ -50,4 +51,5 @@ private:
     bool transfer(const struct FringCommandWrite *wrCmd, const FringCommandRead *rdCmd = 0);
     bool readDeviceStatus();
     bool readLogMessage();
+    uint32_t calculateCRC(uint32_t crc, const char *buf, size_t len);
 };
