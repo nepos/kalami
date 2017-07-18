@@ -149,14 +149,16 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
 {
     bool ret = true;
+    QJsonObject payload = message.payload().toObject();
+
+    qInfo() << "MSG PL:" << payload;
+    qInfo() << "value:" << payload["value"] << payload["value"].toDouble();
 
     if (message.type() == "display/SET_BRIGHTNESS") {
-        QJsonObject payload = message.payload().toObject();
         displayBrightness->setBrightness(payload["value"].toDouble());
     }
 
     if (message.type() == "led/SET_STATE") {
-        QJsonObject payload = message.payload().toObject();
         QJsonObject color = payload["color"].toObject();
         int id = payload["id"] == "videocall" ? 0 : 1;
 
