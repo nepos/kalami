@@ -97,7 +97,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     // light sensor
     QObject::connect(lightSensor, &AmbientLightSensor::valueChanged, this, [this](float value) {
         PolyphantMessage msg("ambientlight/STATE_CHANGED", QJsonObject {
-                                 { "id", "primary" },
                                  { "value", value },
                              }, 0);
         polyphant->sendMessage(msg);
