@@ -26,7 +26,6 @@ BrightnessControl::BrightnessControl(const QString &rootPath, QObject *parent) :
     QObject(parent), brightnessFile()
 {
     brightnessFile.setFileName(rootPath + "/brightness");
-    brightnessFile.open(QIODevice::WriteOnly | QIODevice::Unbuffered);
 
     QFile max(rootPath + "/max_brightness");
     if (max.open(QIODevice::ReadOnly)) {
@@ -39,13 +38,16 @@ BrightnessControl::BrightnessControl(const QString &rootPath, QObject *parent) :
 
 BrightnessControl::~BrightnessControl()
 {
-    brightnessFile.close();
 }
 
 void BrightnessControl::setBrightness(float value)
 {
-    if (brightnessFile.isOpen()) {
+    if (brightnessFile.open(QIODevice::WriteOnly | QIODevice::Unbuffered)) {
         QString str = QString::number(value * (float) maxBrightness);
+        qInfo(BrightnessControlLog) << "Setting brightness of" << brightnessFile.fileName()
+                                    << "to" << str;
         brightnessFile.write(str.toLocal8Bit() + "\n");
-    }
+        brightnessFile.close();
+    } else
+        qWarning(BrightnessControlLog) << "Unable to open brightness file!";
 }
