@@ -2,7 +2,7 @@
 
 PolyphantMessage::PolyphantMessage(const QJsonObject json, QObject *parent) : QObject(parent)
 {
-    _type = json["error"].toString();
+    _type = json["type"].toString();
     _payload = json["payload"].toObject();
     _meta = json["meta"].toObject();
 }
@@ -23,4 +23,3 @@ const QJsonObject PolyphantMessage::toJson() const {
         { "meta", _meta },
     };
 }
-
