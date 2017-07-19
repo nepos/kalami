@@ -9,10 +9,20 @@ struct ALSAMixerPrivate {
     ALSAMixerPrivate() {};
 
     snd_mixer_t *handle;
-    snd_mixer_elem_t *masterElement;
     long masterMin, masterMax;
     float masterCurrent;
 };
+
+static snd_mixer_elem_t *findMixerElement(snd_mixer_t *handle, const char *name, int index)
+{
+    snd_mixer_selem_id_t *sid;
+
+    snd_mixer_selem_id_alloca(&sid);
+    snd_mixer_selem_id_set_index(sid, index);
+    snd_mixer_selem_id_set_name(sid, name);
+
+    return snd_mixer_find_selem(handle, sid);
+}
 
 ALSAMixer::ALSAMixer(const QString &deviceName, QObject *parent) :
     QObject(parent), d_ptr(new ALSAMixerPrivate)
@@ -40,17 +50,21 @@ ALSAMixer::ALSAMixer(const QString &deviceName, QObject *parent) :
 
     qInfo(ALSAMixerLog) << "ALSA mixer interface opened for" << deviceName;
 
-    snd_mixer_selem_id_t *sid;
-    snd_mixer_selem_id_alloca(&sid);
-    snd_mixer_selem_id_set_index(sid, 0);
-    snd_mixer_selem_id_set_name(sid, "Master");
-    d->masterElement = snd_mixer_find_selem(d->handle, sid);
-    if (!d->masterElement) {
-        qInfo(ALSAMixerLog) << "Unable to find ALSA mixer element for master volume:" << strerror(-errno);
-        return;
-    }
+    // Set ALSA mixer controls
+    setEnumByName("RX1 MIX1 INP1", "RX1");
+    setEnumByName("RX2 MIX1 INP1", "RX2");
+    setEnumByName("RDAC2 MUX", "RX2");
+    setEnumByName("HPHL", "1");
+    setEnumByName("HPHR", "1");
 
-    snd_mixer_selem_get_playback_volume_range(d->masterElement, &d->masterMin, &d->masterMax);
+    // Read volume ranges for master volume control, so we can scale
+    snd_mixer_elem_t *me = findMixerElement(d->handle, "RX1 Digital Volume", 0);
+    if (me) {
+        snd_mixer_selem_get_playback_volume_range(me, &d->masterMin, &d->masterMax);
+        snd_mixer_elem_free(me);
+    } else
+        qWarning(ALSAMixerLog) << "Unable to find playback mixer element";
+
     getMasterVolume();
 }
 
@@ -58,28 +72,74 @@ ALSAMixer::~ALSAMixer()
 {
     Q_D(ALSAMixer);
 
-    if (d->masterElement)
-        snd_mixer_elem_free(d->masterElement);
-
     if (d->handle)
         snd_mixer_close(d->handle);
+}
+
+void ALSAMixer::setPlaybackVolumeByName(const char *name, int val, int index)
+{
+    Q_D(ALSAMixer);
+
+    snd_mixer_elem_t *me = findMixerElement(d->handle, name, index);
+    if (!me) {
+        qWarning(ALSAMixerLog) << "Unable to find playback mixer element named" << name;
+        return;
+    }
+
+    snd_mixer_selem_set_playback_volume_all(me, val);
+}
+
+void ALSAMixer::setEnumByName(const char *name, const char *value, int index)
+{
+    Q_D(ALSAMixer);
+    int ret;
+
+    snd_mixer_elem_t *me = findMixerElement(d->handle, name, index);
+    if (!me) {
+        qWarning(ALSAMixerLog) << "Unable to find playback mixer element named" << name;
+        return;
+    }
+
+    for (int i = 0; i < snd_mixer_selem_get_enum_items(me); i++) {
+        char buf[256];
+
+        ret = snd_mixer_selem_get_enum_item_name(me, i, sizeof(buf) - 1, buf);
+        if (ret < 0)
+            continue;
+
+        if (strcmp(buf, value) == 0) {
+            ret = snd_mixer_selem_set_enum_item(me, SND_MIXER_SCHN_MONO, i);
+            if (ret == 0) {
+                snd_mixer_elem_free(me);
+                return;
+            }
+        }
+    }
+
+    qWarning(ALSAMixerLog) << "Unable to find enum value" << value << "in mixer element!";
+    snd_mixer_elem_free(me);
 }
 
 float ALSAMixer::getMasterVolume()
 {
     Q_D(ALSAMixer);
 
-    long current;
+    snd_mixer_elem_t *me = findMixerElement(d->handle, "RX1 Digital Volume", 0);
+    if (!me) {
+        qWarning(ALSAMixerLog) << "Unable to find playback mixer element";
+        d->masterCurrent = 0.0f;
+    }
+
     int ret;
+    long current;
 
-    if (!d->masterElement)
-        return 0.0;
-
-    ret = snd_mixer_selem_get_playback_volume(d->masterElement, SND_MIXER_SCHN_FRONT_LEFT, &current);
+    ret = snd_mixer_selem_get_playback_volume(me, SND_MIXER_SCHN_FRONT_LEFT, &current);
     if (ret < 0)
-        return 0.0;
+        d->masterCurrent = 0.0f;
+    else
+        d->masterCurrent = (float) (d->masterCurrent - d->masterMin) / (float) (d->masterMax - d->masterMin);
 
-    d->masterCurrent = (float) (d->masterCurrent - d->masterMin) / (float) (d->masterMax - d->masterMin);
+     snd_mixer_elem_free(me);
 
     return d->masterCurrent;
 }
@@ -88,10 +148,8 @@ void ALSAMixer::setMasterVolume(float volume)
 {
     Q_D(ALSAMixer);
 
-    if (d->masterElement) {
-        float val = d->masterMin + (volume * (float) (d->masterMax - d->masterMin));
+    float val = d->masterMin + (volume * (float) (d->masterMax - d->masterMin));
 
-        if (val != d->masterCurrent)
-            snd_mixer_selem_set_playback_volume_all(d->masterElement, val);
-    }
+    setPlaybackVolumeByName("RX1 Digital Volume", val);
+    setPlaybackVolumeByName("RX2 Digital Volume", val);
 }
