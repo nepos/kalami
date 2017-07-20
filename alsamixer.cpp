@@ -122,16 +122,16 @@ float ALSAMixer::getMasterVolume()
     if (!me) {
         qWarning(ALSAMixerLog) << "Unable to find playback mixer element";
         d->masterCurrent = 0.0f;
+    } else {
+        int ret;
+        long current;
+
+        ret = snd_mixer_selem_get_playback_volume(me, SND_MIXER_SCHN_FRONT_LEFT, &current);
+        if (ret < 0)
+            d->masterCurrent = 0.0f;
+        else
+            d->masterCurrent = (float) (d->masterCurrent - d->masterMin) / (float) (d->masterMax - d->masterMin);
     }
-
-    int ret;
-    long current;
-
-    ret = snd_mixer_selem_get_playback_volume(me, SND_MIXER_SCHN_FRONT_LEFT, &current);
-    if (ret < 0)
-        d->masterCurrent = 0.0f;
-    else
-        d->masterCurrent = (float) (d->masterCurrent - d->masterMin) / (float) (d->masterMax - d->masterMin);
 
     return d->masterCurrent;
 }
