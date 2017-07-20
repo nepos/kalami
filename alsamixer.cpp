@@ -54,8 +54,8 @@ ALSAMixer::ALSAMixer(const QString &deviceName, QObject *parent) :
     setEnumByName("RX1 MIX1 INP1", "RX1");
     setEnumByName("RX2 MIX1 INP1", "RX2");
     setEnumByName("RDAC2 MUX", "RX2");
-    setEnumByName("HPHL", "1");
-    setEnumByName("HPHR", "1");
+    setEnumByName("HPHL", "Switch");
+    setEnumByName("HPHR", "Switch");
 
     // Read volume ranges for master volume control, so we can scale
     snd_mixer_elem_t *me = findMixerElement(d->handle, "RX1 Digital Volume", 0);
@@ -118,7 +118,7 @@ float ALSAMixer::getMasterVolume()
 {
     Q_D(ALSAMixer);
 
-    snd_mixer_elem_t *me = findMixerElement(d->handle, "RX1 Digital Volume", 0);
+    snd_mixer_elem_t *me = findMixerElement(d->handle, "RX1 Digital", 0);
     if (!me) {
         qWarning(ALSAMixerLog) << "Unable to find playback mixer element";
         d->masterCurrent = 0.0f;
@@ -142,6 +142,6 @@ void ALSAMixer::setMasterVolume(float volume)
 
     float val = d->masterMin + (volume * (float) (d->masterMax - d->masterMin));
 
-    setPlaybackVolumeByName("RX1 Digital Volume", val);
-    setPlaybackVolumeByName("RX2 Digital Volume", val);
+    setPlaybackVolumeByName("RX1 Digital", val);
+    setPlaybackVolumeByName("RX2 Digital", val);
 }
