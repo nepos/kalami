@@ -43,13 +43,13 @@ bool I2CClient::transfer(uint8_t *sendBuf, size_t sendSize , uint8_t *receiveBuf
     struct i2c_msg msgs[] = {
         {
             .addr = (__u16) address,
-            .flags = I2C_M_RD,
+            .flags = 0,
             .len = (__u16) sendSize,
             .buf = sendBuf
         },
         {
             .addr = (__u16) address,
-            .flags = I2C_M_STOP,
+            .flags = I2C_M_RD | I2C_M_NOSTART,
             .len = (__u16) receiveSize,
             .buf = receiveBuf
         }
@@ -57,7 +57,7 @@ bool I2CClient::transfer(uint8_t *sendBuf, size_t sendSize , uint8_t *receiveBuf
 
     struct i2c_rdwr_ioctl_data data = {
         .msgs = msgs,
-        .nmsgs = 1
+        .nmsgs = 2
     };
 
     if (sendSize == 0) {
@@ -65,5 +65,5 @@ bool I2CClient::transfer(uint8_t *sendBuf, size_t sendSize , uint8_t *receiveBuf
         data.nmsgs = 1;
     }
 
-    return ioctl(file.handle(), I2C_RDWR, &data) == 0;
+    return ioctl(file.handle(), I2C_RDWR, &data) >= 0;
 }
