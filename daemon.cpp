@@ -124,26 +124,29 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     });
 
     // fring
-    QObject::connect(fring, &Fring::homeButtonChanged, this, [this](bool state) {
-        PolyphantMessage msg("homebutton/STATE_CHANGED", QJsonObject {
-                                 { "id", "home" },
-                                 { "state", state },
-                             }, 0);
-        polyphant->sendMessage(msg);
-    });
+    if (fring->initialize()) {
+        QObject::connect(fring, &Fring::homeButtonChanged, this, [this](bool state) {
+            PolyphantMessage msg("homebutton/STATE_CHANGED", QJsonObject {
+                                     { "id", "home" },
+                                     { "state", state },
+                                 }, 0);
+            polyphant->sendMessage(msg);
+        });
 
-    QObject::connect(fring, &Fring::batteryStateChanged, this, [this](float level, float chargeCurrent, float dischargeCurrent) {
-        PolyphantMessage msg("battery/STATE_CHANGED", QJsonObject {
-                                 { "level", level },
-                                 { "chargeCurrent", chargeCurrent },
-                                 { "dischargeCurrent", dischargeCurrent },
-                             }, 0);
-        polyphant->sendMessage(msg);
-    });
+        QObject::connect(fring, &Fring::batteryStateChanged, this, [this](float level, float chargeCurrent, float dischargeCurrent) {
+            PolyphantMessage msg("battery/STATE_CHANGED", QJsonObject {
+                                     { "level", level },
+                                     { "chargeCurrent", chargeCurrent },
+                                     { "dischargeCurrent", dischargeCurrent },
+                                 }, 0);
+            polyphant->sendMessage(msg);
+        });
 
-    QObject::connect(fring, &Fring::logMessageReceived, this, [this](const QString &message) {
-        qInfo(DaemonLog) << "Message from fring:" << message;
-    });
+        QObject::connect(fring, &Fring::logMessageReceived, this, [this](const QString &message) {
+            qInfo(DaemonLog) << "Message from fring:" << message;
+        });
+    }
+
 }
 
 void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
