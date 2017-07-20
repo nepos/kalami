@@ -43,7 +43,7 @@ BrightnessControl::~BrightnessControl()
 void BrightnessControl::setBrightness(float value)
 {
     if (brightnessFile.open(QIODevice::WriteOnly | QIODevice::Unbuffered)) {
-        QString str = QString::number(value * (float) maxBrightness);
+        QString str = QString::number((int) (value * (float) maxBrightness));
         qInfo(BrightnessControlLog) << "Setting brightness of" << brightnessFile.fileName()
                                     << "to" << str;
         brightnessFile.write(str.toLocal8Bit() + "\n");
