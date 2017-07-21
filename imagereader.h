@@ -20,6 +20,7 @@ public:
     qint64 size() { return imageSize; };
     bool open();
     uchar *map();
+    void close();
 
 private:
     enum ImageType type;

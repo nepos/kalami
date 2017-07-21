@@ -28,7 +28,8 @@ SOURCES += main.cpp \
     polyphantmessage.cpp \
     polyphantconnection.cpp \
     ambientlightsensor.cpp \
-    brightnesscontrol.cpp
+    brightnesscontrol.cpp \
+    imagereader.cpp
 
 HEADERS += \
     daemon.h \
@@ -48,8 +49,11 @@ HEADERS += \
     polyphantconnection.h \
     ambientlightsensor.h \
     brightnesscontrol.h \
-    fring-protocol.h
+    fring-protocol.h \
+    imagereader.h
 
 LIBS += -ludev
 LIBS += -lqconnman
 LIBS += -lasound
+LIBS += -lz -lvcdcom -lvcddec
+

@@ -146,7 +146,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             qInfo(DaemonLog) << "Message from fring:" << message;
         });
     }
-
 }
 
 void Daemon::polyphantMessageReceived(const PolyphantMessage &message)

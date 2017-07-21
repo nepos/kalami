@@ -9,6 +9,7 @@
 #include <QEventLoop>
 #include <QTimer>
 #include <QFileInfo>
+
 #include "updater.h"
 
 Q_LOGGING_CATEGORY(UpdaterLog, "Updater")
@@ -18,6 +19,7 @@ Updater::Updater(const Machine *machine, const QString &updateChannel, QObject *
 {
     pendingReply = NULL;
     thread = NULL;
+    state = Updater::StateUndefined;
 }
 
 Updater::~Updater()
@@ -29,10 +31,10 @@ Updater::~Updater()
 const QString &Updater::getUpdateSeed(Updater::ImageType type) const
 {
     switch (type) {
-    case Updater::IMAGE_TYPE_BOOTIMG:
+    case Updater::BootImageType:
         return machine->getAltBootDevice();
 
-    case Updater::IMAGE_TYPE_ROOTFS:
+    case Updater::RootfsImageType:
         return machine->getAltRootfsDevice();
     }
 
@@ -42,14 +44,96 @@ const QString &Updater::getUpdateSeed(Updater::ImageType type) const
 const QString &Updater::getUpdateTarget(Updater::ImageType type) const
 {
     switch (type) {
-    case Updater::IMAGE_TYPE_BOOTIMG:
+    case Updater::BootImageType:
         return machine->getCurrentBootDevice();
 
-    case Updater::IMAGE_TYPE_ROOTFS:
+    case Updater::RootfsImageType:
         return machine->getCurrentRootfsDevice();
     }
 
     return NULL;
+}
+
+bool Updater::verifySignature(const QString &contentFile, const QString &signatureFile)
+{
+    QProcess gpg;
+    QStringList arguments;
+
+    arguments << "--quiet" << "--verify" << signatureFile << contentFile;
+
+    gpg.start("/usr/bin/gpg", arguments);
+    if (!gpg.waitForFinished())
+        return false;
+
+    return gpg.exitCode() == 0;
+}
+
+void Updater::downloadFinished()
+{
+    QNetworkReply *reply = (QNetworkReply *) sender();
+    QByteArray content = reply->readAll();
+
+    switch (state) {
+    case Updater::StateDownloadJson: {
+        QJsonParseError jsonError;
+        QJsonDocument doc = QJsonDocument::fromJson(content, &jsonError);
+
+        QFile file("/tmp/update.json");
+        if (!file.open(QFileDevice::WriteOnly))
+            return;
+
+        file.write(content);
+        file.close();
+
+        if (jsonError.error != QJsonParseError::NoError) {
+            emit checkFailed("Unable to parse Json content from update server:" + jsonError.errorString());
+            return;
+        }
+
+        QJsonObject json = doc.object();
+        availableUpdate.version = json["build_id"].toString().toULong();
+        availableUpdate.rootfsUrl = QUrl(json["rootfs"].toString());
+        availableUpdate.rootfsSha512 = json["rootfs_sha512"].toString();
+        availableUpdate.bootimgUrl = QUrl(json["bootimg"].toString());
+        availableUpdate.bootimgSha512 = json["bootimg_sha512"].toString();
+        availableUpdate.rootfsDeltaUrl = QUrl(json["rootfs_deltas"].toString() + "/" + machine->getOsVersion() + ".vcdiff");
+        availableUpdate.bootimgDeltaUrl = QUrl(json["bootimg_deltas"].toString() + "/" + machine->getOsVersion() + ".vcdiff");
+
+        QNetworkRequest request(QUrl(json["signature"].toString()));
+        state = Updater::StateDownloadSignature;
+        pendingReply = networkAccessManager.get(request);
+        QObject::connect(pendingReply, &QNetworkReply::finished, this, &Updater::downloadFinished);
+
+        break;
+    }
+
+    case Updater::StateDownloadSignature: {
+        QFile file("/tmp/update.json.sig");
+        if (!file.open(QFileDevice::WriteOnly))
+            return;
+
+        file.write(content);
+        file.close();
+
+        state = Updater::StateVerifySignature;
+
+        if (!verifySignature("/tmp/update.json", "/tmp/update.json.sig")) {
+            qWarning() << "Unable to verify signature!";
+            break;
+        }
+
+        if (availableUpdate.version > machine->getOsVersion())
+            emit updateAvailable(QString::number(availableUpdate.version));
+        else
+            emit alreadyUpToDate();
+
+        break;
+    }
+    default:
+        break;
+    }
+
+    reply->deleteLater();
 }
 
 void Updater::check()
@@ -68,6 +152,8 @@ void Updater::check()
         model = "unknown";
     }
 
+    model = "saphira";
+
     query.addQueryItem("current", currentVersion);
 
     QUrl url("http://os.nepos.io/updates/" + model + "/" + updateChannel + ".json");
@@ -77,38 +163,19 @@ void Updater::check()
 
     QNetworkRequest request(url);
     request.setRawHeader(QString("X-nepos-current").toLocal8Bit(), currentVersion.toLocal8Bit());
-    request.setRawHeader(QString("X-nepos-machine-id").toLocal8Bit(), machine->getMachineId().toLocal8Bit());
-    request.setRawHeader(QString("X-nepos-device-model").toLocal8Bit(), machine->getModelName().toLocal8Bit());
-    request.setRawHeader(QString("X-nepos-device-revision").toLocal8Bit(), machine->getDeviceRevision().toLocal8Bit());
-    request.setRawHeader(QString("X-nepos-device-serial").toLocal8Bit(), machine->getDeviceSerial().toLocal8Bit());
+    //    request.setRawHeader(QString("X-nepos-machine-id").toLocal8Bit(), machine->getMachineId().toLocal8Bit());
+    //    request.setRawHeader(QString("X-nepos-device-model").toLocal8Bit(), machine->getModelName().toLocal8Bit());
+    //    request.setRawHeader(QString("X-nepos-device-revision").toLocal8Bit(), machine->getDeviceRevision().toLocal8Bit());
+    //    request.setRawHeader(QString("X-nepos-device-serial").toLocal8Bit(), machine->getDeviceSerial().toLocal8Bit());
 
-    if (pendingReply)
+    if (pendingReply) {
         pendingReply->abort();
+        pendingReply->deleteLater();
+    }
 
+    state = Updater::StateDownloadJson;
     pendingReply = networkAccessManager.get(request);
-    QObject::connect(pendingReply, &QNetworkReply::finished, this, [this]() {
-        QNetworkReply *reply = (QNetworkReply *) sender();
-        QByteArray content = reply->readAll();
-
-        QJsonParseError error;
-        QJsonDocument doc = QJsonDocument::fromJson(content, &error);
-
-        if (error.error != QJsonParseError::NoError) {
-            emit checkFailed("Unable to parse Json content from update server:" + error.errorString());
-            return;
-        }
-
-        QJsonObject json = doc.object();
-        availableUpdate.version = json["build_id"].toString().toULong();
-        availableUpdate.rootfsUrl = QUrl(json["rootfs"].toString());
-        availableUpdate.bootimgUrl = QUrl(json["bootimg"].toString());
-        availableUpdate.casyncStore = QUrl(json["casync_store"].toString());
-
-        if (availableUpdate.version > machine->getOsVersion())
-            emit updateAvailable(QString::number(availableUpdate.version));
-        else
-            emit alreadyUpToDate();
-    });
+    QObject::connect(pendingReply, &QNetworkReply::finished, this, &Updater::downloadFinished);
 }
 
 void Updater::install()
@@ -134,14 +201,119 @@ void Updater::install()
         emit updateFailed();
     });
 
+    QObject::connect(thread, &UpdateThread::progress, this, [this](float v) {
+        emit updateProgress(v);
+    });
+
     thread->start();
+}
+
+
+
+UpdateWriter::UpdateWriter()
+{
+}
+
+UpdateWriter::~UpdateWriter()
+{
+    file.close();
+}
+
+bool UpdateWriter::open(const QString &path)
+{
+    file.setFileName(path);
+    return file.open(QFileDevice::WriteOnly);
+}
+
+void UpdateWriter::close()
+{
+    file.close();
+}
+
+UpdateWriter &UpdateWriter::append(const char *s, size_t n)
+{
+    file.write(s, n);
+    return *this;
+}
+
+void UpdateWriter::clear()
+{
+    file.reset();
+}
+
+void UpdateWriter::push_back(char c)
+{
+    file.write(&c, 1);
+}
+
+void UpdateWriter::ReserveAdditionalBytes(size_t res_arg)
+{
+    file.resize(file.pos() + res_arg);
+}
+
+size_t UpdateWriter::size() const
+{
+    return file.pos();
 }
 
 UpdateThread::UpdateThread(const Updater *updater, QObject *parent) : QThread(parent), updater(updater)
 {
 }
 
-bool UpdateThread::downloadFile(const QUrl &url, const QString &path)
+bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, UpdateWriter *output)
+{
+    QNetworkAccessManager networkAccessManager;
+    QNetworkRequest request(deltaUrl);
+    QNetworkReply *reply = networkAccessManager.get(request);
+    QEventLoop loop;
+    QTimer timer;
+    bool ret = false;
+    bool error = false;
+
+    open_vcdiff::VCDiffStreamingDecoder decoder;
+
+    decoder.SetMaximumTargetFileSize(256 * 1024 * 1024);
+    decoder.StartDecoding((const char *) dict->map(), dict->size());
+
+    QObject::connect(reply, &QNetworkReply::readyRead, this, [this, &loop, &decoder, output, &error]() {
+        QNetworkReply *reply = (QNetworkReply *) sender();
+
+        QByteArray data = reply->readAll();
+        if (data.isEmpty() && reply->error() != QNetworkReply::NoError) {
+            qInfo() << "Error downloading file: " << reply->error();
+            reply->abort();
+            error = true;
+            return;
+        }
+
+        if (!decoder.DecodeChunkToInterface(data.constData(), data.size(), output)) {
+            reply->abort();
+            error = true;
+            loop.quit();
+        }
+    });
+
+    QObject::connect(reply, &QNetworkReply::finished, this, [this, &loop, &decoder, &ret]() {
+        decoder.FinishDecoding();
+        ret = true;
+        loop.quit();
+    });
+
+    QObject::connect(reply, &QNetworkReply::downloadProgress, this, [this](qint64 bytesReceived, qint64 bytesTotal) {
+        float v = (float) bytesReceived / (float) bytesTotal;
+        // reserve 50% for image download, 50% for verification
+        emit progress(v/2);
+    });
+
+    QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+    timer.setSingleShot(true);
+    timer.start(60 * 1000);
+    loop.exec();
+
+    return ret && !error;
+}
+
+bool UpdateThread::downloadFullImage(const QUrl &url, const QString &path)
 {
     QNetworkAccessManager networkAccessManager;
     QNetworkRequest request(url);
@@ -150,116 +322,127 @@ bool UpdateThread::downloadFile(const QUrl &url, const QString &path)
     QTimer timer;
     bool ret = false;
 
-    timer.setSingleShot(true);
+    QFile output(path);
+    if (!output.open(QFileDevice::WriteOnly))
+        return false;
 
-    qInfo(UpdaterLog) << "downloading" << url << "to" << path;
+    QObject::connect(reply, &QNetworkReply::readyRead, this, [this, &loop, &output]() {
+        QNetworkReply *reply = (QNetworkReply *) sender();
 
-    QObject::connect(reply, &QNetworkReply::finished, this, [this, path, &loop, &ret]() {
-        QNetworkReply *data = (QNetworkReply *) sender();
-        QFile localFile(path);
-        if (!localFile.open(QIODevice::WriteOnly)) {
-            qWarning(UpdaterLog) << "Unable to open file" << path << "for writing!";
-            loop.quit();
+        QByteArray data = reply->readAll();
+        if (data.isEmpty() && reply->error() != QNetworkReply::NoError) {
+            qInfo() << "Error downloading file: " << reply->error();
+            reply->abort();
             return;
         }
 
-        localFile.write(data->readAll());
-        localFile.close();
-        data->deleteLater();
+        if (output.write(data) != data.size()) {
+            qWarning() << "Unable to write output";
+            loop.quit();
+        }
+    });
+
+    QObject::connect(reply, &QNetworkReply::finished, this, [this, &loop, &ret]() {
         ret = true;
         loop.quit();
     });
 
+    QObject::connect(reply, &QNetworkReply::downloadProgress, this, [this](qint64 bytesReceived, qint64 bytesTotal) {
+        float v = (float) bytesReceived / (float) bytesTotal;
+        // reserve 50% for image download, 50% for verification
+        emit progress(v/2);
+    });
+
     QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+    timer.setSingleShot(true);
     timer.start(60 * 1000);
 
     loop.exec();
+    output.close();
+
     return ret;
 }
 
-bool UpdateThread::verifySignature(const QString &content, const QString &signature)
+bool UpdateThread::verifyImage(ImageReader::ImageType type, const QString &path, const QString &sha512)
 {
-    QProcess gpg;
-    QStringList arguments;
+    QCryptographicHash hash(QCryptographicHash::Sha512);
 
-    arguments << "--quiet" << "--verify" << signature << content;
-
-    gpg.start("/usr/bin/gpg", arguments);
-    if (!gpg.waitForFinished())
+    ImageReader image(type, path);
+    if (!image.open())
         return false;
 
-    return gpg.exitCode() == 0;
-}
+    qint64 pos = 0;
+    char *buf = (char *) image.map();
 
-bool UpdateThread::casync(const QString &caibx, const QString &dest, const QString &seed, const QUrl &store)
-{
-    QProcess casync;
-    QStringList arguments;
+    while (pos < image.size()) {
+        qint64 l = qMin((qint64) 1024 * 1024, (qint64) (image.size() - pos));
+        hash.addData(buf, l);
+        pos += l;
+        buf += l;
 
-    arguments << "extract"
-                << caibx
-                << "--seed" << seed
-                << "--store" << store.toString()
-                << dest;
-
-    casync.start("/usr/bin/casync", arguments);
-    if (!casync.waitForFinished())
-        return false;
-
-    if (casync.exitCode() != 0) {
-        qWarning(UpdaterLog) << "casync failed:";
-        qWarning(UpdaterLog) << "-----------------------------";
-        qWarning(UpdaterLog) << casync.readAllStandardOutput();
-        qWarning(UpdaterLog) << casync.readAllStandardError();
-        qWarning(UpdaterLog) << "-----------------------------";
-        return false;
+        emit progress(0.5f + ((float) pos / (float) image.size()) / 2);
     }
 
-    return true;
+    return hash.result().toHex() == sha512;
+}
+
+bool UpdateThread::downloadAndVerify(ImageReader::ImageType type,
+                                     const QString &dictionaryPath,
+                                     const QString &outputPath,
+                                     const QUrl fullImageUrl,
+                                     const QUrl deltaImageUrl,
+                                     const QString &sha512)
+{
+    UpdateWriter output;
+    if (!output.open(outputPath))
+        return false;
+
+    ImageReader dict(type, dictionaryPath);
+    if (dict.open()) {
+        if (downloadDeltaImage(deltaImageUrl, &dict, &output) && verifyImage(type, outputPath, sha512))
+            return true;
+
+        dict.close();
+        output.close();
+    }
+
+    qInfo() << "Downloading delta update from" << deltaImageUrl << "failed";
+    qInfo() << "Trying full image from" << fullImageUrl;
+
+    // Downloading the delta didn't succeed, so let's try the full file
+    if (downloadFullImage(fullImageUrl, outputPath) && verifyImage(type, outputPath, sha512))
+        return true;
+
+    // Everything failed. We're bricked.
+    qInfo() << "Full image update failed as well.";
+
+    return false;
 }
 
 void UpdateThread::run()
 {
     const AvailableUpdate *update = updater->getAvailableUpdate();
-    QString tmp("/tmp/");
-    bool success = false;
+    bool ret;
 
-    QUrl bootimgSigUrl(update->bootimgUrl);
-    bootimgSigUrl.setPath(bootimgSigUrl.path() + ".sig");
-    QFileInfo bootimgSigInfo(bootimgSigUrl.path());
-    QString bootimgSigLocalFile(tmp + bootimgSigInfo.fileName());
-
-    QFileInfo bootimgInfo(update->bootimgUrl.path());
-    QString bootimgLocalFile(tmp + bootimgInfo.fileName());
-
-    QUrl rootfsSigUrl(update->rootfsUrl);
-    rootfsSigUrl.setPath(rootfsSigUrl.path() + ".sig");
-    QFileInfo rootfsSigInfo(rootfsSigUrl.path());
-    QString rootfsSigLocalFile(tmp + rootfsSigInfo.fileName());
-
-    QFileInfo rootfsInfo(update->rootfsUrl.path());
-    QString rootfsLocalFile(tmp + rootfsInfo.fileName());
-
-    if (downloadFile(update->bootimgUrl, bootimgLocalFile) &&
-        downloadFile(bootimgSigUrl, bootimgSigLocalFile) &&
-        downloadFile(update->rootfsUrl, rootfsLocalFile) &&
-        downloadFile(rootfsSigUrl, rootfsSigLocalFile)) {
-
-        if (verifySignature(bootimgLocalFile, bootimgSigLocalFile)) {
-            if (casync(bootimgLocalFile, updater->getUpdateTarget(Updater::IMAGE_TYPE_BOOTIMG), updater->getUpdateSeed(Updater::IMAGE_TYPE_BOOTIMG), update->casyncStore) &&
-                casync(rootfsLocalFile, updater->getUpdateTarget(Updater::IMAGE_TYPE_ROOTFS), updater->getUpdateSeed(Updater::IMAGE_TYPE_ROOTFS), update->casyncStore)) {
-                success = true;
-            }
-        }
+    ret = downloadAndVerify(ImageReader::AndroidBootType,
+                            updater->getUpdateSeed(Updater::BootImageType),
+                            updater->getUpdateTarget(Updater::BootImageType),
+                            update->bootimgUrl, update->bootimgDeltaUrl,
+                            update->bootimgSha512);
+    if (!ret) {
+        emit failed();
+        return;
     }
 
-    QFile::remove(bootimgLocalFile);
-    QFile::remove(bootimgSigLocalFile);
-    QFile::remove(rootfsLocalFile);
-    QFile::remove(rootfsSigLocalFile);
-
-    if (success)
-        emit succeeded();
-    else
+    ret = downloadAndVerify(ImageReader::SquashFsType,
+                            updater->getUpdateSeed(Updater::RootfsImageType),
+                            updater->getUpdateTarget(Updater::RootfsImageType),
+                            update->rootfsUrl, update->rootfsDeltaUrl,
+                            update->rootfsSha512);
+    if (!ret) {
         emit failed();
+        return;
+    }
+
+    emit succeeded();
 }
