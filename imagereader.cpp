@@ -47,7 +47,7 @@ struct androidBootHeader {
 #define _ANDROID_BOOTIMG_MAGIC_2 UINT32_C(0x2144494f)
 
 ImageReader::ImageReader(enum ImageType type, const QString path, QObject *parent) :
-    QObject(parent), type(type), file(path)
+    QObject(parent), type(type), file(path), mappedBuffer(0)
 {
 }
 
@@ -115,7 +115,25 @@ bool ImageReader::open()
         return false;
     }
 
+    if (imageSize > file.size()) {
+        qWarning() << "Reported image size exceeds file size!";
+        return false;
+    }
+
     return true;
+}
+
+void ImageReader::close()
+{
+    if (!file.isOpen())
+        return;
+
+    if (mappedBuffer) {
+        file.unmap(mappedBuffer);
+        mappedBuffer = nullptr;
+    }
+
+    file.close();
 }
 
 uchar *ImageReader::map()
@@ -124,7 +142,7 @@ uchar *ImageReader::map()
         return NULL;
 
     if (!mappedBuffer)
-        mappedBuffer = file.map(0, imageSize, QFileDevice::MapPrivateOption);
+        mappedBuffer = file.map(0, imageSize, QFileDevice::NoOptions);
 
     return mappedBuffer;
 }
