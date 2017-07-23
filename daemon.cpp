@@ -42,10 +42,10 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     machine(new Machine(this)),
     fring(new Fring()),
     polyphant(new PolyphantConnection(uri, this)),
+    updater(new Updater(machine, "latest", this)),
     nfc(new Nfc(this))
 {
     // Updater logic
-    updater = new Updater(machine, "latest", this);
     QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
         qInfo(DaemonLog) << "New update available, version" << version;
         updater->install();
@@ -77,6 +77,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     });
 
     QObject::connect(connman, &Connman::connectedWifiChanged, this, [this](const QJsonObject &wifi) {
+        // TODO
     });
 
     QObject::connect(connman, &Connman::goneOnline, this, [this]() {

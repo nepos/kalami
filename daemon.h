@@ -50,10 +50,10 @@ private:
     ALSAMixer *mixer;
     AmbientLightSensor *lightSensor;
     BrightnessControl *displayBrightness;
-    Updater *updater;
     Connman *connman;
     Machine *machine;
     Fring *fring;
     PolyphantConnection *polyphant;
+    Updater *updater;
     Nfc *nfc;
 };
