@@ -3,6 +3,9 @@
 
 #include <QObject>
 #include <QFile>
+#include <QtCore/QLoggingCategory>
+
+Q_DECLARE_LOGGING_CATEGORY(ImageReaderLog)
 
 class ImageReader : public QObject
 {

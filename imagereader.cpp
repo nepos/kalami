@@ -4,6 +4,8 @@
 #include <linux/magic.h>
 #include "imagereader.h"
 
+Q_LOGGING_CATEGORY(ImageReaderLog, "ImageReader")
+
 struct squashfsHeader {
     uint32_t s_magic;
     uint32_t inodes;
@@ -72,12 +74,12 @@ bool ImageReader::open()
 
         qint64 r = file.read((char *) &hdr, sizeof(hdr));
         if (r != sizeof(hdr)) {
-            qWarning() << "Unable to read header";
+            qWarning(ImageReaderLog) << "Unable to read header of" << file.fileName();
             return false;
         }
 
         if (qFromLittleEndian(hdr.s_magic) != SQUASHFS_MAGIC) {
-            qWarning() << "Wrong superblock magic!";
+            qWarning(ImageReaderLog) << "Wrong superblock magic in" << file.fileName();
             return false;
         }
 
@@ -90,13 +92,13 @@ bool ImageReader::open()
 
         qint64 r = file.read((char *) &hdr, sizeof(hdr));
         if (r != sizeof(hdr)) {
-            qWarning() << "Unable to read header";
+            qWarning(ImageReaderLog) << "Unable to read header of" << file.fileName();
             return false;
         }
 
         if (qFromLittleEndian(hdr.magic) != _ANDROID_BOOTIMG_MAGIC_1 ||
             qFromLittleEndian(hdr.magic2) != _ANDROID_BOOTIMG_MAGIC_2) {
-            qWarning() << "Wrong superblock magic!";
+            qWarning(ImageReaderLog) << "Wrong superblock magic!";
             return false;
         }
 
@@ -112,12 +114,12 @@ bool ImageReader::open()
     }
 
     default:
-        qWarning() << "Unsupported image type!";
+        qWarning(ImageReaderLog) << "Unsupported image type in" << file.fileName();
         return false;
     }
 
     if (imageSize > file.size()) {
-        qWarning() << "Reported image size exceeds file size!";
+        qWarning(ImageReaderLog) << "Reported image size" << imageSize << "exceeds file size of" << file.fileName() << file.size();
         return false;
     }
 
