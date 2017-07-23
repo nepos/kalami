@@ -417,13 +417,11 @@ bool UpdateThread::downloadAndVerify(ImageReader::ImageType type,
     qInfo(UpdaterLog) << "Trying full image from" << fullImageUrl;
 
     // Downloading the delta didn't succeed, so let's try the full file
-    if (downloadFullImage(fullImageUrl, &output)) // && verifyImage(type, outputPath, sha512))
+    if (downloadFullImage(fullImageUrl, &output) && verifyImage(type, outputPath, sha512))
         return true;
 
-    output.close();
-
     // Everything failed. We're bricked.
-    qInfo() << "Full image update failed as well.";
+    qInfo(UpdaterLog) << "Full image update failed as well.";
 
     return false;
 }
