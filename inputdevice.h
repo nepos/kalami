@@ -23,6 +23,8 @@
 #include <QFile>
 #include <QtCore/QLoggingCategory>
 
+#include <linux/input.h>
+
 Q_DECLARE_LOGGING_CATEGORY(InputDeviceLog)
 
 class InputDevice : public QObject

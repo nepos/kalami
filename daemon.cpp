@@ -38,6 +38,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     mixer(new ALSAMixer("hw:0", this)),
     lightSensor(new AmbientLightSensor("/sys/bus/iio/devices/iio:device0/in_illuminance0_input")),
     displayBrightness(new BrightnessControl("/sys/class/backlight/1a98000.dsi.0")),
+    volumeInputDevice(new InputDevice("/dev/input/by-xxx/xxx")),
     connman(new Connman(this)),
     machine(new Machine(this)),
     fring(new Fring()),
@@ -69,6 +70,16 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     // ALSA
     qInfo(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
+
+    // Input devices
+    QObject::connect(volumeInputDevice, &InputDevice::inputEvent, this, [this](int type, int code, int value) {
+        if (type != EV_REL || code != REL_X)
+            return;
+
+        PolyphantMessage msg(value > 0 ? "volumecontrol/VOLUME_UP" : "volumecontrol/VOLUME_DOWN",
+                             QJsonObject{}, 0);
+        polyphant->sendMessage(msg);
+    });
 
     // Connman connection
     QObject::connect(connman, &Connman::availableWifisUpdated, this, [this](const QJsonArray &list) {

@@ -29,6 +29,7 @@
 #include "brightnesscontrol.h"
 #include "connman.h"
 #include "fring.h"
+#include "inputdevice.h"
 #include "machine.h"
 #include "nfc.h"
 #include "polyphantconnection.h"
@@ -50,6 +51,7 @@ private:
     ALSAMixer *mixer;
     AmbientLightSensor *lightSensor;
     BrightnessControl *displayBrightness;
+    InputDevice *volumeInputDevice;
     Connman *connman;
     Machine *machine;
     Fring *fring;
