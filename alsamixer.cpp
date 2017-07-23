@@ -84,6 +84,8 @@ void ALSAMixer::setPlaybackVolumeByName(const char *name, int val, int index)
         qWarning(ALSAMixerLog) << "Unable to find playback mixer element named" << name;
         return;
     }
+
+    snd_mixer_selem_set_playback_volume(me, SND_MIXER_SCHN_FRONT_LEFT, val);
 }
 
 void ALSAMixer::setEnumByName(const char *name, const char *value, int index)
