@@ -27,7 +27,6 @@ Q_LOGGING_CATEGORY(AmbientLightSensorLog, "AmbientLightSensor")
 AmbientLightSensor::AmbientLightSensor(QString illuminanceFile, float threshold, QObject *parent) :
     QObject(parent),
     input(illuminanceFile),
-    interval(interval),
     threshold(threshold)
 {
     luminance = -1.0f;
