@@ -38,7 +38,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     mixer(new ALSAMixer("hw:0", this)),
     lightSensor(new AmbientLightSensor("/sys/bus/iio/devices/iio:device0/in_illuminance0_input")),
     displayBrightness(new BrightnessControl("/sys/class/backlight/1a98000.dsi.0")),
-    updater(new Updater(machine, "latest", this)),
     connman(new Connman(this)),
     machine(new Machine(this)),
     systemdConnection(new QDBusInterface("org.freedesktop.systemd1",
@@ -50,10 +49,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     udev(new UDevMonitor(this)),
     nfc(new Nfc(this))
 {
-    // ALSA
-    qInfo(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
-
     // Updater logic
+    updater = new Updater(machine, "latest", this);
     QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
         qInfo(DaemonLog) << "New update available, version" << version;
         updater->install();
@@ -74,6 +71,9 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject::connect(updater, &Updater::updateFailed, this, [this]() {
         qInfo(DaemonLog) << "Update failed!";
     });
+
+    // ALSA
+    qInfo(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
 
     // Connman connection
     QObject::connect(connman, &Connman::availableWifisUpdated, this, [this](const QJsonArray &list) {
