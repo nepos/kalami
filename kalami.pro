@@ -14,8 +14,6 @@ TEMPLATE = app
 SOURCES += main.cpp \
     daemon.cpp \
     inputdevice.cpp \
-    udevdevice.cpp \
-    udevmonitor.cpp \
     connman.cpp \
     updater.cpp \
     alsamixer.cpp \
@@ -34,8 +32,6 @@ SOURCES += main.cpp \
 HEADERS += \
     daemon.h \
     inputdevice.h \
-    udevdevice.h \
-    udevmonitor.h \
     connman.h \
     updater.h \
     alsamixer.h \

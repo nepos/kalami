@@ -40,13 +40,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     displayBrightness(new BrightnessControl("/sys/class/backlight/1a98000.dsi.0")),
     connman(new Connman(this)),
     machine(new Machine(this)),
-    systemdConnection(new QDBusInterface("org.freedesktop.systemd1",
-                                         "/org/freedesktop/systemd1",
-                                         "org.freedesktop.systemd1.Manager",
-                                         QDBusConnection::systemBus(), this)),
     fring(new Fring()),
     polyphant(new PolyphantConnection(uri, this)),
-    udev(new UDevMonitor(this)),
     nfc(new Nfc(this))
 {
     // Updater logic
@@ -110,18 +105,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qInfo(DaemonLog) << "Connected to D-Bus as" << bus.baseService();
     else
         qWarning(DaemonLog) << "D-Bus connection failed:" << bus.lastError();
-
-
-    // udev monitor
-    udev->addMatchSubsystem("input");
-
-    QObject::connect(udev, &UDevMonitor::deviceAdded, this, [this](const UDevDevice &d) {
-        qInfo(DaemonLog) << "Linux device added:" << d.getDevPath() << "sysname" << d.getSysName();
-    });
-
-    QObject::connect(udev, &UDevMonitor::deviceRemoved, this, [this](const UDevDevice &d) {
-        qInfo(DaemonLog) << "Linux device removed:" << d.getDevPath() << "sysname" << d.getSysName();
-    });
 
     // fring
     if (fring->initialize()) {

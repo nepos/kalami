@@ -32,7 +32,6 @@
 #include "machine.h"
 #include "nfc.h"
 #include "polyphantconnection.h"
-#include "udevmonitor.h"
 #include "updater.h"
 
 Q_DECLARE_LOGGING_CATEGORY(DaemonLog)
@@ -44,10 +43,6 @@ public:
     explicit Daemon(QUrl serverUri, QObject *parent = 0);
     ~Daemon();
 
-signals:
-
-public slots:
-
 private slots:
     void polyphantMessageReceived(const PolyphantMessage &message);
 
@@ -56,11 +51,9 @@ private:
     AmbientLightSensor *lightSensor;
     BrightnessControl *displayBrightness;
     Updater *updater;
-    Fring *fring;
     Connman *connman;
     Machine *machine;
-    QDBusInterface *systemdConnection;
+    Fring *fring;
     PolyphantConnection *polyphant;
-    UDevMonitor *udev;
     Nfc *nfc;
 };
