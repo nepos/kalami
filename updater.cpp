@@ -339,7 +339,7 @@ bool UpdateThread::downloadFullImage(const QUrl &url, UpdateWriter *output)
         QNetworkReply *reply = (QNetworkReply *) sender();
 
         if (reply->error() != QNetworkReply::NoError) {
-            qInfo() << "Error downloading file: " << reply->error();
+            qInfo(UpdaterLog) << "Error downloading file: " << reply->error();
             reply->abort();
             return;
         }
@@ -413,8 +413,8 @@ bool UpdateThread::downloadAndVerify(ImageReader::ImageType type,
         dict.close();
     }
 
-    qInfo() << "Downloading delta update from" << deltaImageUrl << "failed";
-    qInfo() << "Trying full image from" << fullImageUrl;
+    qInfo(UpdaterLog) << "Downloading delta update from" << deltaImageUrl << "failed";
+    qInfo(UpdaterLog) << "Trying full image from" << fullImageUrl;
 
     // Downloading the delta didn't succeed, so let's try the full file
     if (downloadFullImage(fullImageUrl, &output)) // && verifyImage(type, outputPath, sha512))
