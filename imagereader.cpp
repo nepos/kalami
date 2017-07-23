@@ -53,7 +53,8 @@ ImageReader::ImageReader(enum ImageType type, const QString path, QObject *paren
 
 ImageReader::~ImageReader()
 {
-    file.close();
+    if (file.isOpen())
+        file.close();
 }
 
 static inline size_t ALIGN_TO(size_t l, size_t ali) {

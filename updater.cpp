@@ -32,10 +32,10 @@ const QString &Updater::getUpdateSeed(Updater::ImageType type) const
 {
     switch (type) {
     case Updater::BootImageType:
-        return machine->getAltBootDevice();
+        return machine->getCurrentBootDevice();
 
     case Updater::RootfsImageType:
-        return machine->getAltRootfsDevice();
+        return machine->getCurrentRootfsDevice();
     }
 
     return NULL;
@@ -45,10 +45,10 @@ const QString &Updater::getUpdateTarget(Updater::ImageType type) const
 {
     switch (type) {
     case Updater::BootImageType:
-        return machine->getCurrentBootDevice();
+        return machine->getAltBootDevice();
 
     case Updater::RootfsImageType:
-        return machine->getCurrentRootfsDevice();
+        return machine->getAltRootfsDevice();
     }
 
     return NULL;
@@ -90,14 +90,16 @@ void Updater::downloadFinished()
             return;
         }
 
+        QString version = QString::number(machine->getOsVersion());
+
         QJsonObject json = doc.object();
         availableUpdate.version = json["build_id"].toString().toULong();
         availableUpdate.rootfsUrl = QUrl(json["rootfs"].toString());
         availableUpdate.rootfsSha512 = json["rootfs_sha512"].toString();
         availableUpdate.bootimgUrl = QUrl(json["bootimg"].toString());
         availableUpdate.bootimgSha512 = json["bootimg_sha512"].toString();
-        availableUpdate.rootfsDeltaUrl = QUrl(json["rootfs_deltas"].toString() + "/" + machine->getOsVersion() + ".vcdiff");
-        availableUpdate.bootimgDeltaUrl = QUrl(json["bootimg_deltas"].toString() + "/" + machine->getOsVersion() + ".vcdiff");
+        availableUpdate.rootfsDeltaUrl = QUrl(json["rootfs_deltas"].toString() + version + ".vcdiff");
+        availableUpdate.bootimgDeltaUrl = QUrl(json["bootimg_deltas"].toString() + version + ".vcdiff");
 
         QNetworkRequest request(QUrl(json["signature"].toString()));
         state = Updater::StateDownloadSignature;
@@ -209,13 +211,14 @@ void Updater::install()
 
 
 
-UpdateWriter::UpdateWriter()
+UpdateWriter::UpdateWriter() : file()
 {
 }
 
 UpdateWriter::~UpdateWriter()
 {
-    file.close();
+    if (file.isOpen())
+        file.close();
 }
 
 bool UpdateWriter::open(const QString &path)
@@ -255,7 +258,9 @@ size_t UpdateWriter::size() const
     return file.pos();
 }
 
-UpdateThread::UpdateThread(const Updater *updater, QObject *parent) : QThread(parent), updater(updater)
+UpdateThread::UpdateThread(const Updater *updater, QObject *parent) :
+    QThread(parent),
+    updater(updater)
 {
 }
 
@@ -269,21 +274,24 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, U
     bool ret = false;
     bool error = false;
 
-    open_vcdiff::VCDiffStreamingDecoder decoder;
+    networkAccessManager.moveToThread(thread());
+    reply->moveToThread(thread());
 
-    decoder.SetMaximumTargetFileSize(256 * 1024 * 1024);
+    open_vcdiff::VCDiffStreamingDecoder decoder;
+    decoder.SetMaximumTargetFileSize(512 * 1024 * 1024);
     decoder.StartDecoding((const char *) dict->map(), dict->size());
 
     QObject::connect(reply, &QNetworkReply::readyRead, this, [this, &loop, &decoder, output, &error]() {
         QNetworkReply *reply = (QNetworkReply *) sender();
 
-        QByteArray data = reply->readAll();
-        if (data.isEmpty() && reply->error() != QNetworkReply::NoError) {
+        if (reply->error() != QNetworkReply::NoError) {
             qInfo() << "Error downloading file: " << reply->error();
             reply->abort();
             error = true;
             return;
         }
+
+        const QByteArray data = reply->readAll();
 
         if (!decoder.DecodeChunkToInterface(data.constData(), data.size(), output)) {
             reply->abort();
@@ -309,10 +317,13 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, U
     timer.start(60 * 1000);
     loop.exec();
 
+    reply->abort();
+    reply->deleteLater();
+
     return ret && !error;
 }
 
-bool UpdateThread::downloadFullImage(const QUrl &url, const QString &path)
+bool UpdateThread::downloadFullImage(const QUrl &url, UpdateWriter *output)
 {
     QNetworkAccessManager networkAccessManager;
     QNetworkRequest request(url);
@@ -321,24 +332,20 @@ bool UpdateThread::downloadFullImage(const QUrl &url, const QString &path)
     QTimer timer;
     bool ret = false;
 
-    QFile output(path);
-    if (!output.open(QFileDevice::WriteOnly))
-        return false;
+    networkAccessManager.moveToThread(thread());
+    reply->moveToThread(thread());
 
-    QObject::connect(reply, &QNetworkReply::readyRead, this, [this, &loop, &output]() {
+    QObject::connect(reply, &QNetworkReply::readyRead, this, [this, output]() {
         QNetworkReply *reply = (QNetworkReply *) sender();
 
-        QByteArray data = reply->readAll();
-        if (data.isEmpty() && reply->error() != QNetworkReply::NoError) {
+        if (reply->error() != QNetworkReply::NoError) {
             qInfo() << "Error downloading file: " << reply->error();
             reply->abort();
             return;
         }
 
-        if (output.write(data) != data.size()) {
-            qWarning() << "Unable to write output";
-            loop.quit();
-        }
+        const QByteArray data = reply->readAll();
+        output->append(data.constData(), data.size());
     });
 
     QObject::connect(reply, &QNetworkReply::finished, this, [this, &loop, &ret]() {
@@ -357,7 +364,9 @@ bool UpdateThread::downloadFullImage(const QUrl &url, const QString &path)
     timer.start(60 * 1000);
 
     loop.exec();
-    output.close();
+
+    reply->abort();
+    reply->deleteLater();
 
     return ret;
 }
@@ -402,15 +411,16 @@ bool UpdateThread::downloadAndVerify(ImageReader::ImageType type,
             return true;
 
         dict.close();
-        output.close();
     }
 
     qInfo() << "Downloading delta update from" << deltaImageUrl << "failed";
     qInfo() << "Trying full image from" << fullImageUrl;
 
     // Downloading the delta didn't succeed, so let's try the full file
-    if (downloadFullImage(fullImageUrl, outputPath) && verifyImage(type, outputPath, sha512))
+    if (downloadFullImage(fullImageUrl, &output)) // && verifyImage(type, outputPath, sha512))
         return true;
+
+    output.close();
 
     // Everything failed. We're bricked.
     qInfo() << "Full image update failed as well.";
