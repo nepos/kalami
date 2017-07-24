@@ -209,7 +209,12 @@ void Updater::install()
     thread->start();
 }
 
-
+//
+// UpdateWriter is a helper class that wraps QFile functionality in an interface
+// open_vcdiff::VCDiffStreamingDecoder expects to push its content to.
+// It is consequently also used in regular full-image downloads to clean up the
+// code paths a bit.
+//
 
 UpdateWriter::UpdateWriter() : file()
 {
@@ -258,6 +263,13 @@ size_t UpdateWriter::size() const
     return file.pos();
 }
 
+//
+// UpdateThread is a wrapper around a QThread that handles image downloads (both
+// VCDIFF delta images and full images) and verifies the written output.
+// Its main entry point is an 'AvailableUpdate' where it gets its URLs and SHA512
+// sums from. It emits signals for success, failure and progress updates.
+//
+
 UpdateThread::UpdateThread(const Updater *updater, QObject *parent) :
     QThread(parent),
     updater(updater)
@@ -290,6 +302,8 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, U
     bool ret = false;
     bool error = false;
 
+    // We need to move these objects to the thread we're running in. Otherwise, the handler for the reply signals
+    // will fire in the main thread, leading to memory corruption in reply->readAll()
     networkAccessManager.moveToThread(thread());
     reply->moveToThread(thread());
 
@@ -331,7 +345,6 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, U
     timer.start(60 * 1000);
     loop.exec();
 
-    reply->abort();
     reply->deleteLater();
 
     return ret && !error;
@@ -346,6 +359,8 @@ bool UpdateThread::downloadFullImage(const QUrl &url, UpdateWriter *output)
     QTimer timer;
     bool ret = false;
 
+    // We need to move these objects to the thread we're running in. Otherwise, the handler for the reply signals
+    // will fire in the main thread, leading to memory corruption in reply->readAll()
     networkAccessManager.moveToThread(thread());
     reply->moveToThread(thread());
 
@@ -377,7 +392,6 @@ bool UpdateThread::downloadFullImage(const QUrl &url, UpdateWriter *output)
 
     loop.exec();
 
-    reply->abort();
     reply->deleteLater();
 
     return ret;
