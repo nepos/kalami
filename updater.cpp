@@ -274,7 +274,7 @@ void UpdateThread::emitProgress(UpdateThread::State state, float v)
         emit progress(v/2);
         break;
 
-    case UpdateThread::VerifyState:
+    case UpdateThread::VerifyImageState:
         emit progress(0.5f + (v/2));
         break;
     }
@@ -400,7 +400,7 @@ bool UpdateThread::verifyImage(ImageReader::ImageType type, const QString &path,
         pos += l;
         buf += l;
 
-        emitProgress(UpdateThread::VerifyState, (float) pos / (float) image.size());
+        emitProgress(UpdateThread::VerifyImageState, (float) pos / (float) image.size());
     }
 
     return hash.result().toHex() == sha512;
@@ -409,8 +409,8 @@ bool UpdateThread::verifyImage(ImageReader::ImageType type, const QString &path,
 bool UpdateThread::downloadAndVerify(ImageReader::ImageType type,
                                      const QString &dictionaryPath,
                                      const QString &outputPath,
-                                     const QUrl fullImageUrl,
-                                     const QUrl deltaImageUrl,
+                                     const QUrl &fullImageUrl,
+                                     const QUrl &deltaImageUrl,
                                      const QString &sha512)
 {
     UpdateWriter output;

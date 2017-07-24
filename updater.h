@@ -112,7 +112,7 @@ private:
     enum State {
         DownloadDeltaImageState,
         DownloadFullImageState,
-        VerifyState,
+        VerifyImageState,
     };
 
     const Updater *updater;
@@ -120,6 +120,6 @@ private:
     bool downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, UpdateWriter *output);
     bool downloadFullImage(const QUrl &source, UpdateWriter *output);
     bool verifyImage(ImageReader::ImageType type, const QString &path, const QString &sha512);
-    bool downloadAndVerify(ImageReader::ImageType type, const QString &dictionaryPath, const QString &outputPath, const QUrl fullImageUrl, const QUrl deltaImageUrl, const QString &sha512);
+    bool downloadAndVerify(ImageReader::ImageType type, const QString &dictionaryPath, const QString &outputPath, const QUrl &fullImageUrl, const QUrl &deltaImageUrl, const QString &sha512);
 };
 
