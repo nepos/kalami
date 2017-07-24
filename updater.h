@@ -108,7 +108,15 @@ signals:
     void failed();
 
 private:
+
+    enum State {
+        DownloadDeltaImageState,
+        DownloadFullImageState,
+        VerifyState,
+    };
+
     const Updater *updater;
+    void emitProgress(State state, float v);
     bool downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, UpdateWriter *output);
     bool downloadFullImage(const QUrl &source, UpdateWriter *output);
     bool verifyImage(ImageReader::ImageType type, const QString &path, const QString &sha512);

@@ -264,6 +264,22 @@ UpdateThread::UpdateThread(const Updater *updater, QObject *parent) :
 {
 }
 
+void UpdateThread::emitProgress(UpdateThread::State state, float v)
+{
+    // reserve 50% for image download, 50% for verification
+
+    switch (state) {
+    case UpdateThread::DownloadFullImageState:
+    case UpdateThread::DownloadDeltaImageState:
+        emit progress(v/2);
+        break;
+
+    case UpdateThread::VerifyState:
+        emit progress(0.5f + (v/2));
+        break;
+    }
+}
+
 bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, UpdateWriter *output)
 {
     QNetworkAccessManager networkAccessManager;
@@ -307,9 +323,7 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, U
     });
 
     QObject::connect(reply, &QNetworkReply::downloadProgress, this, [this](qint64 bytesReceived, qint64 bytesTotal) {
-        float v = (float) bytesReceived / (float) bytesTotal;
-        // reserve 50% for image download, 50% for verification
-        emit progress(v/2);
+        emitProgress(UpdateThread::DownloadDeltaImageState, (float) bytesReceived / (float) bytesTotal);
     });
 
     QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
@@ -354,9 +368,7 @@ bool UpdateThread::downloadFullImage(const QUrl &url, UpdateWriter *output)
     });
 
     QObject::connect(reply, &QNetworkReply::downloadProgress, this, [this](qint64 bytesReceived, qint64 bytesTotal) {
-        float v = (float) bytesReceived / (float) bytesTotal;
-        // reserve 50% for image download, 50% for verification
-        emit progress(v/2);
+        emitProgress(UpdateThread::DownloadFullImageState, (float) bytesReceived / (float) bytesTotal);
     });
 
     QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
@@ -388,7 +400,7 @@ bool UpdateThread::verifyImage(ImageReader::ImageType type, const QString &path,
         pos += l;
         buf += l;
 
-        emit progress(0.5f + ((float) pos / (float) image.size()) / 2);
+        emitProgress(UpdateThread::VerifyState, (float) pos / (float) image.size());
     }
 
     return hash.result().toHex() == sha512;
