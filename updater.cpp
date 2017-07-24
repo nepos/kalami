@@ -102,6 +102,8 @@ void Updater::downloadFinished()
         availableUpdate.bootimgDeltaUrl = QUrl(json["bootimg_deltas"].toString() + version + ".vcdiff");
 
         QNetworkRequest request(QUrl(json["signature"].toString()));
+        request.setMaximumRedirectsAllowed(0);
+
         state = Updater::StateDownloadSignature;
         pendingReply = networkAccessManager.get(request);
         QObject::connect(pendingReply, &QNetworkReply::finished, this, &Updater::downloadFinished);
@@ -157,7 +159,7 @@ void Updater::check()
 
     query.addQueryItem("current", currentVersion);
 
-    QUrl url("http://os.nepos.io/updates/" + model + "/" + updateChannel + ".json");
+    QUrl url("https://os.nepos.io/updates/" + model + "/" + updateChannel + ".json");
     url.setQuery(query);
 
     qInfo(UpdaterLog) << "Checking for updates on" << url;
@@ -168,6 +170,8 @@ void Updater::check()
     request.setRawHeader(QString("X-nepos-device-model").toLocal8Bit(), machine->getModelName().toLocal8Bit());
     request.setRawHeader(QString("X-nepos-device-revision").toLocal8Bit(), machine->getDeviceRevision().toLocal8Bit());
     request.setRawHeader(QString("X-nepos-device-serial").toLocal8Bit(), machine->getDeviceSerial().toLocal8Bit());
+    request.setMaximumRedirectsAllowed(1);
+    request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
 
     if (pendingReply) {
         pendingReply->abort();
