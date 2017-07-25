@@ -79,15 +79,17 @@ void Updater::downloadFinished()
         QJsonDocument doc = QJsonDocument::fromJson(content, &jsonError);
 
         QFile file("/tmp/update.json");
-        if (!file.open(QFileDevice::WriteOnly))
-            return;
+        if (!file.open(QFileDevice::WriteOnly)) {
+            qWarning(UpdaterLog) << "Unable to write" << file.fileName();
+            break;
+        }
 
         file.write(content);
         file.close();
 
         if (jsonError.error != QJsonParseError::NoError) {
             emit checkFailed("Unable to parse Json content from update server:" + jsonError.errorString());
-            return;
+            break;
         }
 
         QString version = QString::number(machine->getOsVersion());
@@ -113,8 +115,10 @@ void Updater::downloadFinished()
 
     case Updater::StateDownloadSignature: {
         QFile file("/tmp/update.json.sig");
-        if (!file.open(QFileDevice::WriteOnly))
-            return;
+        if (!file.open(QFileDevice::WriteOnly)) {
+            qWarning(UpdaterLog) << "Unable to write" << file.fileName();
+            break;
+        }
 
         file.write(content);
         file.close();
