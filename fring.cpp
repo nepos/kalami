@@ -56,8 +56,12 @@ bool Fring::initialize()
     boardRevisionA = rdCmd.boardRevision.boardRevisionA;
     boardRevisionB = rdCmd.boardRevision.boardRevisionB;
 
-    qInfo() << "Successfully initialized fring, firmware version" << firmwareVersion
-            << "board revisions" << boardRevisionA << boardRevisionB;
+    qInfo(FringLog) << "Successfully initialized fring, firmware version" << firmwareVersion
+                    << "board revisions" << boardRevisionA << boardRevisionB;
+
+    // test hack
+    if (firmwareVersion == 99)
+        updateFirmware("/app/firmware/test.bin");
 
     return true;
 }
@@ -245,6 +249,8 @@ bool Fring::updateFirmware(const QString filename)
     }
 
     wrCmd->reg = FRING_REG_PUSH_FIRMWARE_UPDATE;
+
+    qInfo(FringLog) << "Transmitting firmware file" << f.fileName() << "size" << f.size();
 
     do {
         r = f.read(wrCmd->firmwareUpdate.payload, maxChunkSize);
