@@ -489,6 +489,7 @@ bool UpdateThread::downloadAndVerify(ImageReader::ImageType type,
     }
 
     // Downloading the delta didn't succeed, so let's try the full file
+    output.clear();
     if (downloadFullImage(fullImageUrl, &output) && verifyImage(type, outputPath, sha512))
         return true;
 
