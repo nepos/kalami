@@ -283,20 +283,37 @@ UpdateThread::UpdateThread(const Updater *updater, QObject *parent) :
 {
 }
 
-void UpdateThread::emitProgress(UpdateThread::State state, float v)
+void UpdateThread::emitProgress(bool isDownload, float v)
 {
-    // reserve 50% for image download, 50% for verification
+    //
+    // segment the progress indicator into 4 parts:
+    //
+    // 25% for boot image download
+    // 25% for boot image verification
+    // 25% for rootfs download
+    // 25% for rootfs verification
+    //
+
+    if (v < 0.0f || v > 1.0f)
+        return;
+
+    float p = 0.0f;
 
     switch (state) {
-    case UpdateThread::DownloadFullImageState:
-    case UpdateThread::DownloadDeltaImageState:
-        emit progress(v/2);
+    case UpdateThread::DownloadBootimgState:
         break;
 
-    case UpdateThread::VerifyImageState:
-        emit progress(0.5f + (v/2));
+    case UpdateThread::DownloadRootfsState:
+        p += 0.5;
         break;
     }
+
+    if (!isDownload)
+        p += 0.25;
+
+    p += v/4;
+
+    emit progress(p);
 }
 
 bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, UpdateWriter *output)
@@ -359,7 +376,7 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, U
     });
 
     QObject::connect(reply, &QNetworkReply::downloadProgress, this, [this](qint64 bytesReceived, qint64 bytesTotal) {
-        emitProgress(UpdateThread::DownloadDeltaImageState, (float) bytesReceived / (float) bytesTotal);
+        emitProgress(true, (float) bytesReceived / (float) bytesTotal);
     });
 
     QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
@@ -416,7 +433,7 @@ bool UpdateThread::downloadFullImage(const QUrl &url, UpdateWriter *output)
     });
 
     QObject::connect(reply, &QNetworkReply::downloadProgress, this, [this](qint64 bytesReceived, qint64 bytesTotal) {
-        emitProgress(UpdateThread::DownloadFullImageState, (float) bytesReceived / (float) bytesTotal);
+        emitProgress(true, (float) bytesReceived / (float) bytesTotal);
     });
 
     QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
@@ -446,7 +463,7 @@ bool UpdateThread::verifyImage(ImageReader::ImageType type, const QString &path,
         pos += l;
         buf += l;
 
-        emitProgress(UpdateThread::VerifyImageState, (float) pos / (float) image.size());
+        emitProgress(false, (float) pos / (float) image.size());
     }
 
     return hash.result().toHex() == sha512;
@@ -486,6 +503,7 @@ void UpdateThread::run()
     const AvailableUpdate *update = updater->getAvailableUpdate();
     bool ret;
 
+    state = UpdateThread::DownloadBootimgState;
     ret = downloadAndVerify(ImageReader::AndroidBootType,
                             updater->getUpdateSeed(Updater::BootImageType),
                             updater->getUpdateTarget(Updater::BootImageType),
@@ -496,6 +514,7 @@ void UpdateThread::run()
         return;
     }
 
+    state = UpdateThread::DownloadRootfsState;
     ret = downloadAndVerify(ImageReader::SquashFsType,
                             updater->getUpdateSeed(Updater::RootfsImageType),
                             updater->getUpdateTarget(Updater::RootfsImageType),

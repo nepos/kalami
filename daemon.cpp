@@ -68,6 +68,10 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qInfo(DaemonLog) << "Update failed!";
     });
 
+    QObject::connect(updater, &Updater::updateProgress, this, [this](float progress) {
+        qInfo(DaemonLog) << "Updater progress:" << progress;
+    });
+
     // ALSA
     qInfo(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
 

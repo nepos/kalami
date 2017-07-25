@@ -111,13 +111,13 @@ signals:
 private:
 
     enum State {
-        DownloadDeltaImageState,
-        DownloadFullImageState,
-        VerifyImageState,
+        DownloadBootimgState,
+        DownloadRootfsState,
     };
 
+    enum State state;
     const Updater *updater;
-    void emitProgress(State state, float v);
+    void emitProgress(bool isDownload, float v);
     bool downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, UpdateWriter *output);
     bool downloadFullImage(const QUrl &source, UpdateWriter *output);
     bool verifyImage(ImageReader::ImageType type, const QString &path, const QString &sha512);
