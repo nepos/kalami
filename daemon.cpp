@@ -43,7 +43,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     machine(new Machine(this)),
     fring(new Fring()),
     polyphant(new PolyphantConnection(uri, this)),
-    updater(new Updater(machine, "latest", this)),
+    updater(new Updater(machine, this)),
     nfc(new Nfc(this))
 {
     // Updater logic
@@ -99,7 +99,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     QObject::connect(connman, &Connman::goneOnline, this, [this]() {
         qInfo(DaemonLog) << "We are now online!";
-        updater->check();
+        updater->check("latest");
     });
 
     connman->start();

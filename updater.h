@@ -38,7 +38,7 @@ class Updater : public QObject
     };
 
 public:
-    explicit Updater(const Machine *machine, const QString &updateChannel, QObject *parent = 0);
+    explicit Updater(const Machine *machine, QObject *parent = 0);
     ~Updater();
     const struct AvailableUpdate *getAvailableUpdate() const { return &availableUpdate; }
 
@@ -59,7 +59,7 @@ signals:
     void updateProgress(float progress);
 
 public slots:
-    void check();
+    void check(const QString &updateChannel);
     void install();
 
 private slots:
@@ -69,7 +69,6 @@ private slots:
 private:
     enum State state;
     const Machine *machine;
-    QString updateChannel;
     QNetworkAccessManager networkAccessManager;
     QNetworkReply *pendingReply;
     struct AvailableUpdate availableUpdate;

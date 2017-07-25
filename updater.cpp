@@ -14,8 +14,8 @@
 
 Q_LOGGING_CATEGORY(UpdaterLog, "Updater")
 
-Updater::Updater(const Machine *machine, const QString &updateChannel, QObject *parent) :
-    QObject(parent), machine(machine), updateChannel(updateChannel), networkAccessManager(this)
+Updater::Updater(const Machine *machine, QObject *parent) :
+    QObject(parent), machine(machine), networkAccessManager(this)
 {
     pendingReply = NULL;
     thread = NULL;
@@ -145,7 +145,7 @@ void Updater::downloadFinished()
     reply->deleteLater();
 }
 
-void Updater::check()
+void Updater::check(const QString &updateChannel)
 {
     QUrlQuery query;
     QString currentVersion = QString::number(machine->getOsVersion());
