@@ -157,8 +157,6 @@ void Updater::check()
         model = "unknown";
     }
 
-    query.addQueryItem("current", currentVersion);
-
     QUrl url("https://os.nepos.io/updates/" + model + "/" + updateChannel + ".json");
     url.setQuery(query);
 
@@ -311,6 +309,8 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, U
     bool ret = false;
     bool error = false;
 
+    qInfo(UpdaterLog) << "Downloading delta update from" << deltaUrl;
+
     // We need to move these objects to the thread we're running in. Otherwise, the handler for the reply signals
     // will fire in the main thread, leading to memory corruption in reply->readAll()
     networkAccessManager.moveToThread(thread());
@@ -384,6 +384,8 @@ bool UpdateThread::downloadFullImage(const QUrl &url, UpdateWriter *output)
     // will fire in the main thread, leading to memory corruption in reply->readAll()
     networkAccessManager.moveToThread(thread());
     reply->moveToThread(thread());
+
+    qInfo(UpdaterLog) << "Downloading full image from" << url;
 
     QObject::connect(reply, &QNetworkReply::readyRead, this, [this, output]() {
         QNetworkReply *reply = (QNetworkReply *) sender();
@@ -468,9 +470,6 @@ bool UpdateThread::downloadAndVerify(ImageReader::ImageType type,
 
         dict.close();
     }
-
-    qInfo(UpdaterLog) << "Downloading delta update from" << deltaImageUrl << "failed";
-    qInfo(UpdaterLog) << "Trying full image from" << fullImageUrl;
 
     // Downloading the delta didn't succeed, so let's try the full file
     if (downloadFullImage(fullImageUrl, &output) && verifyImage(type, outputPath, sha512))
