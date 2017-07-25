@@ -267,6 +267,11 @@ size_t UpdateWriter::size() const
     return file.pos();
 }
 
+void UpdateWriter::flush()
+{
+    file.flush();
+}
+
 //
 // UpdateThread is a wrapper around a QThread that handles image downloads (both
 // VCDIFF delta images and full images) and verifies the written output.
@@ -319,7 +324,7 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, U
         QNetworkReply *reply = (QNetworkReply *) sender();
 
         if (reply->error() != QNetworkReply::NoError) {
-            qInfo() << "Error downloading file: " << reply->error();
+            qInfo(UpdaterLog) << "Error downloading file: " << reply->errorString();
             reply->abort();
             error = true;
             return;
@@ -334,8 +339,21 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, U
         }
     });
 
-    QObject::connect(reply, &QNetworkReply::finished, this, [this, &loop, &decoder, &ret]() {
-        decoder.FinishDecoding();
+    connect(reply, static_cast<void(QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error),
+          [this, &loop, &error](QNetworkReply::NetworkError code){
+        QNetworkReply *reply = (QNetworkReply *) sender();
+        Q_UNUSED(code);
+
+        qInfo(UpdaterLog) << "Error downloading" << reply->url() << ":" << reply->errorString();
+        reply->abort();
+        error = true;
+        loop.quit();
+    });
+
+    QObject::connect(reply, &QNetworkReply::finished, this, [this, &loop, &decoder, &ret, &error]() {
+        if (!error)
+            decoder.FinishDecoding();
+
         ret = true;
         loop.quit();
     });
@@ -348,8 +366,7 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, U
     timer.setSingleShot(true);
     timer.start(60 * 1000);
     loop.exec();
-
-    reply->deleteLater();
+    output->flush();
 
     return ret && !error;
 }
@@ -381,6 +398,16 @@ bool UpdateThread::downloadFullImage(const QUrl &url, UpdateWriter *output)
         output->append(data.constData(), data.size());
     });
 
+    connect(reply, static_cast<void(QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error),
+          [this, &loop](QNetworkReply::NetworkError code){
+        QNetworkReply *reply = (QNetworkReply *) sender();
+        Q_UNUSED(code);
+
+        qInfo(UpdaterLog) << "Error downloading" << reply->url() << ":" << reply->errorString();
+        reply->abort();
+        loop.quit();
+    });
+
     QObject::connect(reply, &QNetworkReply::finished, this, [this, &loop, &ret]() {
         ret = true;
         loop.quit();
@@ -395,8 +422,7 @@ bool UpdateThread::downloadFullImage(const QUrl &url, UpdateWriter *output)
     timer.start(60 * 1000);
 
     loop.exec();
-
-    reply->deleteLater();
+    output->flush();
 
     return ret;
 }

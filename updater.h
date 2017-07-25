@@ -83,6 +83,7 @@ public:
 
     bool open(const QString &path);
     void close();
+    void flush();
 
     virtual UpdateWriter &append(const char* s, size_t n);
     virtual void clear();
