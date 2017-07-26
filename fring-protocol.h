@@ -1,24 +1,33 @@
 #ifndef FRINGPROTOCOL_H
 #define FRINGPROTOCOL_H
 
-const int FRING_REG_ID                    = 0x01;
-const int FRING_REG_READ_BOOT_INFO        = 0x02;
-const int FRING_REG_READ_BOARD_REVISION   = 0x03;
-const int FRING_REG_READ_INTERRUPT_STATUS = 0x04;
-const int FRING_REG_SET_LED               = 0x05;
-const int FRING_REG_READ_DEVICE_STATUS    = 0x06;
-const int FRING_REG_PUSH_FIRMWARE_UPDATE  = 0x07;
-const int FRING_REG_READ_LOG_MESSAGE      = 0x08;
+enum {
+    FRING_REG_ID                    = 0x01,
+    FRING_REG_READ_BOOT_INFO        = 0x02,
+    FRING_REG_READ_BOARD_REVISION   = 0x03,
+    FRING_REG_READ_INTERRUPT_STATUS = 0x04,
+    FRING_REG_SET_LED               = 0x05,
+    FRING_REG_READ_DEVICE_STATUS    = 0x06,
+    FRING_REG_PUSH_FIRMWARE_UPDATE  = 0x07,
+    FRING_REG_READ_LOG_MESSAGE      = 0x08,
+};
 
-const int FRING_INTERRUPT_DEVICE_STATUS   = 0x01;
-const int FRING_INTERRUPT_LOG_MESSAGE     = 0x02;
+enum {
+    FRING_INTERRUPT_DEVICE_STATUS   = 0x01,
+    FRING_INTERRUPT_LOG_MESSAGE     = 0x02
+};
 
-const int FRING_LED_MODE_OFF = 0;
-const int FRING_LED_MODE_ON  = 1;
-const int FRING_LED_MODE_FLASHING = 2;
-const int FRING_LED_MODE_PULSATING = 3;
+enum {
+    FRING_LED_MODE_OFF              = 0,
+    FRING_LED_MODE_ON               = 1,
+    FRING_LED_MODE_FLASHING         = 2,
+    FRING_LED_MODE_PULSATING        = 3
+};
 
-const int FRING_UPDATE_STATUS_OK = 0;
+enum {
+    FRING_UPDATE_STATUS_OK          = 0
+};
+
 
 #define _packed_ __attribute__((__packed__))
 
