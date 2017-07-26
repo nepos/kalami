@@ -46,7 +46,8 @@ HEADERS += \
     ambientlightsensor.h \
     brightnesscontrol.h \
     fring-protocol.h \
-    imagereader.h
+    imagereader.h \
+    crc32table.h
 
 LIBS += -ludev
 LIBS += -lqconnman
