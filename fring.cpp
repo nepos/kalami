@@ -22,6 +22,8 @@ Fring::Fring(QObject *parent) :
     homeButtonState = -1;
 }
 
+#include <QThread>
+
 bool Fring::initialize()
 {
     if (!client.open(Fring::I2CBus, Fring::I2CAddr))
@@ -29,6 +31,14 @@ bool Fring::initialize()
 
     struct FringCommandRead rdCmd = {};
     struct FringCommandWrite wrCmd = {};
+
+    while (!qgetenv("FRING_HACK").isEmpty()) {
+        wrCmd.reg = FRING_REG_ID;
+        transfer(&wrCmd, &rdCmd);
+
+        qInfo(FringLog) << "READ FROM ID CMD" << QByteArray((char*) rdCmd.id.id, 5);
+        QThread::sleep(1);
+    }
 
     wrCmd.reg = FRING_REG_ID;
     if (!transfer(&wrCmd, &rdCmd))
