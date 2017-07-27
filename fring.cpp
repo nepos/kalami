@@ -33,7 +33,9 @@ bool Fring::initialize()
     struct FringCommandWrite wrCmd = {};
 
     wrCmd.reg = FRING_REG_ID;
-    if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.id)))
+    wrCmd.protocolVersion.version = 1;
+    if (!transfer(&wrCmd, offsetof(struct FringCommandWrite, protocolVersion) + sizeof(wrCmd.protocolVersion),
+                  &rdCmd, sizeof(rdCmd.id)))
         return false;
 
     if (rdCmd.id.id[0] != 'F' ||

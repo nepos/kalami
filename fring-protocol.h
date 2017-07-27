@@ -76,6 +76,10 @@ struct FringCommandWrite {
     uint8_t reg;
     union {
         struct {
+            uint8_t version;
+        } protocolVersion;
+
+        struct {
             uint8_t id;
             uint8_t mode;
 
