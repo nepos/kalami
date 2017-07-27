@@ -18,6 +18,10 @@ enum {
 };
 
 enum {
+    FRING_DEVICE_STATUS_HOME_BUTTON = 0x01,
+};
+
+enum {
     FRING_INTERRUPT_DEVICE_STATUS   = 0x01,
     FRING_INTERRUPT_LOG_MESSAGE     = 0x02
 };
@@ -61,7 +65,7 @@ struct FringCommandRead {
             uint8_t batteryLevel;
             uint8_t batteryChargeCurrent;
             uint8_t batteryDischargeCurrent;
-            uint8_t homeButton:1;
+            uint32_t status;
         } deviceStatus;
 
         struct {

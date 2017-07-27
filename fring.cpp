@@ -24,6 +24,12 @@ Fring::Fring(QObject *parent) :
     homeButtonState = -1;
 }
 
+#define CMD_LEN(type, sub) \
+({ \
+    type __x; \
+    (offsetof(type, sub) + sizeof(__x.sub)); \
+})
+
 bool Fring::initialize()
 {
     if (!client.open(Fring::I2CBus, Fring::I2CAddr))
@@ -34,8 +40,8 @@ bool Fring::initialize()
 
     wrCmd.reg = FRING_REG_ID;
     wrCmd.protocolVersion.version = 1;
-    if (!transfer(&wrCmd, offsetof(struct FringCommandWrite, protocolVersion) + sizeof(wrCmd.protocolVersion),
-                  &rdCmd, sizeof(rdCmd.id)))
+    if (!transfer(&wrCmd, CMD_LEN(struct FringCommandWrite, protocolVersion),
+                  &rdCmd, CMD_LEN(struct FringCommandRead, id)))
         return false;
 
     if (rdCmd.id.id[0] != 'F' ||
@@ -173,8 +179,12 @@ bool Fring::readDeviceStatus()
     if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.deviceStatus)))
         return false;
 
-    if (homeButtonState != rdCmd.deviceStatus.homeButton) {
-        homeButtonState = !!rdCmd.deviceStatus.homeButton;
+    uint32_t status = qFromLittleEndian(rdCmd.deviceStatus.status);
+
+    bool home = !!(status & FRING_DEVICE_STATUS_HOME_BUTTON);
+
+    if (homeButtonState != home) {
+        homeButtonState = home;
         emit homeButtonChanged(homeButtonState);
     }
 
