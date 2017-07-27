@@ -43,7 +43,7 @@ bool Fring::initialize()
         rdCmd.id.id[2] != 'i' ||
         rdCmd.id.id[3] != 'n' ||
         rdCmd.id.id[4] != 'g') {
-        qWarning(FringLog) << "Invalid ID code!";
+        qWarning(FringLog) << "Invalid ID code " << QByteArray((char *) rdCmd.id.id, 5);
         return false;
     }
 
