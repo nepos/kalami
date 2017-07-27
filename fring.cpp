@@ -253,7 +253,6 @@ bool Fring::updateFirmware(const QString filename)
         wrCmd->firmwareUpdate.length = qToLittleEndian(r);
 
         if (r == 0) {
-
             wrCmd->firmwareUpdate.offset = 0;
             wrCmd->firmwareUpdate.crc = qToLittleEndian(fullCRC);
         } else {

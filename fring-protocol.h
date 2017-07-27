@@ -40,7 +40,7 @@ struct FringCommandRead {
         struct {
             uint32_t version;
             uint32_t uptime;
-            uint8_t bootedFirmware;
+            uint32_t flags;
         } version _packed_;
 
         struct {
