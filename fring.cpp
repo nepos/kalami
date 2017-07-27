@@ -1,4 +1,5 @@
 #include <QtEndian>
+#include <QDir>
 
 #include "fring.h"
 #include "fring-protocol.h"
@@ -73,9 +74,23 @@ bool Fring::initialize()
                     << QString("(" + bootFlagsStrings.join(", ") + ")")
                     << "board revisions" << boardRevisionA << boardRevisionB;
 
-    // test hack
-    if (firmwareVersion == 99)
-        updateFirmware("/app/firmware/test.bin");
+    // Check for firmware updates
+    QDir firmwareDir = QDir("/app/firmware/fring/");
+    QStringList firmwareFiles = firmwareDir.entryList(QDir::Files);
+
+    if (!firmwareFiles.isEmpty()) {
+        QString firmwareFile = firmwareFiles.first();
+        QStringList parts = firmwareFile.split(".");
+
+        if (!parts.isEmpty()) {
+            int availableVersion = parts.first().toInt();
+
+            if (availableVersion > firmwareVersion) {
+                qInfo(FringLog) << "Newer firmware available (" + firmwareFile + "), updating.";
+                updateFirmware(firmwareDir.absolutePath() + "/" + firmwareFile);
+            }
+        }
+    }
 
     return true;
 }
