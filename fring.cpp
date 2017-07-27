@@ -33,7 +33,7 @@ bool Fring::initialize()
     struct FringCommandWrite wrCmd = {};
 
     wrCmd.reg = FRING_REG_ID;
-    if (!transfer(&wrCmd, &rdCmd))
+    if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.id)))
         return false;
 
     if (rdCmd.id.id[0] != 'F' ||
@@ -48,7 +48,7 @@ bool Fring::initialize()
     QStringList bootFlagsStrings;
 
     wrCmd.reg = FRING_REG_READ_BOOT_INFO;
-    if (!transfer(&wrCmd, &rdCmd))
+    if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.bootInfo)))
         return false;
 
     uint32_t bootFlags = qFromLittleEndian(rdCmd.bootInfo.flags);
@@ -64,7 +64,7 @@ bool Fring::initialize()
     firmwareVersion = qFromLittleEndian(rdCmd.bootInfo.version);
 
     wrCmd.reg = FRING_REG_READ_BOARD_REVISION;
-    if (!transfer(&wrCmd, &rdCmd))
+    if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.boardRevision)))
         return false;
 
     boardRevisionA = rdCmd.boardRevision.boardRevisionA;
@@ -95,9 +95,10 @@ bool Fring::initialize()
     return true;
 }
 
-bool Fring::transfer(const struct FringCommandWrite *wrCmd, const struct FringCommandRead *rdCmd)
+bool Fring::transfer(const struct FringCommandWrite *wrCmd, size_t wrSize,
+                     const struct FringCommandRead *rdCmd, size_t rdSize)
 {
-    if (!client.transfer((uint8_t *) wrCmd, sizeof(*wrCmd), (uint8_t *) rdCmd, sizeof(*rdCmd))) {
+    if (!client.transfer((uint8_t *) wrCmd, wrSize, (uint8_t *) rdCmd, rdSize)) {
         qWarning(FringLog) << "Unable to transfer command!";
         return false;
     }
@@ -113,7 +114,7 @@ bool Fring::setLedOff(int id)
     wrCmd.led.id = id;
     wrCmd.led.mode = FRING_LED_MODE_OFF;
 
-    return transfer(&wrCmd);
+    return transfer(&wrCmd, offsetof(struct FringCommandWrite, led) + sizeof(wrCmd.led));
 }
 
 bool Fring::setLedOn(int id, float r, float g, float b)
@@ -127,7 +128,7 @@ bool Fring::setLedOn(int id, float r, float g, float b)
     wrCmd.led.on.g = 255.0f / g;
     wrCmd.led.on.b = 255.0f / b;
 
-    return transfer(&wrCmd);
+    return transfer(&wrCmd, offsetof(struct FringCommandWrite, led) + sizeof(wrCmd.led));
 }
 
 bool Fring::setLedFlashing(int id, float r, float g, float b, float onPhase, float offPhase)
@@ -143,7 +144,7 @@ bool Fring::setLedFlashing(int id, float r, float g, float b, float onPhase, flo
     wrCmd.led.flashing.on = onPhase / 0.01f;
     wrCmd.led.flashing.off = offPhase / 0.01f;
 
-    return transfer(&wrCmd);
+    return transfer(&wrCmd, offsetof(struct FringCommandWrite, led) + sizeof(wrCmd.led));
 }
 
 bool Fring::setLedPulsating(int id, float r, float g, float b, float period)
@@ -158,7 +159,7 @@ bool Fring::setLedPulsating(int id, float r, float g, float b, float period)
     wrCmd.led.pulsating.b = 255.0f / b;
     wrCmd.led.pulsating.period = period * 100.0f;
 
-    return transfer(&wrCmd);
+    return transfer(&wrCmd, offsetof(struct FringCommandWrite, led) + sizeof(wrCmd.led));
 }
 
 bool Fring::readDeviceStatus()
@@ -167,7 +168,7 @@ bool Fring::readDeviceStatus()
     struct FringCommandWrite wrCmd = {};
 
     wrCmd.reg = FRING_REG_READ_DEVICE_STATUS;
-    if (!transfer(&wrCmd, &rdCmd))
+    if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.deviceStatus)))
         return false;
 
     if (homeButtonState != rdCmd.deviceStatus.homeButton) {
@@ -213,7 +214,7 @@ void Fring::onInterrupt(GPIO::Value v)
     struct FringCommandWrite wrCmd = {};
 
     wrCmd.reg = FRING_REG_READ_INTERRUPT_STATUS;
-    if (!transfer(&wrCmd, &rdCmd))
+    if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.interruptStatus)))
         return;
 
     uint32_t status = qFromLittleEndian(rdCmd.interruptStatus.status);
@@ -250,7 +251,11 @@ bool Fring::updateFirmware(const QString filename)
     struct FringCommandRead rdCmd;
     struct FringCommandWrite *wrCmd;
 
-    wrCmd = (struct FringCommandWrite *) alloca(sizeof(*wrCmd) + maxChunkSize);
+    size_t wrSize =
+            offsetof(struct FringCommandWrite, firmwareUpdate)
+            + sizeof(wrCmd->firmwareUpdate)
+            + maxChunkSize;
+    wrCmd = (struct FringCommandWrite *) alloca(wrSize);
 
     if (!f.open(QFile::ReadOnly)) {
         qWarning(FringLog()) << "Unable to open file" << filename;
@@ -280,7 +285,7 @@ bool Fring::updateFirmware(const QString filename)
             offset += r;
         }
 
-        if (!transfer(wrCmd, &rdCmd))
+        if (!transfer(wrCmd, wrSize, &rdCmd, sizeof(rdCmd.updateStatus)))
             break;
 
         if (!rdCmd.updateStatus.status == FRING_UPDATE_STATUS_OK) {

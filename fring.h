@@ -48,7 +48,7 @@ private:
     int batteryChargeCurrent;
     int batteryDischargeCurrent;
 
-    bool transfer(const struct FringCommandWrite *wrCmd, const FringCommandRead *rdCmd = 0);
+    bool transfer(const struct FringCommandWrite *wrCmd, size_t wrSize, const FringCommandRead *rdCmd = 0, size_t rdSize = 0);
     bool readDeviceStatus();
     bool readLogMessage();
     uint32_t calculateCRC(uint32_t crc, const char *buf, size_t len);
