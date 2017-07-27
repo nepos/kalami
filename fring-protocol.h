@@ -13,6 +13,11 @@ enum {
 };
 
 enum {
+    FRING_BOOT_STATUS_FIRMWARE_B    = 0x01,
+    FRING_BOOT_STATUS_BETA          = 0x02,
+};
+
+enum {
     FRING_INTERRUPT_DEVICE_STATUS   = 0x01,
     FRING_INTERRUPT_LOG_MESSAGE     = 0x02
 };
@@ -41,7 +46,7 @@ struct FringCommandRead {
             uint32_t version;
             uint32_t uptime;
             uint32_t flags;
-        } version _packed_;
+        } bootInfo _packed_;
 
         struct {
             uint8_t boardRevisionA;
