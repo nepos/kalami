@@ -78,8 +78,8 @@ bool Fring::initialize()
     boardRevisionA = rdCmd.boardRevision.boardRevisionA;
     boardRevisionB = rdCmd.boardRevision.boardRevisionB;
 
-    qInfo(FringLog) << "Successfully initialized fring, firmware version" << firmwareVersion
-                    << QString("(" + bootFlagsStrings.join(", ") + ")")
+    qInfo(FringLog) << "Successfully initialized, firmware version" << firmwareVersion
+                    << bootFlagsStrings.join(", ")
                     << "board revisions" << boardRevisionA << boardRevisionB;
 
     // Check for firmware updates
