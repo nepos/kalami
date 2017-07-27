@@ -54,11 +54,23 @@ bool Fring::initialize()
         return false;
     }
 
+    QStringList bootFlagsStrings;
+
     wrCmd.reg = FRING_REG_READ_BOOT_INFO;
     if (!transfer(&wrCmd, &rdCmd))
         return false;
 
-    firmwareVersion = qFromLittleEndian(rdCmd.version.version);
+    uint32_t bootFlags = qFromLittleEndian(rdCmd.bootInfo.flags);
+
+    if (bootFlags & FRING_BOOT_STATUS_FIRMWARE_B)
+        bootFlagsStrings << "booted from B";
+    else
+        bootFlagsStrings << "booted from A";
+
+    if (bootFlags & FRING_BOOT_STATUS_BETA)
+        bootFlagsStrings << "beta version";
+
+    firmwareVersion = qFromLittleEndian(rdCmd.bootInfo.version);
 
     wrCmd.reg = FRING_REG_READ_BOARD_REVISION;
     if (!transfer(&wrCmd, &rdCmd))
@@ -68,6 +80,7 @@ bool Fring::initialize()
     boardRevisionB = rdCmd.boardRevision.boardRevisionB;
 
     qInfo(FringLog) << "Successfully initialized fring, firmware version" << firmwareVersion
+                    << QString("(" + bootFlagsStrings.join(", ") + ")")
                     << "board revisions" << boardRevisionA << boardRevisionB;
 
     // test hack
