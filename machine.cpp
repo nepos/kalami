@@ -111,6 +111,12 @@ Machine::Machine(QObject *parent) : QObject(parent)
     }
 }
 
+void Machine::setDeviceSerial(const QString &serial)
+{
+    deviceSerial = serial;
+    qInfo(MachineLog) << "Device serial set to" << serial;
+}
+
 bool Machine::setAltBootConfig()
 {
     QFile bootConfigFile(bootDevPrefix + "p7");

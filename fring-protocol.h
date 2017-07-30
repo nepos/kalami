@@ -49,6 +49,7 @@ struct FringCommandRead {
         struct {
             uint32_t version;
             uint32_t uptime;
+            uint8_t serial[12];
             uint32_t flags;
         } bootInfo _packed_;
 

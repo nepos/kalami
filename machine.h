@@ -36,6 +36,8 @@ public:
     const QString &getAltBootDevice()       const { return altBootDevice;   }
     const QString &getAltRootfsDevice()     const { return altRootfsDevice; }
 
+    void setDeviceSerial(const QString &serial);
+
     void restart();
     void powerOff();
 

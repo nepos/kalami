@@ -146,6 +146,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         QObject::connect(fring, &Fring::logMessageReceived, this, [this](const QString &message) {
             qInfo(DaemonLog) << "Message from fring:" << message;
         });
+
+        machine->setDeviceSerial(fring->getDeviceSerial());
     }
 }
 

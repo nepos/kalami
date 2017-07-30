@@ -15,6 +15,7 @@ class Fring : public QObject
 public:
     explicit Fring(QObject *parent = 0);
     bool initialize();
+    const QString &getDeviceSerial();
 
 signals:
     void homeButtonChanged(bool state);
@@ -42,6 +43,7 @@ private:
     int firmwareVersion;
     int boardRevisionA;
     int boardRevisionB;
+    QString deviceSerial;
 
     int homeButtonState;
     int batteryLevel;

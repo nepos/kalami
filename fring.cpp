@@ -70,6 +70,8 @@ bool Fring::initialize()
         bootFlagsStrings << "beta version";
 
     firmwareVersion = qFromLittleEndian(rdCmd.bootInfo.version);
+    QByteArray ba = QByteArray((char *) rdCmd.bootInfo.serial, sizeof(rdCmd.bootInfo.serial));
+    deviceSerial = QString(ba.toHex());
 
     wrCmd.reg = FRING_REG_READ_BOARD_REVISION;
     if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.boardRevision)))
@@ -101,6 +103,11 @@ bool Fring::initialize()
     }
 
     return true;
+}
+
+const QString &Fring::getDeviceSerial()
+{
+    return deviceSerial;
 }
 
 bool Fring::transfer(const struct FringCommandWrite *wrCmd, size_t wrSize,
