@@ -24,12 +24,6 @@ Fring::Fring(QObject *parent) :
     homeButtonState = -1;
 }
 
-#define CMD_LEN(type, sub) \
-({ \
-    type __x; \
-    (offsetof(type, sub) + sizeof(__x.sub)); \
-})
-
 bool Fring::initialize()
 {
     if (!client.open(Fring::I2CBus, Fring::I2CAddr))
@@ -40,8 +34,8 @@ bool Fring::initialize()
 
     wrCmd.reg = FRING_REG_ID;
     wrCmd.protocolVersion.version = 1;
-    if (!transfer(&wrCmd, CMD_LEN(struct FringCommandWrite, protocolVersion),
-                  &rdCmd, CMD_LEN(struct FringCommandRead, id)))
+    if (!transfer(&wrCmd, offsetof(struct FringCommandWrite, protocolVersion) + sizeof(wrCmd.protocolVersion),
+                  &rdCmd, sizeof(rdCmd.id)))
         return false;
 
     if (rdCmd.id.id[0] != 'F' ||
