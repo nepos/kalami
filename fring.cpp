@@ -15,7 +15,8 @@ const int Fring::I2CAddr = 0x42;
 Fring::Fring(QObject *parent) :
     QObject(parent),
     client(this),
-    interruptGpio(Fring::GPIONr, this)
+    interruptGpio(Fring::GPIONr, this),
+    updateThread(0)
 {
     interruptGpio.setEdge(GPIO::EdgeFalling);
     interruptGpio.setDirection(GPIO::DirectionIn);
@@ -90,8 +91,8 @@ bool Fring::initialize()
             int availableVersion = parts.first().toInt();
 
             if (availableVersion > firmwareVersion) {
-                qInfo(FringLog) << "Newer firmware available (" + firmwareFile + "), updating.";
-                updateFirmware(firmwareDir.absolutePath() + "/" + firmwareFile);
+                qInfo(FringLog) << "Newer firmware available (" + firmwareFile + "). Starting update.";
+                startFirmwareUpdate(firmwareDir.absolutePath() + "/" + firmwareFile);
             }
         }
     }
@@ -237,9 +238,51 @@ void Fring::onInterrupt(GPIO::Value v)
 
     if (status & FRING_INTERRUPT_LOG_MESSAGE)
         readLogMessage();
+
+    if (status & FRING_INTERRUPT_FIRMWARE_UPDATE) {
+        if (updateThread)
+            updateThread->interrupt();
+        else
+            qWarning(FringLog) << "Firmware update interrupt with no update in progress? Uh-oh.";
+    }
 }
 
-uint32_t Fring::calculateCRC(uint32_t crc, const char *buf, size_t len)
+void Fring::startFirmwareUpdate(const QString filename)
+{
+    if (updateThread) {
+        updateThread->quit();
+        updateThread->deleteLater();
+        updateThread = NULL;
+    }
+
+    updateThread = new FringUpdateThread(this, filename);
+
+    QObject::connect(updateThread, &FringUpdateThread::succeeded, this, [this]() {
+        qInfo(FringLog) << "Update thread succeeded.";
+    });
+
+    QObject::connect(updateThread, &FringUpdateThread::failed, this, [this]() {
+        qInfo(FringLog) << "Update thread failed.";
+    });
+
+    QObject::connect(updateThread, &FringUpdateThread::progress, this, [this](float v) {
+        qInfo(FringLog) << "Update thread progress:" << v;
+    });
+
+    updateThread->start();
+}
+
+FringUpdateThread::FringUpdateThread(Fring *fring, const QString &filename) : fring(fring), file(filename), semaphore()
+{
+}
+
+FringUpdateThread::~FringUpdateThread()
+{
+    if (file.isOpen())
+        file.close();
+}
+
+uint32_t FringUpdateThread::calculateCRC(uint32_t crc, const char *buf, size_t len)
 {
     const char *p;
     uint8_t octet;
@@ -254,12 +297,11 @@ uint32_t Fring::calculateCRC(uint32_t crc, const char *buf, size_t len)
     return ~crc;
 }
 
-bool Fring::updateFirmware(const QString filename)
+void FringUpdateThread::run()
 {
     uint32_t fullCRC = 0;
     uint32_t offset = 0;
     qint64 r;
-    QFile f(filename);
     static const size_t maxChunkSize = 1024;
     struct FringCommandRead rdCmd;
     struct FringCommandWrite *wrCmd;
@@ -270,17 +312,18 @@ bool Fring::updateFirmware(const QString filename)
             + maxChunkSize;
     wrCmd = (struct FringCommandWrite *) alloca(wrSize);
 
-    if (!f.open(QFile::ReadOnly)) {
-        qWarning(FringLog()) << "Unable to open file" << filename;
-        return false;
+    if (!file.open(QFile::ReadOnly)) {
+        qWarning(FringLog()) << "Unable to open file" << file.fileName();
+        emit failed();
+        return;
     }
 
     wrCmd->reg = FRING_REG_PUSH_FIRMWARE_UPDATE;
 
-    qInfo(FringLog) << "Transmitting firmware file" << f.fileName() << "size" << f.size();
+    qInfo(FringLog) << "Transmitting firmware file" << file.fileName() << "size" << file.size();
 
     do {
-        r = f.read(wrCmd->firmwareUpdate.payload, maxChunkSize);
+        r = file.read(wrCmd->firmwareUpdate.payload, maxChunkSize);
         if (r < 0) {
             qWarning(FringLog) << "Unable to read firmware file!";
             break;
@@ -298,17 +341,34 @@ bool Fring::updateFirmware(const QString filename)
             offset += r;
         }
 
-        if (!transfer(wrCmd, wrSize, &rdCmd, sizeof(rdCmd.updateStatus)))
-            break;
-
-        if (!rdCmd.updateStatus.status == FRING_UPDATE_STATUS_OK) {
-            qWarning(FringLog) << "Firmware returned bad code in response to update command:" << rdCmd.updateStatus.status;
-            break;
+        if (!fring->transfer(wrCmd, wrSize, &rdCmd, sizeof(rdCmd.updateStatus))) {
+            emit failed();
+            return;
         }
+
+        semaphore.acquire();
+
+        if (interruptStatus == FRING_UPDATE_STATUS_OK) {
+            qWarning(FringLog) << "Firmware returned bad code in response to update command:" << interruptStatus;
+            emit failed();
+            return;
+        }
+
+        emit progress((float) offset / (float) file.size());
     } while(r > 0);
 
-    f.close();
-
-    return true;
+    emit succeeded();
 }
 
+void FringUpdateThread::interrupt()
+{
+    struct FringCommandRead rdCmd = {};
+    struct FringCommandWrite wrCmd = {};
+
+    wrCmd.reg = FRING_REG_READ_FIRMWARE_UPDATE_RESULT;
+    if (!fring->transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.updateStatus)))
+        return;
+
+    interruptStatus = qFromLittleEndian(rdCmd.updateStatus.status);
+    semaphore.release();
+}
