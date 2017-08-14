@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QFile>
+#include <QMutex>
 
 class I2CClient : public QObject
 {
@@ -17,4 +18,5 @@ public:
 private:
     int address;
     QFile file;
+    QMutex mutex;
 };

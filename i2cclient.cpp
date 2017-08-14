@@ -7,7 +7,7 @@
 
 #include "i2cclient.h"
 
-I2CClient::I2CClient(QObject *parent) : QObject(parent), file()
+I2CClient::I2CClient(QObject *parent) : QObject(parent), file(), mutex()
 {
 }
 
@@ -64,6 +64,8 @@ bool I2CClient::transfer(uint8_t *sendBuf, size_t sendSize , uint8_t *receiveBuf
         msgs[0].flags |= I2C_M_STOP;
         data.nmsgs = 1;
     }
+
+    QMutexLocker locker(&mutex);
 
     return ioctl(file.handle(), I2C_RDWR, &data) >= 0;
 }
