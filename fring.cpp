@@ -302,7 +302,7 @@ void FringUpdateThread::run()
     uint32_t fullCRC = 0;
     uint32_t offset = 0;
     qint64 r;
-    static const size_t maxChunkSize = 32;
+    static const size_t maxChunkSize = 1024;
     struct FringCommandRead rdCmd;
     struct FringCommandWrite *wrCmd;
 
