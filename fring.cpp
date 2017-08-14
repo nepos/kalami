@@ -299,10 +299,10 @@ uint32_t FringUpdateThread::calculateCRC(uint32_t crc, const char *buf, size_t l
 
 void FringUpdateThread::run()
 {
-    uint32_t fullCRC = 0;
+    uint32_t crc = 0;
     uint32_t offset = 0;
     qint64 r;
-    static const size_t maxChunkSize = 1024;
+    static const size_t maxChunkSize = 64;
     struct FringCommandRead rdCmd;
     struct FringCommandWrite *wrCmd;
 
@@ -329,17 +329,11 @@ void FringUpdateThread::run()
             break;
         }
 
+        crc = calculateCRC(crc, wrCmd->firmwareUpdate.payload + offset, r);
+        wrCmd->firmwareUpdate.crc = qToLittleEndian(crc);
         wrCmd->firmwareUpdate.length = qToLittleEndian(r);
-
-        if (r == 0) {
-            wrCmd->firmwareUpdate.offset = 0;
-            wrCmd->firmwareUpdate.crc = qToLittleEndian(fullCRC);
-        } else {
-            wrCmd->firmwareUpdate.offset = qToLittleEndian(offset);
-            wrCmd->firmwareUpdate.crc = qToLittleEndian(calculateCRC(0, wrCmd->firmwareUpdate.payload, r));
-            fullCRC = calculateCRC(fullCRC, wrCmd->firmwareUpdate.payload, r);
-            offset += r;
-        }
+        wrCmd->firmwareUpdate.offset = qToLittleEndian(offset);
+        offset += r;
 
         if (!fring->transfer(wrCmd, wrSize, &rdCmd, sizeof(rdCmd.updateStatus))) {
             emit failed();
