@@ -2,14 +2,15 @@
 #define FRINGPROTOCOL_H
 
 enum {
-    FRING_REG_ID                    = 0x01,
-    FRING_REG_READ_BOOT_INFO        = 0x02,
-    FRING_REG_READ_BOARD_REVISION   = 0x03,
-    FRING_REG_READ_INTERRUPT_STATUS = 0x04,
-    FRING_REG_SET_LED               = 0x05,
-    FRING_REG_READ_DEVICE_STATUS    = 0x06,
-    FRING_REG_PUSH_FIRMWARE_UPDATE  = 0x07,
-    FRING_REG_READ_LOG_MESSAGE      = 0x08,
+    FRING_REG_ID                          = 0x01,
+    FRING_REG_READ_BOOT_INFO              = 0x02,
+    FRING_REG_READ_BOARD_REVISION         = 0x03,
+    FRING_REG_READ_INTERRUPT_STATUS       = 0x04,
+    FRING_REG_SET_LED                     = 0x05,
+    FRING_REG_READ_DEVICE_STATUS          = 0x06,
+    FRING_REG_PUSH_FIRMWARE_UPDATE        = 0x07,
+    FRING_REG_READ_FIRMWARE_UPDATE_RESULT = 0x08,
+    FRING_REG_READ_LOG_MESSAGE            = 0x09,
 };
 
 enum {
@@ -23,7 +24,8 @@ enum {
 
 enum {
     FRING_INTERRUPT_DEVICE_STATUS   = 0x01,
-    FRING_INTERRUPT_LOG_MESSAGE     = 0x02
+    FRING_INTERRUPT_LOG_MESSAGE     = 0x02,
+    FRING_INTERRUPT_FIRMWARE_UPDATE = 0x04
 };
 
 enum {
@@ -36,7 +38,6 @@ enum {
 enum {
     FRING_UPDATE_STATUS_OK          = 0
 };
-
 
 #define _packed_ __attribute__((__packed__))
 
