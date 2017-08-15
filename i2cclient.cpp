@@ -7,6 +7,8 @@
 
 #include "i2cclient.h"
 
+Q_LOGGING_CATEGORY(I2CClientLog, "I2CClientLog")
+
 I2CClient::I2CClient(QObject *parent) : QObject(parent), file(), mutex()
 {
 }
@@ -40,12 +42,8 @@ bool I2CClient::transfer(uint8_t *sendBuf, size_t sendSize , uint8_t *receiveBuf
     if (!file.isOpen())
         return false;
 
-    uint8_t dummy;
-
-    if (!receiveBuf) {
-        receiveBuf = &dummy;
+    if (!receiveBuf)
         receiveSize = 0;
-    }
 
     struct i2c_msg msgs[] = {
         {
@@ -67,7 +65,16 @@ bool I2CClient::transfer(uint8_t *sendBuf, size_t sendSize , uint8_t *receiveBuf
         .nmsgs = 2
     };
 
-    QMutexLocker locker(&mutex);
+    //QMutexLocker locker(&mutex);
 
-    return ioctl(file.handle(), I2C_RDWR, &data) >= 0;
+    int ret = ioctl(file.handle(), I2C_RDWR, &data);
+
+    if (ret < 0) {
+        QString str;
+        str.sprintf("I2C client transfer (%lu out, %lu in) failed: %s", sendSize, receiveSize, strerror(errno));
+        qWarning(I2CClientLog) << str;
+        return false;
+    }
+
+    return true;
 }

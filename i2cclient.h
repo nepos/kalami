@@ -3,6 +3,9 @@
 #include <QObject>
 #include <QFile>
 #include <QMutex>
+#include <QtCore/QLoggingCategory>
+
+Q_DECLARE_LOGGING_CATEGORY(I2CClientLog)
 
 class I2CClient : public QObject
 {
