@@ -65,7 +65,9 @@ bool I2CClient::transfer(uint8_t *sendBuf, size_t sendSize , uint8_t *receiveBuf
     if (!receiveBuf || receiveSize == 0)
         data.nmsgs = 1;
 
+    qWarning(I2CClientLog) << "Try to aquire i2c mutex";
     QMutexLocker locker(&mutex);
+    qWarning(I2CClientLog) << "i2c mutex aquired";
 
     int ret = ioctl(file.handle(), I2C_RDWR, &data);
 

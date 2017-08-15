@@ -304,7 +304,7 @@ void FringUpdateThread::run()
     uint32_t crc = ~0U;
     uint32_t offset = 0;
     qint64 r;
-    static const size_t maxChunkSize = 64;
+    static const size_t maxChunkSize = 32;
     struct FringCommandWrite *wrCmd;
     struct FringCommandRead rdCmd = {};
 
@@ -344,13 +344,14 @@ void FringUpdateThread::run()
         str.sprintf("Transmitting %lld bytes, offset %d, crc %08x", r, offset, crc);
         qWarning(FringLog) << str;
 
+        qWarning(FringLog) << "Before Transmit";
         if (!fring->transfer(wrCmd, wrSize, &rdCmd, 1)) {
             emit failed();
             return;
         }
-        offset += r;
+        qWarning(FringLog) << "After Transmit";
 
-        qWarning(FringLog) << "Transmit done, now waiting for interrupt.";
+        offset += r;
 
         semaphore.acquire();
 
@@ -361,7 +362,7 @@ void FringUpdateThread::run()
         }
 
         emit progress((float) offset / (float) file.size());
-        msleep(10);
+        //msleep(10);
     } while(r > 0);
 
     emit succeeded();
