@@ -306,6 +306,8 @@ void FringUpdateThread::run()
     qint64 r;
     static const size_t maxChunkSize = 64;
     struct FringCommandWrite *wrCmd;
+    struct FringCommandRead rdCmd = {};
+
 
     size_t wrSize =
             offsetof(struct FringCommandWrite, firmwareUpdate)
@@ -340,7 +342,7 @@ void FringUpdateThread::run()
         wrCmd->firmwareUpdate.offset = qToLittleEndian(offset);
         offset += r;
 
-        if (!fring->transfer(wrCmd, wrSize)) {
+        if (!fring->transfer(wrCmd, wrSize, &rdCmd, 1)) {
             emit failed();
             return;
         }
