@@ -42,10 +42,7 @@ bool I2CClient::transfer(uint8_t *sendBuf, size_t sendSize , uint8_t *receiveBuf
     if (!file.isOpen())
         return false;
 
-    if (!receiveBuf)
-        receiveSize = 0;
-
-    struct i2c_msg msgs[] = {
+    struct i2c_msg msgs[2] = {
         {
             .addr = (__u16) address,
             .flags = 0,
@@ -65,13 +62,16 @@ bool I2CClient::transfer(uint8_t *sendBuf, size_t sendSize , uint8_t *receiveBuf
         .nmsgs = 2
     };
 
-    //QMutexLocker locker(&mutex);
+    if (!receiveBuf || receiveSize == 0)
+        data.nmsgs = 1;
+
+    QMutexLocker locker(&mutex);
 
     int ret = ioctl(file.handle(), I2C_RDWR, &data);
 
     if (ret < 0) {
         QString str;
-        str.sprintf("I2C client transfer (%lu out, %lu in) failed: %s", sendSize, receiveSize, strerror(errno));
+        str.sprintf("I2C client transfer (%lu out, %lu in. %d messages) failed: %s", sendSize, receiveSize, data.nmsgs, strerror(errno));
         qWarning(I2CClientLog) << str;
         return false;
     }
