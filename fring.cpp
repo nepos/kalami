@@ -336,7 +336,7 @@ void FringUpdateThread::run()
         r += 3;
         r &= ~3;
 
-        crc = calculateCRC(crc, wrCmd->firmwareUpdate.payload + offset, r);
+        crc = calculateCRC(crc, wrCmd->firmwareUpdate.payload, r);
         wrCmd->firmwareUpdate.crc = qToLittleEndian(crc);
         wrCmd->firmwareUpdate.length = qToLittleEndian(r);
         wrCmd->firmwareUpdate.offset = qToLittleEndian(offset);
