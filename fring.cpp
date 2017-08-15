@@ -349,7 +349,7 @@ void FringUpdateThread::run()
 
         semaphore.acquire();
 
-        if (interruptStatus != FRING_UPDATE_STATUS_OK) {
+        if (interruptStatus != FRING_UPDATE_RESULT_OK) {
             qWarning(FringLog) << "Firmware returned bad code in response to update command:" << interruptStatus;
             emit failed();
             return;
