@@ -40,6 +40,13 @@ bool I2CClient::transfer(uint8_t *sendBuf, size_t sendSize , uint8_t *receiveBuf
     if (!file.isOpen())
         return false;
 
+    uint8_t dummy;
+
+    if (!receiveBuf) {
+        receiveBuf = &dummy;
+        receiveSize = 0;
+    }
+
     struct i2c_msg msgs[] = {
         {
             .addr = (__u16) address,
@@ -59,11 +66,6 @@ bool I2CClient::transfer(uint8_t *sendBuf, size_t sendSize , uint8_t *receiveBuf
         .msgs = msgs,
         .nmsgs = 2
     };
-
-    if (sendSize == 0) {
-        msgs[0].flags |= I2C_M_STOP;
-        data.nmsgs = 1;
-    }
 
     QMutexLocker locker(&mutex);
 
