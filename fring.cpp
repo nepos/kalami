@@ -284,22 +284,24 @@ FringUpdateThread::~FringUpdateThread()
 
 uint32_t FringUpdateThread::calculateCRC(uint32_t crc, const char *buf, size_t len)
 {
-    const char *p;
-    uint8_t octet;
+    // STM32 implements CRC32-MPEG2 which uses big endian and no final flip mask
 
-    crc ^= ~0U;
+    while (len > 0) {
+        crc = (crc << 8) ^ crc32table[((crc >> 24) ^ buf[3]) & 0xff];
+        crc = (crc << 8) ^ crc32table[((crc >> 24) ^ buf[2]) & 0xff];
+        crc = (crc << 8) ^ crc32table[((crc >> 24) ^ buf[1]) & 0xff];
+        crc = (crc << 8) ^ crc32table[((crc >> 24) ^ buf[0]) & 0xff];
 
-    for (p = buf; p < buf + len; p++) {
-        octet = *p;  /* Cast to unsigned octet. */
-        crc = (crc >> 8) ^ crc32table[(crc & 0xff) ^ octet];
+        buf += 4;
+        len -= 4;
     }
 
-    return ~crc;
+    return crc;
 }
 
 void FringUpdateThread::run()
 {
-    uint32_t crc = 0;
+    uint32_t crc = ~0U;
     uint32_t offset = 0;
     qint64 r;
     static const size_t maxChunkSize = 64;
@@ -327,6 +329,10 @@ void FringUpdateThread::run()
             qWarning(FringLog) << "Unable to read firmware file!";
             break;
         }
+
+        // Align chunk size to 4 bytes
+        r += 3;
+        r &= ~3;
 
         crc = calculateCRC(crc, wrCmd->firmwareUpdate.payload + offset, r);
         wrCmd->firmwareUpdate.crc = qToLittleEndian(crc);
