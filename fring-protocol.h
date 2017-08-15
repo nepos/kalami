@@ -36,7 +36,10 @@ enum {
 };
 
 enum {
-    FRING_UPDATE_STATUS_OK          = 0
+    FRING_UPDATE_RESULT_OK          = 0,
+    FRING_UPDATE_RESULT_CRC_ERR     = 1,
+    FRING_UPDATE_RESULT_INVAL       = 2,
+    FRING_UPDATE_RESULT_INTERNAL_ERR= 3
 };
 
 #define _packed_ __attribute__((__packed__))
