@@ -134,9 +134,9 @@ bool Fring::setLedOn(int id, float r, float g, float b)
     wrCmd.reg = FRING_REG_SET_LED;
     wrCmd.led.id = id;
     wrCmd.led.mode = FRING_LED_MODE_ON;
-    wrCmd.led.on.r = 255.0f / r;
-    wrCmd.led.on.g = 255.0f / g;
-    wrCmd.led.on.b = 255.0f / b;
+    wrCmd.led.on.r = 255.0f * r;
+    wrCmd.led.on.g = 255.0f * g;
+    wrCmd.led.on.b = 255.0f * b;
 
     return transfer(&wrCmd, offsetof(struct FringCommandWrite, led) + sizeof(wrCmd.led));
 }
@@ -148,9 +148,9 @@ bool Fring::setLedFlashing(int id, float r, float g, float b, float onPhase, flo
     wrCmd.reg = FRING_REG_SET_LED;
     wrCmd.led.id = id;
     wrCmd.led.mode = FRING_LED_MODE_FLASHING;
-    wrCmd.led.flashing.r = 255.0f / r;
-    wrCmd.led.flashing.g = 255.0f / g;
-    wrCmd.led.flashing.b = 255.0f / b;
+    wrCmd.led.flashing.r = 255.0f * r;
+    wrCmd.led.flashing.g = 255.0f * g;
+    wrCmd.led.flashing.b = 255.0f * b;
     wrCmd.led.flashing.on = onPhase / 0.01f;
     wrCmd.led.flashing.off = offPhase / 0.01f;
 
@@ -164,10 +164,10 @@ bool Fring::setLedPulsating(int id, float r, float g, float b, float period)
     wrCmd.reg = FRING_REG_SET_LED;
     wrCmd.led.id = id;
     wrCmd.led.mode = FRING_LED_MODE_FLASHING;
-    wrCmd.led.pulsating.r = 255.0f / r;
-    wrCmd.led.pulsating.g = 255.0f / g;
-    wrCmd.led.pulsating.b = 255.0f / b;
-    wrCmd.led.pulsating.period = period * 100.0f;
+    wrCmd.led.pulsating.r = 255.0f * r;
+    wrCmd.led.pulsating.g = 255.0f * g;
+    wrCmd.led.pulsating.b = 255.0f * b;
+    wrCmd.led.pulsating.period = period * 10.0f;
 
     return transfer(&wrCmd, offsetof(struct FringCommandWrite, led) + sizeof(wrCmd.led));
 }
