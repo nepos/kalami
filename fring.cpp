@@ -340,19 +340,18 @@ void FringUpdateThread::run()
         wrCmd->firmwareUpdate.length = qToLittleEndian(r);
         wrCmd->firmwareUpdate.offset = qToLittleEndian(offset);
 
-        QString str;
-        str.sprintf("Transmitting %lld bytes, offset %d, crc %08x", r, offset, crc);
-        qWarning(FringLog) << str;
+//        QString str;
+//        str.sprintf("Transmitting %lld bytes, offset %d, crc %08x", r, offset, crc);
+//        qInfo(FringLog) << str;
 
-        qWarning(FringLog) << "Before Transmit";
         if (!fring->transfer(wrCmd, wrSize, &rdCmd, 1)) {
             emit failed();
             return;
         }
-        qWarning(FringLog) << "After Transmit";
 
         offset += r;
 
+        // Wait for interrupt
         semaphore.acquire();
 
         if (interruptStatus != FRING_UPDATE_RESULT_OK) {
@@ -362,7 +361,6 @@ void FringUpdateThread::run()
         }
 
         emit progress((float) offset / (float) file.size());
-        //msleep(10);
     } while(r > 0);
 
     emit succeeded();
@@ -373,15 +371,10 @@ void FringUpdateThread::interrupt()
     struct FringCommandRead rdCmd = {};
     struct FringCommandWrite wrCmd = {};
 
-    qWarning(FringLog) << "Interrupt for firmware update!";
-
     wrCmd.reg = FRING_REG_READ_FIRMWARE_UPDATE_RESULT;
     if (!fring->transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.updateStatus)))
         return;
 
     interruptStatus = qFromLittleEndian(rdCmd.updateStatus.status);
-
-    qWarning(FringLog) << "status" << interruptStatus;
-
     semaphore.release();
 }
