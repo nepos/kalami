@@ -201,6 +201,7 @@ void Updater::install()
     thread = new UpdateThread(this);
 
     QObject::connect(thread, &UpdateThread::succeeded, this, [this]() {
+        machine->setAltBootConfig();
         emit updateSucceeded();
     });
 

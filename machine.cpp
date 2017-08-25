@@ -119,6 +119,9 @@ void Machine::setDeviceSerial(const QString &serial)
 
 bool Machine::setAltBootConfig()
 {
+    if (model != Machine::SAPHIRA)
+        return;
+
     QFile bootConfigFile(bootDevPrefix + "p7");
     if (!bootConfigFile.open(QIODevice::WriteOnly))
         return false;
