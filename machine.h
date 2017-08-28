@@ -41,7 +41,7 @@ public:
     void restart();
     void powerOff();
 
-    bool setAltBootConfig();
+    bool setAltBootConfig() const;
     bool verifyBootConfig();
 
 private:
