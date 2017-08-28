@@ -1,5 +1,6 @@
 #include <QtEndian>
 #include <QDir>
+#include <QThread>
 
 #include "fring.h"
 #include "fring-protocol.h"
@@ -32,6 +33,14 @@ bool Fring::initialize()
 
     struct FringCommandRead rdCmd = {};
     struct FringCommandWrite wrCmd = {};
+
+    do {
+        wrCmd.unused[0] = 0xaa;
+        wrCmd.unused[1] = 0x55;
+        transfer(&wrCmd, 2, &rdCmd, 2);
+        qWarning(FringLog) << "Received:" << QByteArray((char *) rdCmd.unused, 2);
+        QThread::sleep(1);
+    } while(1);
 
     wrCmd.reg = FRING_REG_ID;
     wrCmd.protocolVersion.version = 1;
