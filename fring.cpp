@@ -35,10 +35,11 @@ bool Fring::initialize()
     struct FringCommandWrite wrCmd = {};
 
     do {
+        wrCmd.reg = 0x55;
         wrCmd.unused[0] = 0xaa;
         wrCmd.unused[1] = 0x55;
-        transfer(&wrCmd, 2, &rdCmd, 2);
-        qWarning(FringLog) << "Received:" << QByteArray((char *) rdCmd.unused, 2);
+        transfer(&wrCmd, 2, &rdCmd, 17);
+        qWarning(FringLog) << "Received:" << QByteArray((char *) rdCmd.unused, 17);
         QThread::sleep(1);
     } while(1);
 
