@@ -48,8 +48,11 @@ while(1) {
         rdCmd.id.id[3] != 'n' ||
         rdCmd.id.id[4] != 'g') {
         qWarning(FringLog) << "Invalid ID code " << QByteArray((char *) rdCmd.id.id, 5);
-        continue;
+    } else {
+        qWarning(FringLog) << "Invalid ID code " << QByteArray((char *) rdCmd.id.id, 5);
     }
+
+	QThread::sleep(1);
 }
 
     QStringList bootFlagsStrings;
