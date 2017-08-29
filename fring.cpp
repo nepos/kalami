@@ -34,11 +34,13 @@ bool Fring::initialize()
     struct FringCommandRead rdCmd = {};
     struct FringCommandWrite wrCmd = {};
 
+while(1) {
+
     wrCmd.reg = FRING_REG_ID;
     wrCmd.protocolVersion.version = 1;
     if (!transfer(&wrCmd, offsetof(struct FringCommandWrite, protocolVersion) + sizeof(wrCmd.protocolVersion),
                   &rdCmd, sizeof(rdCmd.id)))
-        return false;
+        continue;
 
     if (rdCmd.id.id[0] != 'F' ||
         rdCmd.id.id[1] != 'r' ||
@@ -46,8 +48,9 @@ bool Fring::initialize()
         rdCmd.id.id[3] != 'n' ||
         rdCmd.id.id[4] != 'g') {
         qWarning(FringLog) << "Invalid ID code " << QByteArray((char *) rdCmd.id.id, 5);
-        return false;
+        continue;
     }
+}
 
     QStringList bootFlagsStrings;
 
