@@ -54,20 +54,16 @@ void GPIO::setDirection(Direction io)
 
         auto sn = new QSocketNotifier(valueFile.handle(), QSocketNotifier::Exception, this);
         QObject::connect(sn, &QSocketNotifier::activated, this, [this](int fd) {
-            QFile f;
-            if (!f.open(fd, QFile::ReadOnly)) {
-                qWarning(GPIOLog) << "Can not open value file for seeking after an interrupt occured";
-            } else {
-                f.seek(0);
-                auto buf = valueFile.readAll();
-                if (buf.isEmpty()) {
-                    qWarning(GPIOLog) << "Can not read GPIO value. Buffer is empty.";
-                    return;
-                }
-
-                GPIO::Value v = buf.at(0) ? ValueHi : ValueLo;
-                emit onDataReady(v);
+            Q_UNUSED(fd);
+            valueFile.reset();
+            auto buf = valueFile.readAll();
+            if (buf.isEmpty()) {
+                qWarning(GPIOLog) << "Can not read GPIO value. Buffer is empty.";
+                return;
             }
+
+            GPIO::Value v = buf.at(0) ? ValueHi : ValueLo;
+            emit onDataReady(v);
         });
     } else {
         f.write("out", 3);
