@@ -207,7 +207,7 @@ bool Fring::readDeviceStatus()
 bool Fring::readLogMessage()
 {
     struct FringCommandWrite wrCmd = {};
-    char buf[256];
+    char buf[16];
 
     wrCmd.reg = FRING_REG_READ_LOG_MESSAGE;
 
