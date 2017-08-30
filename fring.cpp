@@ -211,7 +211,7 @@ bool Fring::readLogMessage()
 
     wrCmd.reg = FRING_REG_READ_LOG_MESSAGE;
 
-    if (!client.transfer((uint8_t *) &wrCmd, sizeof(wrCmd), (uint8_t *) buf, sizeof(buf))) {
+    if (!client.transfer((uint8_t *) &wrCmd, 1, (uint8_t *) buf, sizeof(buf))) {
         qWarning(FringLog) << "Unable to transfer command!";
         return false;
     }
