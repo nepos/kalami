@@ -71,7 +71,7 @@ bool I2CClient::transfer(uint8_t *sendBuf, size_t sendSize , uint8_t *receiveBuf
 
     if (ret < 0) {
         QString str;
-        str.sprintf("I2C client transfer (%lu out, %lu in. %d messages) failed: %s", sendSize, receiveSize, data.nmsgs, strerror(errno));
+        str.sprintf("I2C client transfer (%02X  %lu out, %lu in. %d messages) failed: %s", sendBuf[0],  sendSize, receiveSize, data.nmsgs, strerror(errno));
         qWarning(I2CClientLog) << str;
         return false;
     }
