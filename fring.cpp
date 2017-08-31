@@ -341,9 +341,9 @@ void FringUpdateThread::run()
         wrCmd->firmwareUpdate.length = qToLittleEndian(r);
         wrCmd->firmwareUpdate.offset = qToLittleEndian(offset);
 
-//        QString str;
-//        str.sprintf("Transmitting %lld bytes, offset %d, crc %08x", r, offset, crc);
-//        qInfo(FringLog) << str;
+        QString str;
+        str.sprintf("Transmitting %lld bytes, offset %d, crc %08x", r, offset, crc);
+        qInfo(FringLog) << str;
 
         if (!fring->transfer(wrCmd, wrSize, &rdCmd, 1)) {
             emit failed();
