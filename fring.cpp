@@ -83,12 +83,17 @@ bool Fring::initialize()
     // Check for firmware updates
     QDir firmwareDir = QDir("/app/firmware/fring/");
     QStringList firmwareFiles = firmwareDir.entryList(QDir::Files);
+    QString updateSuffix = (bootFlags & FRING_BOOT_STATUS_FIRMWARE_B) ? "bin-a" : "bin-b";
 
-    if (!firmwareFiles.isEmpty()) {
-        QString firmwareFile = firmwareFiles.first();
+    foreach (QString firmwareFile, firmwareFiles) {
         QStringList parts = firmwareFile.split(".");
 
         if (!parts.isEmpty()) {
+            QString suffix = parts.last();
+
+            if (suffix != updateSuffix)
+                continue;
+
             int availableVersion = parts.first().toInt();
 
             if (availableVersion > firmwareVersion) {
