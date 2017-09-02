@@ -14,12 +14,26 @@ enum {
 };
 
 enum {
-    FRING_BOOT_STATUS_FIRMWARE_B    = 0x01,
-    FRING_BOOT_STATUS_BETA          = 0x02,
+    FRING_HWERR_LED_NOT_RESPONDING        = 0x01,
+    FRING_HWERR_CHARGER_NOT_RESPONDING    = 0x02,
+    FRING_HWERR_CHARGER_INIT_ERROR        = 0x04,
+    FRING_HWERR_CHARGER_OVERTEMPERATURE   = 0x08,
+    FRING_HWERR_USB_NOT_RESPONDING        = 0x10,
+    FRING_HWERR_USB_INIT_ERROR            = 0x20,
+    FRING_HWERR_BATTERY_NOT_RESPONDING    = 0x40,
+    FRING_HWERR_BATTERY_INIT_ERROR        = 0x80,
+    FRING_HWERR_BATTERY_OVERTEMPERATURE   = 0x100,
+    FRING_HWERR_ADC                       = 0x200,
 };
 
 enum {
-    FRING_DEVICE_STATUS_HOME_BUTTON = 0x01,
+    FRING_BOOT_STATUS_FIRMWARE_B          = 0x01,
+    FRING_BOOT_STATUS_BETA                = 0x02,
+};
+
+enum {
+    FRING_DEVICE_STATUS_HOME_BUTTON     = 0x01,
+    FRING_DEVICE_STATUS_BATTERY_PRESENT = 0x02,
 };
 
 enum {
@@ -55,6 +69,7 @@ struct FringCommandRead {
             uint32_t uptime;
             uint8_t serial[12];
             uint32_t flags;
+            uint32_t hardwareErrors;
         } bootInfo _packed_;
 
         struct {

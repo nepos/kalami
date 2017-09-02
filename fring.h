@@ -49,6 +49,7 @@ private:
     QString deviceSerial;
 
     int homeButtonState;
+    int batteryPresent;
     int batteryLevel;
     int batteryChargeCurrent;
     int batteryDischargeCurrent;

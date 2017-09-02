@@ -24,6 +24,7 @@ Fring::Fring(QObject *parent) :
     QObject::connect(&interruptGpio, &GPIO::onDataReady, this, &Fring::onInterrupt);
 
     homeButtonState = -1;
+    batteryPresent = -1;
 }
 
 bool Fring::initialize()
@@ -79,6 +80,12 @@ bool Fring::initialize()
     qInfo(FringLog) << "Successfully initialized, firmware version" << firmwareVersion
                     << bootFlagsStrings.join(", ")
                     << "board revisions" << boardRevisionA << boardRevisionB;
+
+    uint32_t hardwareErrors = qFromLittleEndian(rdCmd.bootInfo.hardwareErrors);
+    if (hardwareErrors)
+        qWarning(FringLog) << "Detected hardware errors: " << QString::number(hardwareErrors, 16);
+    else
+        qInfo(FringLog) << "No hardware errors reported.";
 
     // Check for firmware updates
     QDir firmwareDir = QDir("/app/firmware/fring/");
@@ -190,11 +197,14 @@ bool Fring::readDeviceStatus()
     uint32_t status = qFromLittleEndian(rdCmd.deviceStatus.status);
 
     bool home = !!(status & FRING_DEVICE_STATUS_HOME_BUTTON);
+    bool battery = !!(status & FRING_DEVICE_STATUS_BATTERY_PRESENT);
 
     if (homeButtonState != home) {
-        homeButtonState = home;
+        homeButtonState = !!home;
         emit homeButtonChanged(homeButtonState);
     }
+
+    batteryPresent = !!battery;
 
     if (batteryLevel != rdCmd.deviceStatus.batteryLevel ||
         batteryChargeCurrent != rdCmd.deviceStatus.batteryChargeCurrent ||
