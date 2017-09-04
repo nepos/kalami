@@ -25,6 +25,7 @@ Fring::Fring(QObject *parent) :
 
     homeButtonState = -1;
     batteryPresent = -1;
+    ambientLightValue = -1;
 }
 
 bool Fring::initialize()
@@ -214,6 +215,12 @@ bool Fring::readDeviceStatus()
         batteryDischargeCurrent = rdCmd.deviceStatus.batteryDischargeCurrent;
 
         emit batteryStateChanged(255.0 / batteryLevel, (float) batteryChargeCurrent, (float) batteryDischargeCurrent);
+    }
+
+    if (ambientLightValue == -1 ||
+        ambientLightValue != rdCmd.deviceStatus.ambientLightValue) {
+        ambientLightValue = rdCmd.deviceStatus.ambientLightValue;
+        emit ambientLightChanged(ambientLightValue / 255.0);
     }
 
     return true;

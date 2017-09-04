@@ -36,7 +36,6 @@ Q_LOGGING_CATEGORY(DaemonLog, "Daemon")
 Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject(parent),
     mixer(new ALSAMixer("hw:0", this)),
-    lightSensor(new AmbientLightSensor("/sys/bus/iio/devices/iio:device0/in_illuminance0_input")),
     displayBrightness(new BrightnessControl("/sys/class/backlight/1a98000.dsi.0")),
     volumeInputDevice(new InputDevice("/sys/devices/platform/rotary/input/input1")),
     connman(new Connman(this)),
@@ -106,16 +105,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     // Websocket connection
     QObject::connect(polyphant, &PolyphantConnection::messageReceived, this, &Daemon::polyphantMessageReceived);
-
-    // light sensor
-    QObject::connect(lightSensor, &AmbientLightSensor::valueChanged, this, [this](float value) {
-        PolyphantMessage msg("ambientlight/STATE_CHANGED", QJsonObject {
-                                 { "value", value },
-                             }, 0);
-        polyphant->sendMessage(msg);
-    });
-
-    lightSensor->start();
 
     // D-Bus connection
     QDBusConnection bus = QDBusConnection::systemBus();

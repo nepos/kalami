@@ -25,7 +25,6 @@
 #include <QtCore/QLoggingCategory>
 
 #include "alsamixer.h"
-#include "ambientlightsensor.h"
 #include "brightnesscontrol.h"
 #include "connman.h"
 #include "fring.h"
@@ -49,7 +48,6 @@ private slots:
 
 private:
     ALSAMixer *mixer;
-    AmbientLightSensor *lightSensor;
     BrightnessControl *displayBrightness;
     InputDevice *volumeInputDevice;
     Connman *connman;

@@ -25,7 +25,6 @@ SOURCES += main.cpp \
     gpio.cpp \
     polyphantmessage.cpp \
     polyphantconnection.cpp \
-    ambientlightsensor.cpp \
     brightnesscontrol.cpp \
     imagereader.cpp
 
@@ -43,7 +42,6 @@ HEADERS += \
     gpio.h \
     polyphantmessage.h \
     polyphantconnection.h \
-    ambientlightsensor.h \
     brightnesscontrol.h \
     fring-protocol.h \
     imagereader.h \

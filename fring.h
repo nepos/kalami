@@ -22,6 +22,7 @@ public:
 
 signals:
     void homeButtonChanged(bool state);
+    void ambientLightChanged(float value);
     void batteryStateChanged(float level, float chargeCurrent, float dischargeCurrent);
     void logMessageReceived(const QString &message);
 
@@ -53,6 +54,7 @@ private:
     int batteryLevel;
     int batteryChargeCurrent;
     int batteryDischargeCurrent;
+    int ambientLightValue;
 
     bool readDeviceStatus();
     bool readLogMessage();
