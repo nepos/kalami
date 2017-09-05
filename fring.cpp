@@ -122,6 +122,15 @@ const QString &Fring::getDeviceSerial()
 bool Fring::transfer(const struct FringCommandWrite *wrCmd, size_t wrSize,
                      const struct FringCommandRead *rdCmd, size_t rdSize)
 {
+    struct FringCommandRead rdCmdDummy;
+
+    // There's a bug in either the qcom i2c host driver or the firmware that causes
+    // transfers to fail unless there is at least one byte read back in a 2nd command.
+    if (rdCmd == NULL || rdSize == 0) {
+        rdCmd = &rdCmdDummy;
+        rdSize = 1;
+    }
+
     if (!client.transfer((uint8_t *) wrCmd, wrSize, (uint8_t *) rdCmd, rdSize)) {
         qWarning(FringLog) << "Unable to transfer command!";
         return false;
@@ -329,7 +338,6 @@ void FringUpdateThread::run()
     qint64 r;
     static const size_t maxChunkSize = 32;
     struct FringCommandWrite *wrCmd;
-    struct FringCommandRead rdCmd = {};
 
     size_t wrSize =
             offsetof(struct FringCommandWrite, firmwareUpdate)
@@ -367,7 +375,7 @@ void FringUpdateThread::run()
         str.sprintf("Transmitting %lld bytes, offset %d, crc %08x", r, offset, crc);
         qInfo(FringLog) << str;
 
-        if (!fring->transfer(wrCmd, wrSize, &rdCmd, 1)) {
+        if (!fring->transfer(wrCmd, wrSize)) {
             emit failed();
             return;
         }
