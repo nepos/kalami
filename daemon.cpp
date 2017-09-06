@@ -161,7 +161,7 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
         if (payload["mode"] == "on")
             ret = fring->setLedOn(id, color["red"].toDouble(), color["green"].toDouble(), color["blue"].toDouble());
 
-        if (payload["mode"] == "blink")
+        if (payload["mode"] == "flash")
             ret = fring->setLedFlashing(id, color["red"].toDouble(), color["green"].toDouble(), color["blue"].toDouble(),
                                         payload["onPhase"].toDouble(), payload["offPhase"].toDouble());
 
