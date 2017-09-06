@@ -31,7 +31,7 @@ public slots:
     bool setLedOff(int id);
     bool setLedOn(int id, float r, float g, float b);
     bool setLedFlashing(int id, float r, float g, float b, float onPhase, float offPhase);
-    bool setLedPulsating(int id, float r, float g, float b, float period);
+    bool setLedPulsating(int id, float r, float g, float b, float frequency);
     void startFirmwareUpdate(const QString filename);
 
 private slots:

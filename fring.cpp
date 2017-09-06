@@ -207,13 +207,13 @@ bool Fring::setLedFlashing(int id, float r, float g, float b, float onPhase, flo
     wrCmd.led.flashing.r = 255.0f * r;
     wrCmd.led.flashing.g = 255.0f * g;
     wrCmd.led.flashing.b = 255.0f * b;
-    wrCmd.led.flashing.on = onPhase / 0.01f;
-    wrCmd.led.flashing.off = offPhase / 0.01f;
+    wrCmd.led.flashing.on = onPhase / 0.1f;
+    wrCmd.led.flashing.off = offPhase / 0.1f;
 
     return setLed(&wrCmd);
 }
 
-bool Fring::setLedPulsating(int id, float r, float g, float b, float period)
+bool Fring::setLedPulsating(int id, float r, float g, float b, float frequency)
 {
     struct FringCommandWrite wrCmd = {};
 
@@ -223,7 +223,7 @@ bool Fring::setLedPulsating(int id, float r, float g, float b, float period)
     wrCmd.led.pulsating.r = 255.0f * r;
     wrCmd.led.pulsating.g = 255.0f * g;
     wrCmd.led.pulsating.b = 255.0f * b;
-    wrCmd.led.pulsating.period = period * 10.0f;
+    wrCmd.led.pulsating.period = 10.0f / frequency;
 
     return setLed(&wrCmd);
 }
