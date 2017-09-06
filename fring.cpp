@@ -3,7 +3,6 @@
 #include <QThread>
 
 #include "fring.h"
-#include "fring-protocol.h"
 #include "gpio.h"
 #include "crc32table.h"
 
@@ -26,6 +25,8 @@ Fring::Fring(QObject *parent) :
     homeButtonState = -1;
     batteryPresent = -1;
     ambientLightValue = -1;
+
+    ledCacheValid = false;
 }
 
 bool Fring::initialize()
@@ -139,6 +140,19 @@ bool Fring::transfer(const struct FringCommandWrite *wrCmd, size_t wrSize,
     return true;
 }
 
+bool Fring::setLed(const struct FringCommandWrite *wrCmd)
+{
+    int id = !!wrCmd->led.id;
+
+    if (ledCacheValid && memcmp(&ledCache[id].led, &wrCmd->led, sizeof(wrCmd->led) == 0))
+            return true;
+
+    memcpy(&ledCache[id].led, &wrCmd->led, sizeof(wrCmd->led));
+    ledCacheValid = true;
+
+    return transfer(wrCmd, offsetof(struct FringCommandWrite, led) + sizeof(wrCmd->led));
+}
+
 bool Fring::setLedOff(int id)
 {
     struct FringCommandWrite wrCmd = {};
@@ -147,7 +161,7 @@ bool Fring::setLedOff(int id)
     wrCmd.led.id = id;
     wrCmd.led.mode = FRING_LED_MODE_OFF;
 
-    return transfer(&wrCmd, offsetof(struct FringCommandWrite, led) + sizeof(wrCmd.led));
+    return setLed(&wrCmd);
 }
 
 bool Fring::setLedOn(int id, float r, float g, float b)
@@ -161,7 +175,7 @@ bool Fring::setLedOn(int id, float r, float g, float b)
     wrCmd.led.on.g = 255.0f * g;
     wrCmd.led.on.b = 255.0f * b;
 
-    return transfer(&wrCmd, offsetof(struct FringCommandWrite, led) + sizeof(wrCmd.led));
+    return setLed(&wrCmd);
 }
 
 bool Fring::setLedFlashing(int id, float r, float g, float b, float onPhase, float offPhase)
@@ -177,7 +191,7 @@ bool Fring::setLedFlashing(int id, float r, float g, float b, float onPhase, flo
     wrCmd.led.flashing.on = onPhase / 0.01f;
     wrCmd.led.flashing.off = offPhase / 0.01f;
 
-    return transfer(&wrCmd, offsetof(struct FringCommandWrite, led) + sizeof(wrCmd.led));
+    return setLed(&wrCmd);
 }
 
 bool Fring::setLedPulsating(int id, float r, float g, float b, float period)
@@ -192,7 +206,7 @@ bool Fring::setLedPulsating(int id, float r, float g, float b, float period)
     wrCmd.led.pulsating.b = 255.0f * b;
     wrCmd.led.pulsating.period = period * 10.0f;
 
-    return transfer(&wrCmd, offsetof(struct FringCommandWrite, led) + sizeof(wrCmd.led));
+    return setLed(&wrCmd);
 }
 
 bool Fring::readDeviceStatus()

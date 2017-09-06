@@ -5,6 +5,7 @@
 #include <QThread>
 #include "i2cclient.h"
 #include "gpio.h"
+#include "fring-protocol.h"
 
 Q_DECLARE_LOGGING_CATEGORY(FringLog)
 
@@ -34,6 +35,7 @@ public slots:
     void startFirmwareUpdate(const QString filename);
 
 private slots:
+    bool setLed(const FringCommandWrite *wrCmd);
     void onInterrupt(GPIO::Value v);
 
 private:
@@ -61,6 +63,9 @@ private:
     uint32_t calculateCRC(uint32_t crc, const char *buf, size_t len);
 
     FringUpdateThread *updateThread;
+
+    struct FringCommandWrite ledCache[2];
+    bool ledCacheValid;
 
 protected:
     friend class FringUpdateThread;
