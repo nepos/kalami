@@ -70,6 +70,25 @@ bool Fring::initialize()
 
     firmwareVersion = qFromLittleEndian(rdCmd.bootInfo.version);
     QByteArray ba = QByteArray((char *) rdCmd.bootInfo.serial, sizeof(rdCmd.bootInfo.serial));
+
+    // Check if the firmware has only 0xff in the serial number, and set a random serial in that case
+    bool allFF = true;
+    for (int i = 0; i < ba.size(); ++i)
+        if (ba[i] != (char) 0xff) {
+            allFF = false;
+            break;
+        }
+
+    if (allFF) {
+        for (int i = 0; i < ba.size(); ++i)
+            ba[i] = (char) (qrand() & 0xff);
+
+        wrCmd.reg = FRING_REG_SET_SERIAL;
+        memcpy(&wrCmd.setSerial.serial, ba.constData(), sizeof(wrCmd.setSerial.serial));
+        qInfo(FringLog) << "Setting firmware device serial:" << ba.toHex();
+        transfer(&wrCmd, offsetof(struct FringCommandWrite, setSerial) + sizeof(wrCmd.setSerial.serial));
+    }
+
     deviceSerial = QString(ba.toHex());
 
     wrCmd.reg = FRING_REG_READ_BOARD_REVISION;

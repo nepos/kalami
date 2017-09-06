@@ -11,6 +11,7 @@ enum {
     FRING_REG_PUSH_FIRMWARE_UPDATE        = 0x07,
     FRING_REG_READ_FIRMWARE_UPDATE_RESULT = 0x08,
     FRING_REG_READ_LOG_MESSAGE            = 0x09,
+    FRING_REG_SET_SERIAL                  = 0x0a,
 };
 
 enum {
@@ -141,6 +142,10 @@ struct FringCommandWrite {
             uint32_t crc;
             char payload[0];
         } firmwareUpdate;
+
+        struct {
+            uint8_t serial[12];
+        } setSerial;
 
         uint8_t unused[0];
     };
