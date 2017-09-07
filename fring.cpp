@@ -219,7 +219,7 @@ bool Fring::setLedPulsating(int id, float r, float g, float b, float frequency)
 
     wrCmd.reg = FRING_REG_SET_LED;
     wrCmd.led.id = id;
-    wrCmd.led.mode = FRING_LED_MODE_FLASHING;
+    wrCmd.led.mode = FRING_LED_MODE_PULSATING;
     wrCmd.led.pulsating.r = 255.0f * r;
     wrCmd.led.pulsating.g = 255.0f * g;
     wrCmd.led.pulsating.b = 255.0f * b;
