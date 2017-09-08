@@ -163,11 +163,15 @@ bool Fring::setLed(const struct FringCommandWrite *wrCmd)
 {
     int id = !!wrCmd->led.id;
 
-    if (ledCacheValid && memcmp(&ledCache[id].led, &wrCmd->led, sizeof(wrCmd->led) == 0))
-            return true;
+    if (ledCacheValid && memcmp(&ledCache[id].led, &wrCmd->led, sizeof(wrCmd->led) == 0)) {
+        qInfo(FringLog) << "LED CMD CAUGHT BY CACHE.";
+        return true;
+    }
 
     memcpy(&ledCache[id].led, &wrCmd->led, sizeof(wrCmd->led));
     ledCacheValid = true;
+
+    qInfo(FringLog) << "SET LED! id" << wrCmd->led.id << "mode" << wrCmd->led.mode << "r/g/b" << wrCmd->led.on.r << wrCmd->led.on.g << wrCmd->led.on.b << "freq" << wrCmd->led.pulsating.period << "on/off" << wrCmd->led.flashing.on << wrCmd->led.flashing.off;
 
     return transfer(wrCmd, offsetof(struct FringCommandWrite, led) + sizeof(wrCmd->led));
 }
