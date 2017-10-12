@@ -70,7 +70,6 @@ struct FringCommandRead {
             uint32_t uptime;
             uint8_t serial[12];
             uint32_t flags;
-            uint32_t hardwareErrors;
         } bootInfo _packed_;
 
         struct {
@@ -88,6 +87,7 @@ struct FringCommandRead {
             uint8_t batteryDischargeCurrent;
             uint8_t ambientLightValue;
             uint32_t status;
+            uint32_t hardwareErrors;
         } deviceStatus;
 
         struct {

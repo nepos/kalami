@@ -44,10 +44,10 @@ bool Fring::initialize()
         return false;
 
     if (rdCmd.id.id[0] != 'F' ||
-        rdCmd.id.id[1] != 'r' ||
-        rdCmd.id.id[2] != 'i' ||
-        rdCmd.id.id[3] != 'n' ||
-        rdCmd.id.id[4] != 'g') {
+            rdCmd.id.id[1] != 'r' ||
+            rdCmd.id.id[2] != 'i' ||
+            rdCmd.id.id[3] != 'n' ||
+            rdCmd.id.id[4] != 'g') {
         qWarning(FringLog) << "Invalid ID code " << QByteArray((char *) rdCmd.id.id, 5);
         return false;
     }
@@ -101,12 +101,6 @@ bool Fring::initialize()
     qInfo(FringLog) << "Successfully initialized, firmware version" << firmwareVersion
                     << bootFlagsStrings.join(", ")
                     << "board revisions" << boardRevisionA << boardRevisionB;
-
-    uint32_t hardwareErrors = qFromLittleEndian(rdCmd.bootInfo.hardwareErrors);
-    if (hardwareErrors)
-        qWarning(FringLog) << "Detected hardware errors: " << QString::number(hardwareErrors, 16);
-    else
-        qInfo(FringLog) << "No hardware errors reported.";
 
     // Check for firmware updates
     QDir firmwareDir = QDir("/app/firmware/fring/");
@@ -254,8 +248,8 @@ bool Fring::readDeviceStatus()
     batteryPresent = !!battery;
 
     if (batteryLevel != rdCmd.deviceStatus.batteryLevel ||
-        batteryChargeCurrent != rdCmd.deviceStatus.batteryChargeCurrent ||
-        batteryDischargeCurrent != rdCmd.deviceStatus.batteryDischargeCurrent) {
+            batteryChargeCurrent != rdCmd.deviceStatus.batteryChargeCurrent ||
+            batteryDischargeCurrent != rdCmd.deviceStatus.batteryDischargeCurrent) {
         batteryLevel = rdCmd.deviceStatus.batteryLevel;
         batteryChargeCurrent = rdCmd.deviceStatus.batteryChargeCurrent;
         batteryDischargeCurrent = rdCmd.deviceStatus.batteryDischargeCurrent;
@@ -264,10 +258,14 @@ bool Fring::readDeviceStatus()
     }
 
     if (ambientLightValue == -1 ||
-        ambientLightValue != rdCmd.deviceStatus.ambientLightValue) {
+            ambientLightValue != rdCmd.deviceStatus.ambientLightValue) {
         ambientLightValue = rdCmd.deviceStatus.ambientLightValue;
         emit ambientLightChanged(ambientLightValue / 255.0);
     }
+
+    hardwareErrors = qFromLittleEndian(rdCmd.deviceStatus.hardwareErrors);
+    if (hardwareErrors)
+        qWarning(FringLog) << "Detected hardware errors: " << QString::number(hardwareErrors, 16);
 
     return true;
 }

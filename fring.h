@@ -57,6 +57,7 @@ private:
     int batteryChargeCurrent;
     int batteryDischargeCurrent;
     int ambientLightValue;
+    uint32_t hardwareErrors;
 
     bool readDeviceStatus();
     bool readLogMessage();
