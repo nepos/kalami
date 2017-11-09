@@ -80,15 +80,15 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             return;
 
         PolyphantMessage msg(value > 0 ?
-                                 "volumecontrol/VOLUME_UP" :
-                                 "volumecontrol/VOLUME_DOWN",
+                                 "policy/VOLUME/UP" :
+                                 "policy/VOLUME/DOWN",
                              QJsonObject{}, 0);
         polyphant->sendMessage(msg);
     });
 
     // Connman connection
     QObject::connect(connman, &Connman::availableWifisUpdated, this, [this](const QJsonArray &list) {
-        PolyphantMessage msg("wifi/SCAN_RESULT", list, 0);
+        PolyphantMessage msg("policy/wifi/SCAN_RESULT", list, 0);
         polyphant->sendMessage(msg);
     });
 
@@ -116,7 +116,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     // fring
     if (fring->initialize()) {
         QObject::connect(fring, &Fring::homeButtonChanged, this, [this](bool state) {
-            PolyphantMessage msg("homebutton/STATE_CHANGED", QJsonObject {
+            PolyphantMessage msg("policy/homebutton/STATE_CHANGED", QJsonObject {
                                      { "id", "home" },
                                      { "state", state },
                                  }, 0);
@@ -124,7 +124,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         });
 
         QObject::connect(fring, &Fring::batteryStateChanged, this, [this](float level, float chargeCurrent, float dischargeCurrent) {
-            PolyphantMessage msg("battery/STATE_CHANGED", QJsonObject {
+            PolyphantMessage msg("policy/battery/STATE_CHANGED", QJsonObject {
                                      { "level", level },
                                      { "chargeCurrent", chargeCurrent },
                                      { "dischargeCurrent", dischargeCurrent },
