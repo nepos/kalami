@@ -16,7 +16,7 @@ public:
         UNSPECIFIED = -1,
         DEVELOPMENT = 0,
         DT410C_EVALBOARD,
-        SAPHIRA,
+        NEPOS1,
     };
 
     enum BootConfig {

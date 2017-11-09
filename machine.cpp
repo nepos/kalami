@@ -119,7 +119,7 @@ void Machine::setDeviceSerial(const QString &serial)
 
 bool Machine::setAltBootConfig() const
 {
-    if (model != Machine::SAPHIRA)
+    if (model != Machine::NEPOS1)
         return false;
 
     QFile bootConfigFile(bootDevPrefix + "p7");

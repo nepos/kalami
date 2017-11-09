@@ -153,12 +153,12 @@ void Updater::check(const QString &updateChannel)
 
     switch (machine->getModel()) {
     case Machine::DT410C_EVALBOARD:
-    case Machine::SAPHIRA:
-        model = "saphira";
+    case Machine::NEPOS1:
+        model = "nepos1";
         break;
-
     default:
         model = "unknown";
+        break;
     }
 
     QUrl url("https://os.nepos.io/updates/" + model + "/" + updateChannel + ".json");
