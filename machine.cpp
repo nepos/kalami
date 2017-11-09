@@ -123,7 +123,7 @@ bool Machine::setAltBootConfig() const
         return false;
 
     QFile bootConfigFile(bootDevPrefix + "p7");
-    if (!bootConfigFile.open(QIODevice::WriteOnly))
+    if (!bootConfigFile.open(QIODevice::WriteOnly | QIODevice::Unbuffered))
         return false;
 
     char b = currentBootConfig == Machine::BOOT_A ? 'b' : 'a';
@@ -137,7 +137,7 @@ bool Machine::setAltBootConfig() const
 bool Machine::verifyBootConfig()
 {
     QFile bootConfigFile(bootDevPrefix + "p7");
-    if (!bootConfigFile.open(QIODevice::ReadWrite))
+    if (!bootConfigFile.open(QIODevice::ReadWrite | QIODevice::Unbuffered))
         return false;
 
     char b;

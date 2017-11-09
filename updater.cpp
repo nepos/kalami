@@ -236,7 +236,7 @@ UpdateWriter::~UpdateWriter()
 bool UpdateWriter::open(const QString &path)
 {
     file.setFileName(path);
-    return file.open(QFileDevice::WriteOnly);
+    return file.open(QFileDevice::WriteOnly | QIODevice::Unbuffered);
 }
 
 void UpdateWriter::close()
