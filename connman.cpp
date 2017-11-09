@@ -93,8 +93,8 @@ void Connman::iterateServices()
         QString id = service->name().toUtf8().toBase64();
 
         QJsonObject wifi {
-            { "id",       id, },
-            { "SSID",     service->name() },
+            { "kalamiId", id, },
+            { "ssid",     service->name() },
             { "security", service->security().join(" ") },
             { "strength", service->strength() / 100.0 },
             { "state",    state },
