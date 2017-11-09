@@ -168,13 +168,24 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
         if (payload["mode"] == "pulse")
             ret = fring->setLedPulsating(id, color["red"].toDouble(), color["green"].toDouble(), color["blue"].toDouble(),
                                          payload["frequency"].toDouble());
+
+        if (ret) {
+            PolyphantMessage response = message.makeResponse();
+            polyphant->sendMessage(response);
+        } else {
+        }
+    }
+
+    if (message.type() == "policy/volume/SET") {
+        mixer->setMasterVolume(payload["value"].toDouble());
     }
 
     if (message.type() == "wifi/CONNECT") {
+        connman->connectToWifi(payload["kalamiId"].toString(), payload["passphrase"].toString());
     }
 
     if (message.type() == "wifi/DISCONNECT") {
-
+        connman->disconnectFromWifi(payload["kalamiId"].toString());
     }
 
     Q_UNUSED(ret);

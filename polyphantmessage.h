@@ -1,15 +1,13 @@
 #ifndef POLYPHANTMESSAGE_H
 #define POLYPHANTMESSAGE_H
 
-#include <QObject>
 #include <QJsonObject>
 
-class PolyphantMessage : public QObject
+class PolyphantMessage
 {
-    Q_OBJECT
 public:
-    explicit PolyphantMessage(const QJsonObject json, QObject *parent = 0);
-    explicit PolyphantMessage(const QString type, const QJsonValue payload, int requestId, const QJsonObject meta = {}, QObject *parent = 0);
+    explicit PolyphantMessage(const QJsonObject json);
+    explicit PolyphantMessage(const QString type, const QJsonValue payload, int requestId, const QJsonObject meta = {});
 
     const QString type() const { return _type; };
     const QString messageId() const { return _payload.toObject()["id"].toString(); };
@@ -20,6 +18,8 @@ public:
     int requestId() const { return _meta["requestId"].toInt(); };
 
     const QJsonObject toJson() const;
+
+    PolyphantMessage makeResponse(const QJsonValue payload = {}) const;
 
 private:
     QString _type;
