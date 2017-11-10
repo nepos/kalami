@@ -75,11 +75,11 @@ Machine::Machine(QObject *parent) : QObject(parent)
     deviceRevision = "a";
     deviceSerial = "xxx";
 
-    qInfo() << "Detected Hardware:" << architecture << "architecture,"
-               << "model name" << modelName
-               << "revision" << deviceRevision
-               << "os version" << QString::number(osVersion)
-               << "serial" << deviceSerial;
+    qInfo(MachineLog) << "Detected Hardware:" << architecture << "architecture,"
+                      << "model name" << modelName
+                      << "revision" << deviceRevision
+                      << "os version" << QString::number(osVersion)
+                      << "serial" << deviceSerial;
 
     QFile cmdlineFile("/proc/cmdline");
     if (cmdlineFile.open(QIODevice::ReadOnly)) {
@@ -95,20 +95,28 @@ Machine::Machine(QObject *parent) : QObject(parent)
     }
 
     bootDevPrefix = currentRootfsDevice.mid(0, strlen("/dev/mmcblk0"));
+    GPTParser parser(bootDevPrefix);
 
-    //GPTParser parser(bootDevPrefix);
+    int bootDevIndex = currentRootfsDevice.mid(strlen("/dev/mmcblk0p")).toInt();
+    QString bootDevParitionName = parser.nameOfPartition(bootDevIndex);
 
-    if (currentRootfsDevice.endsWith("p12")) {
-        altRootfsDevice = bootDevPrefix + "p13";
-        currentBootDevice = bootDevPrefix + "p10";
-        altBootDevice = bootDevPrefix + "p11";
+    if (bootDevParitionName == "rootfs-a") {
+        altRootfsDevice = parser.deviceNameForPartitionName("rootfs-b");
+        currentBootDevice = parser.deviceNameForPartitionName("boot-a");
+        altBootDevice = parser.deviceNameForPartitionName("boot-b");
         currentBootConfig = Machine::BOOT_A;
     } else {
-        altRootfsDevice = bootDevPrefix + "p12";
-        currentBootDevice = bootDevPrefix + "p11";
-        altBootDevice = bootDevPrefix + "p10";
+        altRootfsDevice = parser.deviceNameForPartitionName("rootfs-a");
+        currentBootDevice = parser.deviceNameForPartitionName("boot-b");
+        altBootDevice = parser.deviceNameForPartitionName("boot-a");
         currentBootConfig = Machine::BOOT_B;
     }
+
+    bootConfigDevice = parser.deviceNameForPartitionName("bootcfg");
+
+    qInfo(MachineLog) << "Boot config stored in" << bootConfigDevice;
+    qInfo(MachineLog) << "Current rootfs on" << currentRootfsDevice << "boot image on" << currentBootDevice;
+    qInfo(MachineLog) << "Alt rootfs on" << altRootfsDevice << "alt boot image on" << altBootDevice;
 }
 
 void Machine::setDeviceSerial(const QString &serial)
@@ -122,7 +130,7 @@ bool Machine::setAltBootConfig() const
     if (model != Machine::NEPOS1)
         return false;
 
-    QFile bootConfigFile(bootDevPrefix + "p7");
+    QFile bootConfigFile(bootConfigDevice);
     if (!bootConfigFile.open(QIODevice::WriteOnly | QIODevice::Unbuffered))
         return false;
 
@@ -136,7 +144,7 @@ bool Machine::setAltBootConfig() const
 
 bool Machine::verifyBootConfig()
 {
-    QFile bootConfigFile(bootDevPrefix + "p7");
+    QFile bootConfigFile(bootConfigDevice);
     if (!bootConfigFile.open(QIODevice::ReadWrite | QIODevice::Unbuffered))
         return false;
 

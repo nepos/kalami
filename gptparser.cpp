@@ -36,6 +36,9 @@ GPTParser::GPTParser(const QString &deviceName, QObject *parent) :
         return;
     }
 
+    isMMC = deviceName.contains("mmcblk");
+
+    baseDevice = deviceName;
     numEntries = header.numEntries;
 }
 
@@ -45,7 +48,7 @@ GPTParser::GPTParser::~GPTParser()
         file.close();
 }
 
-int GPTParser::findPartitionByName(const QString &name)
+int GPTParser::partitionIndexForName(const QString &name)
 {
     if (!file.isOpen())
         return -1;
@@ -62,3 +65,29 @@ int GPTParser::findPartitionByName(const QString &name)
 
     return -1;
 }
+
+const QString GPTParser::deviceNameForPartitionName(const QString &partitionName)
+{
+    QString device = baseDevice;
+
+    if (isMMC)
+        device += "p";
+
+    device += QString::number(partitionIndexForName(partitionName));
+
+    return device;
+}
+
+const QString GPTParser::nameOfPartition(unsigned int index)
+{
+    if (!file.isOpen() || index >= numEntries)
+        return "";
+
+    struct GPTEntry entry;
+
+    file.seek(512 + 512 + index * 128);
+    file.read((char *) &entry, sizeof(entry));
+
+    return QString::fromUtf16(entry.name);
+}
+

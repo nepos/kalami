@@ -58,5 +58,6 @@ private:
     QString currentRootfsDevice;
     QString altBootDevice;
     QString altRootfsDevice;
+    QString bootConfigDevice;
     QString bootDevPrefix;
 };

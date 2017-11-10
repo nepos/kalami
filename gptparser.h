@@ -13,13 +13,13 @@ public:
     explicit GPTParser(const QString &deviceName, QObject *parent = 0);
     ~GPTParser();
 
-    int findPartitionByName(const QString &name);
-
-signals:
-
-public slots:
+    int partitionIndexForName(const QString &name);
+    const QString nameOfPartition(unsigned int index);
+    const QString deviceNameForPartitionName(const QString &partitionName);
 
 private:
+    bool isMMC;
+    QString baseDevice;
     QFile file;
     uint32_t numEntries;
 };
