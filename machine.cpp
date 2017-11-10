@@ -134,8 +134,12 @@ bool Machine::setAltBootConfig() const
     if (!bootConfigFile.open(QIODevice::WriteOnly | QIODevice::Unbuffered))
         return false;
 
-    char b = currentBootConfig == Machine::BOOT_A ? 'b' : 'a';
+    // When changing the boot config, use the lower-case letter. The bootloader will
+    // turn it into the upper-case version and negative it, but still boot into the
+    // alternative rootfs. verifyBootConfig() can detect this mismatch and make the
+    // new version permanent.
 
+    char b = currentBootConfig == Machine::BOOT_A ? 'b' : 'a';
     bootConfigFile.write(&b, sizeof(b));
     bootConfigFile.close();
 
@@ -152,11 +156,14 @@ bool Machine::verifyBootConfig()
     bootConfigFile.read(&b, sizeof(b));
     bootConfigFile.reset();
 
-    if (b == 'a') {
-        b = 'A';
-        bootConfigFile.write(&b, sizeof(b));
-    } else if (b == 'b') {
+    // Only take action in case the currently booted rootfs differers from
+    // the one configured in the boot config partition.
+
+    if (b == 'A' && currentBootConfig != Machine::BOOT_A) {
         b = 'B';
+        bootConfigFile.write(&b, sizeof(b));
+    } else if (b == 'B' && currentBootConfig != Machine::BOOT_B) {
+        b = 'A';
         bootConfigFile.write(&b, sizeof(b));
     }
 
