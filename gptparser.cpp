@@ -60,7 +60,7 @@ int GPTParser::partitionIndexForName(const QString &name)
         file.read((char *) &entry, sizeof(entry));
 
         if (name == QString::fromUtf16(entry.name))
-            return i;
+            return i + 1;
     }
 
     return -1;
@@ -80,12 +80,12 @@ const QString GPTParser::deviceNameForPartitionName(const QString &partitionName
 
 const QString GPTParser::nameOfPartition(unsigned int index)
 {
-    if (!file.isOpen() || index >= numEntries)
+    if (!file.isOpen() || index == 0 || index >= numEntries)
         return "";
 
     struct GPTEntry entry;
 
-    file.seek(512 + 512 + index * 128);
+    file.seek(512 + 512 + (index - 1) * 128);
     file.read((char *) &entry, sizeof(entry));
 
     return QString::fromUtf16(entry.name);
