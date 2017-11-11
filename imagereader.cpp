@@ -117,11 +117,6 @@ bool ImageReader::open()
         return false;
     }
 
-    if (imageSize > file.size()) {
-        qWarning(ImageReaderLog) << "Reported image size" << imageSize << "exceeds file size of" << file.fileName() << file.size();
-        return false;
-    }
-
     return true;
 }
 
