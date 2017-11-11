@@ -33,6 +33,10 @@ Machine::Machine(QObject *parent) : QObject(parent)
 
         if (modelName.contains("APQ 8016 SBC"))
             model = Machine::DT410C_EVALBOARD;
+
+        if (modelName.contains("NEPOS1"))
+            model = Machine::NEPOS1;
+
     } else if (architecture == "x86_64") {
         QFile modelFile("/sys/devices/virtual/dmi/id/product_version");
         if (modelFile.open(QIODevice::ReadOnly)) {
