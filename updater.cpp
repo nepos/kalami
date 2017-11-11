@@ -270,11 +270,6 @@ size_t UpdateWriter::size() const
     return file.pos();
 }
 
-void UpdateWriter::flush()
-{
-    file.flush();
-}
-
 //
 // UpdateThread is a wrapper around a QThread that handles image downloads (both
 // VCDIFF delta images and full images) and verifies the written output.
@@ -321,7 +316,7 @@ void UpdateThread::emitProgress(bool isDownload, float v)
     emit progress(p);
 }
 
-bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, UpdateWriter *output)
+bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, const QString &outputPath)
 {
     QNetworkAccessManager networkAccessManager;
     QNetworkRequest request(deltaUrl);
@@ -338,11 +333,19 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, U
     networkAccessManager.moveToThread(thread());
     reply->moveToThread(thread());
 
+    UpdateWriter output;
+    if (!output.open(outputPath))
+        return false;
+
+    const char *buf = (const char *) dict->map();
+    if (buf == nullptr)
+        return false;
+
     open_vcdiff::VCDiffStreamingDecoder decoder;
     decoder.SetMaximumTargetFileSize(512 * 1024 * 1024);
-    decoder.StartDecoding((const char *) dict->map(), dict->size());
+    decoder.StartDecoding(buf, dict->size());
 
-    QObject::connect(reply, &QNetworkReply::readyRead, this, [this, &loop, &decoder, output, &error]() {
+    QObject::connect(reply, &QNetworkReply::readyRead, this, [this, &loop, &decoder, &output, &error]() {
         QNetworkReply *reply = (QNetworkReply *) sender();
 
         if (reply->error() != QNetworkReply::NoError) {
@@ -353,8 +356,7 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, U
         }
 
         const QByteArray data = reply->readAll();
-
-        if (!decoder.DecodeChunkToInterface(data.constData(), data.size(), output)) {
+        if (!decoder.DecodeChunkToInterface(data.constData(), data.size(), &output)) {
             reply->abort();
             error = true;
             loop.quit();
@@ -388,12 +390,11 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, U
     timer.setSingleShot(true);
     timer.start(60 * 1000);
     loop.exec();
-    output->flush();
 
     return ret && !error;
 }
 
-bool UpdateThread::downloadFullImage(const QUrl &url, UpdateWriter *output)
+bool UpdateThread::downloadFullImage(const QUrl &url, const QString &outputPath)
 {
     QNetworkAccessManager networkAccessManager;
     QNetworkRequest request(url);
@@ -407,9 +408,13 @@ bool UpdateThread::downloadFullImage(const QUrl &url, UpdateWriter *output)
     networkAccessManager.moveToThread(thread());
     reply->moveToThread(thread());
 
+    UpdateWriter output;
+    if (!output.open(outputPath))
+        return false;
+
     qInfo(UpdaterLog) << "Downloading full image from" << url;
 
-    QObject::connect(reply, &QNetworkReply::readyRead, this, [this, output]() {
+    QObject::connect(reply, &QNetworkReply::readyRead, this, [this, &output]() {
         QNetworkReply *reply = (QNetworkReply *) sender();
 
         if (reply->error() != QNetworkReply::NoError) {
@@ -419,7 +424,7 @@ bool UpdateThread::downloadFullImage(const QUrl &url, UpdateWriter *output)
         }
 
         const QByteArray data = reply->readAll();
-        output->append(data.constData(), data.size());
+        output.append(data.constData(), data.size());
     });
 
     connect(reply, static_cast<void(QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error),
@@ -446,7 +451,6 @@ bool UpdateThread::downloadFullImage(const QUrl &url, UpdateWriter *output)
     timer.start(60 * 1000);
 
     loop.exec();
-    output->flush();
 
     return ret;
 }
@@ -460,7 +464,9 @@ bool UpdateThread::verifyImage(ImageReader::ImageType type, const QString &path,
         return false;
 
     qint64 pos = 0;
-    char *buf = (char *) image.map();
+    const char *buf = (const char *) image.map();
+    if (!buf)
+        return false;
 
     while (pos < image.size()) {
         qint64 l = qMin((qint64) 1024 * 1024, (qint64) (image.size() - pos));
@@ -481,21 +487,16 @@ bool UpdateThread::downloadAndVerify(ImageReader::ImageType type,
                                      const QUrl &deltaImageUrl,
                                      const QString &sha512)
 {
-    UpdateWriter output;
-    if (!output.open(outputPath))
-        return false;
-
     ImageReader dict(type, dictionaryPath);
     if (dict.open()) {
-        if (downloadDeltaImage(deltaImageUrl, &dict, &output) && verifyImage(type, outputPath, sha512))
+        if (downloadDeltaImage(deltaImageUrl, &dict, outputPath) && verifyImage(type, outputPath, sha512))
             return true;
 
         dict.close();
     }
 
     // Downloading the delta didn't succeed, so let's try the full file
-    output.clear();
-    if (downloadFullImage(fullImageUrl, &output) && verifyImage(type, outputPath, sha512))
+    if (downloadFullImage(fullImageUrl, outputPath) && verifyImage(type, outputPath, sha512))
         return true;
 
     // Everything failed. We're bricked.

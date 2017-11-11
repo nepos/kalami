@@ -82,7 +82,6 @@ public:
 
     bool open(const QString &path);
     void close();
-    void flush();
 
     virtual UpdateWriter &append(const char* s, size_t n);
     virtual void clear();
@@ -117,8 +116,8 @@ private:
     enum State state;
     const Updater *updater;
     void emitProgress(bool isDownload, float v);
-    bool downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, UpdateWriter *output);
-    bool downloadFullImage(const QUrl &source, UpdateWriter *output);
+    bool downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, const QString &outputPath);
+    bool downloadFullImage(const QUrl &source, const QString &outputPath);
     bool verifyImage(ImageReader::ImageType type, const QString &path, const QString &sha512);
     bool downloadAndVerify(ImageReader::ImageType type, const QString &dictionaryPath, const QString &outputPath, const QUrl &fullImageUrl, const QUrl &deltaImageUrl, const QString &sha512);
 };
