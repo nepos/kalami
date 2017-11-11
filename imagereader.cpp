@@ -2,6 +2,13 @@
 #include <QDebug>
 
 #include <linux/magic.h>
+#include <linux/fs.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 #include "imagereader.h"
 
 Q_LOGGING_CATEGORY(ImageReaderLog, "ImageReader")
@@ -64,7 +71,14 @@ static inline size_t ALIGN_TO(size_t l, size_t ali) {
 
 bool ImageReader::open()
 {
+    int ret;
+    struct stat stat;
+
     if (!file.open(QIODevice::ReadOnly))
+        return false;
+
+    ret = fstat(file.handle(), &stat);
+    if (ret < 0)
         return false;
 
     switch (type) {
@@ -117,6 +131,24 @@ bool ImageReader::open()
         return false;
     }
 
+    qint64 fileSize = 0;
+
+    if (S_ISREG(stat.st_mode)) {
+        fileSize = file.size();
+    } else if (S_ISBLK(stat.st_mode)) {
+        ret = ioctl(file.handle(), BLKGETSIZE64, &fileSize);
+        if (ret < 0)
+            fileSize = 0;
+    } else {
+        qWarning() << "Unsupported file type of" << file.fileName();
+        return false;
+    }
+
+    if (fileSize < imageSize) {
+        qWarning(ImageReaderLog) << "Reported image size" << imageSize << "exceeds file size of" << file.fileName() << fileSize;
+        return false;
+    }
+
     return true;
 }
 
@@ -126,20 +158,23 @@ void ImageReader::close()
         return;
 
     if (mappedBuffer) {
-        file.unmap(mappedBuffer);
+        munmap(mappedBuffer, imageSize);
         mappedBuffer = nullptr;
     }
 
     file.close();
 }
 
-uchar *ImageReader::map()
+const uchar *ImageReader::map()
 {
     if (!file.isOpen())
         return NULL;
 
     if (!mappedBuffer)
-        mappedBuffer = file.map(0, imageSize, QFileDevice::NoOptions);
+        mappedBuffer = (uchar *) mmap(nullptr, imageSize, PROT_READ, MAP_SHARED, file.handle(), 0);
+
+    if (!mappedBuffer)
+        qWarning(ImageReaderLog) << "Unable to map" << file.fileName();
 
     return mappedBuffer;
 }

@@ -22,7 +22,7 @@ public:
 
     qint64 size() { return imageSize; };
     bool open();
-    uchar *map();
+    const uchar *map();
     void close();
 
 private:
