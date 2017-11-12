@@ -10,6 +10,12 @@
 #include <QTimer>
 #include <QFileInfo>
 
+#include <linux/fs.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 #include "updater.h"
 
 Q_LOGGING_CATEGORY(UpdaterLog, "Updater")
@@ -236,7 +242,22 @@ UpdateWriter::~UpdateWriter()
 bool UpdateWriter::open(const QString &path)
 {
     file.setFileName(path);
-    return file.open(QFileDevice::WriteOnly | QIODevice::Unbuffered);
+    if (!file.open(QFileDevice::WriteOnly | QIODevice::Unbuffered))
+        return false;
+
+    struct stat stat;
+
+    if (fstat(file.handle(), &stat) < 0)
+        return false;
+
+    fileMaxSize = 0;
+
+    if (S_ISBLK(stat.st_mode))
+        ioctl(file.handle(), BLKGETSIZE64, &fileMaxSize);
+    else
+        fileMaxSize = 1024 * 1024 * 1024; // Dummy value when operating on plain files
+
+    return true;
 }
 
 void UpdateWriter::close()
@@ -342,7 +363,7 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, c
         return false;
 
     open_vcdiff::VCDiffStreamingDecoder decoder;
-    decoder.SetMaximumTargetFileSize(512 * 1024 * 1024);
+    decoder.SetMaximumTargetFileSize(output.maxSize());
     decoder.StartDecoding(buf, dict->size());
 
     QObject::connect(reply, &QNetworkReply::readyRead, this, [this, &loop, &decoder, &output, &error]() {

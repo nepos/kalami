@@ -88,8 +88,10 @@ public:
     virtual void push_back(char c);
     virtual void ReserveAdditionalBytes(size_t res_arg);
     virtual size_t size() const;
+    qint64 maxSize() const { return fileMaxSize; };
 
 private:
+    qint64 fileMaxSize;
     QFile file;
 };
 
