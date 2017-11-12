@@ -266,6 +266,7 @@ void UpdateWriter::close()
 
 UpdateWriter &UpdateWriter::append(const char *s, size_t n)
 {
+    qInfo() << "UpdateWriter appending" << n << "bytes to" << file.fileName() << "at pos" << file.pos();
     file.write(s, n);
     return *this;
 }
@@ -282,6 +283,8 @@ void UpdateWriter::push_back(char c)
 
 void UpdateWriter::ReserveAdditionalBytes(size_t res_arg)
 {
+    qInfo() << "UpdateWriter requesting more bytes:" << res_arg;
+
     if (!isBlockDevice)
         file.resize(file.pos() + res_arg);
 }
@@ -377,6 +380,7 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, c
         }
 
         const QByteArray data = reply->readAll();
+        qWarning() << "DELTA DECODER GOT" << data.size() << "bytes";
         if (!decoder.DecodeChunkToInterface(data.constData(), data.size(), &output)) {
             reply->abort();
             error = true;
