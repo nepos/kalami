@@ -139,6 +139,20 @@ void Connman::sendConnectedService()
     emit connectedWifiChanged(wifi);
 }
 
+void Connman::enableWifi()
+{
+    Q_D(Connman);
+
+    foreach (Technology *technology, d->manager->technologies()) {
+        qInfo(ConnmanLog) << "Technology:" << technology->name();
+        if (technology->name() == "WiFi") {
+            qInfo(ConnmanLog) << "Enabling Wifi";
+            technology->setPowered(true);
+            technology->scan();
+        }
+    }
+}
+
 Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
 {
     Q_D(Connman);
@@ -148,24 +162,17 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
 
     QObject::connect(d->manager, &Manager::stateChanged, [this, d]() {
         qInfo(ConnmanLog) << "connman: stateChanged" << d->manager->state();
-        if (d->manager->state() == Manager::Online)
+        if (d->manager->state() == Manager::Online) {
+            enableWifi();
             emit goneOnline();
+        }
     });
 
     QObject::connect(d->manager, &Manager::offlineModeChanged, [this, d]() {
         qInfo(ConnmanLog) << "connman: offlineModeChanged" << d->manager->offlineMode();
 
-        if (d->manager->offlineMode())
-            return;
-
-        foreach (Technology *technology, d->manager->technologies()) {
-            qInfo(ConnmanLog) << "Technology:" << technology->name();
-            if (technology->name() == "WiFi") {
-                qInfo(ConnmanLog) << "Enabling Wifi";
-                technology->setPowered(true);
-                technology->scan();
-            }
-        }
+        if (!d->manager->offlineMode())
+            enableWifi();
 
         iterateServices();
     });
@@ -187,8 +194,9 @@ void Connman::start()
     Q_D(Connman);
 
     d->manager->setOfflineMode(false);
+    enableWifi();
 
-    qInfo() << "Manager state" << d->manager->state();
+    qInfo(ConnmanLog) << "Manager state" << d->manager->state();
 
     if (d->manager->state() == Manager::Online)
         emit goneOnline();

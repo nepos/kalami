@@ -29,6 +29,7 @@ private slots:
     void connectToKnownWifi();
     void agentPassphraseRequested();
     void sendConnectedService();
+    void enableWifi();
 
 private:
     ConnmanPrivate *d_ptr;
