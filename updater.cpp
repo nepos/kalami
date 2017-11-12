@@ -342,15 +342,21 @@ void UpdateThread::emitProgress(bool isDownload, float v)
 
 bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, const QString &outputPath)
 {
-    QNetworkAccessManager networkAccessManager;
-    QNetworkRequest request(deltaUrl);
-    QNetworkReply *reply = networkAccessManager.get(request);
     QEventLoop loop;
     QTimer timer;
     bool ret = false;
     bool error = false;
 
     qInfo(UpdaterLog) << "Downloading delta update from" << deltaUrl;
+
+    QNetworkAccessManager networkAccessManager;
+    QNetworkRequest request(deltaUrl);
+    request.setAttribute(QNetworkRequest::SpdyAllowedAttribute, true);
+#if QT_VERSION >= 0x050900
+    request.setAttribute(QNetworkRequest::HTTP2AllowedAttribute, true);
+#endif
+
+    QNetworkReply *reply = networkAccessManager.get(request);
 
     // We need to move these objects to the thread we're running in. Otherwise, the handler for the reply signals
     // will fire in the main thread, leading to memory corruption in reply->readAll()
@@ -379,12 +385,17 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, c
             return;
         }
 
-        const QByteArray data = reply->readAll();
-        qWarning() << "DELTA DECODER GOT" << data.size() << "bytes";
-        if (!decoder.DecodeChunkToInterface(data.constData(), data.size(), &output)) {
-            reply->abort();
-            error = true;
-            loop.quit();
+        while (true) {
+            const QByteArray data = reply->read(1024);
+            if (data.isEmpty())
+                break;
+
+            qWarning() << "DELTA DECODER GOT" << data.size() << "bytes";
+            if (!decoder.DecodeChunkToInterface(data.constData(), data.size(), &output)) {
+                reply->abort();
+                error = true;
+                loop.quit();
+            }
         }
     });
 
@@ -421,12 +432,19 @@ bool UpdateThread::downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, c
 
 bool UpdateThread::downloadFullImage(const QUrl &url, const QString &outputPath)
 {
-    QNetworkAccessManager networkAccessManager;
-    QNetworkRequest request(url);
-    QNetworkReply *reply = networkAccessManager.get(request);
     QEventLoop loop;
     QTimer timer;
     bool ret = false;
+
+    QNetworkAccessManager networkAccessManager;
+    QNetworkRequest request(url);
+    request.setAttribute(QNetworkRequest::SpdyAllowedAttribute, true);
+#if QT_VERSION >= 0x050900
+    request.setAttribute(QNetworkRequest::HTTP2AllowedAttribute, true);
+#endif
+
+    QNetworkReply *reply = networkAccessManager.get(request);
+    reply->setReadBufferSize(256 * 1024);
 
     // We need to move these objects to the thread we're running in. Otherwise, the handler for the reply signals
     // will fire in the main thread, leading to memory corruption in reply->readAll()
