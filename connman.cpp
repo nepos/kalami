@@ -187,6 +187,11 @@ void Connman::start()
     Q_D(Connman);
 
     d->manager->setOfflineMode(false);
+
+    qInfo() << "Manager state" << d->manager->state();
+
+    if (d->manager->state() == Manager::Online)
+        emit goneOnline();
 }
 
 bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
