@@ -53,6 +53,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     QObject::connect(updater, &Updater::alreadyUpToDate, this, [this]() {
         qInfo(DaemonLog) << "Already up-to-date!";
+        // FIXME: more checks should be met before boot is considered verified!
+        machine->verifyBootConfig();
     });
 
     QObject::connect(updater, &Updater::checkFailed, this, [this]() {
