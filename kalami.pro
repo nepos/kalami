@@ -50,5 +50,5 @@ HEADERS += \
 LIBS += -ludev
 LIBS += -lqconnman
 LIBS += -lasound
-LIBS += -lz -lvcdcom -lvcddec
+LIBS += -lz -lvcddec -lvcdcom
 
