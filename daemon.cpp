@@ -37,7 +37,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject(parent),
     mixer(new ALSAMixer("hw:0", this)),
     displayBrightness(new BrightnessControl("/sys/class/backlight/1a98000.dsi.0")),
-    volumeInputDevice(new InputDevice("/sys/devices/platform/rotary/input/input1")),
+    volumeInputDevice(new InputDevice("/dev/input/event1")),
     connman(new Connman(this)),
     machine(new Machine(this)),
     fring(new Fring()),
