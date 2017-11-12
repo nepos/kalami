@@ -181,10 +181,8 @@ void Updater::check(const QString &updateChannel)
     request.setMaximumRedirectsAllowed(1);
     request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
 
-    if (pendingReply) {
+    if (pendingReply)
         pendingReply->abort();
-        pendingReply->deleteLater();
-    }
 
     state = Updater::StateDownloadJson;
     pendingReply = networkAccessManager.get(request);
