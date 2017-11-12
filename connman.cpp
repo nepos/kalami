@@ -175,8 +175,8 @@ void Connman::start()
     d->manager->setOfflineMode(false);
 
     foreach (Technology *technology, d->manager->technologies()) {
-        qInfo(ConnmanLog) << "tech name" << technology->name() << "type" << technology->type();
         if (technology->name() == "WiFi") {
+            qInfo(ConnmanLog) << "Enabling Wifi";
             technology->setPowered(true);
             technology->scan();
         }
