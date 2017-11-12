@@ -251,8 +251,9 @@ bool UpdateWriter::open(const QString &path)
         return false;
 
     fileMaxSize = 0;
+    isBlockDevice = S_ISBLK(stat.st_mode);
 
-    if (S_ISBLK(stat.st_mode))
+    if (isBlockDevice)
         ioctl(file.handle(), BLKGETSIZE64, &fileMaxSize);
     else
         fileMaxSize = 1024 * 1024 * 1024; // Dummy value when operating on plain files
@@ -283,7 +284,8 @@ void UpdateWriter::push_back(char c)
 
 void UpdateWriter::ReserveAdditionalBytes(size_t res_arg)
 {
-    file.resize(file.pos() + res_arg);
+    if (!isBlockDevice)
+        file.resize(file.pos() + res_arg);
 }
 
 size_t UpdateWriter::size() const

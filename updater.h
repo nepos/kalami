@@ -92,6 +92,7 @@ public:
 
 private:
     qint64 fileMaxSize;
+    bool isBlockDevice;
     QFile file;
 };
 
