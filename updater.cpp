@@ -489,14 +489,20 @@ bool UpdateThread::downloadAndVerify(ImageReader::ImageType type,
 {
     ImageReader dict(type, dictionaryPath);
     if (dict.open()) {
-        if (downloadDeltaImage(deltaImageUrl, &dict, outputPath) && verifyImage(type, outputPath, sha512))
-            return true;
+        if (!downloadDeltaImage(deltaImageUrl, &dict, outputPath))
+            return false;
 
         dict.close();
     }
 
+    if (verifyImage(type, outputPath, sha512))
+        return true;
+
     // Downloading the delta didn't succeed, so let's try the full file
-    if (downloadFullImage(fullImageUrl, outputPath) && verifyImage(type, outputPath, sha512))
+    if (!downloadFullImage(fullImageUrl, outputPath))
+        return false;
+
+    if (verifyImage(type, outputPath, sha512))
         return true;
 
     // Everything failed. We're bricked.
