@@ -280,6 +280,7 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
 #endif
 
     QNetworkReply *reply = networkAccessManager.get(request);
+    reply->setReadBufferSize(1024 * 1024);
 
     // We need to move these objects to the thread we're running in. Otherwise, the handler for the reply signals
     // will fire in the main thread, leading to memory corruption in reply->readAll()
@@ -312,18 +313,11 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
             return;
         }
 
-        while (true) {
-            const QByteArray data = reply->read(1024);
-            if (data.isEmpty())
-                break;
-
-            int r = decoder.DecodeChunkToInterface(data.constData(), data.size());
-            qWarning() << "DecodeChunkToInterface returned" << r;
-            if (!r) {
-                reply->abort();
-                error = true;
-                loop.quit();
-            }
+        const QByteArray data = reply->readAll();
+        if (!decoder.DecodeChunkToInterface(data.constData(), data.size())) {
+            reply->abort();
+            error = true;
+            loop.quit();
         }
     });
 
@@ -352,7 +346,7 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
 
     QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
     timer.setSingleShot(true);
-    timer.start(60 * 1000);
+    timer.start(5 * 60 * 1000);
     loop.exec();
 
     return ret && !error;
@@ -419,7 +413,7 @@ bool UpdateThread::downloadFullImage(const QUrl &url, const QString &outputPath)
 
     QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
     timer.setSingleShot(true);
-    timer.start(60 * 1000);
+    timer.start(10 * 60 * 1000);
 
     loop.exec();
 
@@ -440,7 +434,7 @@ bool UpdateThread::verifyImage(ImageReader::ImageType type, const QString &path,
         return false;
 
     while (pos < image.size()) {
-        qint64 l = qMin((qint64) 1024 * 1024, (qint64) (image.size() - pos));
+        qint64 l = qMin((qint64) 10 * 1024 * 1024, (qint64) (image.size() - pos));
         hash.addData(buf, l);
         pos += l;
         buf += l;
