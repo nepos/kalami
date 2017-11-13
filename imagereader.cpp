@@ -3,10 +3,7 @@
 
 #include <linux/magic.h>
 #include <linux/fs.h>
-#include <sys/mman.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
 #include <unistd.h>
 
 #include "imagereader.h"
@@ -56,13 +53,8 @@ struct androidBootHeader {
 #define _ANDROID_BOOTIMG_MAGIC_2 UINT32_C(0x2144494f)
 
 ImageReader::ImageReader(enum ImageType type, const QString path, QObject *parent) :
-    QObject(parent), type(type), file(path), mappedBuffer(0)
+    BlockDevice(path, parent), type(type)
 {
-}
-
-ImageReader::~ImageReader()
-{
-    close();
 }
 
 static inline size_t ALIGN_TO(size_t l, size_t ali) {
@@ -71,28 +63,21 @@ static inline size_t ALIGN_TO(size_t l, size_t ali) {
 
 bool ImageReader::open()
 {
-    int ret;
-    struct stat stat;
-
-    if (!file.open(QIODevice::ReadOnly))
-        return false;
-
-    ret = fstat(file.handle(), &stat);
-    if (ret < 0)
+    if (!BlockDevice::open(QIODevice::ReadOnly))
         return false;
 
     switch (type) {
     case ImageReader::SquashFsType: {
         struct squashfsHeader hdr;
 
-        qint64 r = file.read((char *) &hdr, sizeof(hdr));
+        qint64 r = read((char *) &hdr, sizeof(hdr));
         if (r != sizeof(hdr)) {
-            qWarning(ImageReaderLog) << "Unable to read header of" << file.fileName();
+            qWarning(ImageReaderLog) << "Unable to read header of" << fileName();
             return false;
         }
 
         if (qFromLittleEndian(hdr.s_magic) != SQUASHFS_MAGIC) {
-            qWarning(ImageReaderLog) << "Wrong superblock magic in" << file.fileName();
+            qWarning(ImageReaderLog) << "Wrong superblock magic in" << fileName();
             return false;
         }
 
@@ -103,9 +88,9 @@ bool ImageReader::open()
     case ImageReader::AndroidBootType: {
         struct androidBootHeader hdr;
 
-        qint64 r = file.read((char *) &hdr, sizeof(hdr));
+        qint64 r = read((char *) &hdr, sizeof(hdr));
         if (r != sizeof(hdr)) {
-            qWarning(ImageReaderLog) << "Unable to read header of" << file.fileName();
+            qWarning(ImageReaderLog) << "Unable to read header of" << fileName();
             return false;
         }
 
@@ -127,54 +112,14 @@ bool ImageReader::open()
     }
 
     default:
-        qWarning(ImageReaderLog) << "Unsupported image type in" << file.fileName();
+        qWarning(ImageReaderLog) << "Unsupported image type in" << fileName();
         return false;
     }
 
-    qint64 fileSize = 0;
-
-    if (S_ISREG(stat.st_mode)) {
-        fileSize = file.size();
-    } else if (S_ISBLK(stat.st_mode)) {
-        ret = ioctl(file.handle(), BLKGETSIZE64, &fileSize);
-        if (ret < 0)
-            fileSize = 0;
-    } else {
-        qWarning() << "Unsupported file type of" << file.fileName();
-        return false;
-    }
-
-    if (fileSize < imageSize) {
-        qWarning(ImageReaderLog) << "Reported image size" << imageSize << "exceeds file size of" << file.fileName() << fileSize;
+    if (maxSize() < imageSize) {
+        qWarning(ImageReaderLog) << "Reported image size" << imageSize << "exceeds file size of" << fileName() << maxSize();
         return false;
     }
 
     return true;
-}
-
-void ImageReader::close()
-{
-    if (!file.isOpen())
-        return;
-
-    if (mappedBuffer) {
-        munmap(mappedBuffer, imageSize);
-        mappedBuffer = nullptr;
-    }
-
-    file.close();
-}
-
-const uchar *ImageReader::map()
-{
-    if (!file.isOpen())
-        return NULL;
-
-    if (!mappedBuffer)
-        mappedBuffer = (uchar *) mmap(nullptr, imageSize, PROT_READ, MAP_SHARED, file.handle(), 0);
-
-    if (!mappedBuffer)
-        qWarning(ImageReaderLog) << "Unable to map" << file.fileName();
-
-    return mappedBuffer;
 }

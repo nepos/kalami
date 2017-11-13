@@ -5,9 +5,11 @@
 #include <QFile>
 #include <QtCore/QLoggingCategory>
 
+#include "blockdevice.h"
+
 Q_DECLARE_LOGGING_CATEGORY(ImageReaderLog)
 
-class ImageReader : public QObject
+class ImageReader : public BlockDevice
 {
     Q_OBJECT
 public:
@@ -18,18 +20,13 @@ public:
     };
 
     explicit ImageReader(enum ImageType type, const QString path, QObject *parent = 0);
-    ~ImageReader();
 
     qint64 size() { return imageSize; };
     bool open();
-    const uchar *map();
-    void close();
 
 private:
     enum ImageType type;
-    QFile file;
     qint64 imageSize;
-    uchar *mappedBuffer;
 };
 
 #endif // IMAGEREADER_H

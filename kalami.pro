@@ -26,7 +26,8 @@ SOURCES += main.cpp \
     polyphantmessage.cpp \
     polyphantconnection.cpp \
     brightnesscontrol.cpp \
-    imagereader.cpp
+    imagereader.cpp \
+    blockdevice.cpp
 
 HEADERS += \
     daemon.h \
@@ -45,7 +46,8 @@ HEADERS += \
     brightnesscontrol.h \
     fring-protocol.h \
     imagereader.h \
-    crc32table.h
+    crc32table.h \
+    blockdevice.h
 
 LIBS += -ludev
 LIBS += -lqconnman
