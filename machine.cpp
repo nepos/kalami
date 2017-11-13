@@ -118,7 +118,7 @@ Machine::Machine(QObject *parent) : QObject(parent)
 
     bootConfigDevice = parser.deviceNameForPartitionName("bootcfg");
 
-    qInfo(MachineLog) << "Boot config stored in" << bootConfigDevice;
+    qInfo(MachineLog) << "Boot config" << (currentBootConfig == Machine::BOOT_A ? "A" : "B");
     qInfo(MachineLog) << "Current rootfs on" << currentRootfsDevice << "boot image on" << currentBootDevice;
     qInfo(MachineLog) << "Alt rootfs on" << altRootfsDevice << "alt boot image on" << altBootDevice;
 }
@@ -165,9 +165,11 @@ bool Machine::verifyBootConfig()
 
     if (b == 'A' && currentBootConfig != Machine::BOOT_A) {
         b = 'B';
+        qInfo(MachineLog) << "Making boot B permanent";
         bootConfigFile.write(&b, sizeof(b));
     } else if (b == 'B' && currentBootConfig != Machine::BOOT_B) {
         b = 'A';
+        qInfo(MachineLog) << "Making boot A permanent";
         bootConfigFile.write(&b, sizeof(b));
     }
 
