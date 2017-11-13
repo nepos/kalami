@@ -75,27 +75,6 @@ private:
     UpdateThread *thread;
 };
 
-class UpdateWriter : public open_vcdiff::OutputStringInterface {
-public:
-    explicit UpdateWriter();
-    ~UpdateWriter();
-
-    bool open(const QString &path);
-    void close();
-
-    virtual UpdateWriter &append(const char* s, size_t n);
-    virtual void clear();
-    virtual void push_back(char c);
-    virtual void ReserveAdditionalBytes(size_t res_arg);
-    virtual size_t size() const;
-    qint64 maxSize() const { return fileMaxSize; };
-
-private:
-    qint64 fileMaxSize;
-    bool isBlockDevice;
-    QFile file;
-};
-
 class UpdateThread : public QThread
 {
     Q_OBJECT
@@ -119,7 +98,7 @@ private:
     enum State state;
     const Updater *updater;
     void emitProgress(bool isDownload, float v);
-    bool downloadDeltaImage(const QUrl &deltaUrl, ImageReader *dict, const QString &outputPath);
+    bool downloadDeltaImage(ImageReader::ImageType type, const QUrl &deltaUrl, const QString &dictionaryPath, const QString &outputPath);
     bool downloadFullImage(const QUrl &source, const QString &outputPath);
     bool verifyImage(ImageReader::ImageType type, const QString &path, const QString &sha512);
     bool downloadAndVerify(ImageReader::ImageType type, const QString &dictionaryPath, const QString &outputPath, const QUrl &fullImageUrl, const QUrl &deltaImageUrl, const QString &sha512);
