@@ -50,7 +50,7 @@ HEADERS += \
     blockdevice.h
 
 LIBS += -ludev
-LIBS += -lqconnman
+LIBS += -lconnman-qt5
 LIBS += -lasound
 LIBS += -lz -lvcddec -lvcdcom
 
