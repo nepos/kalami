@@ -30,6 +30,7 @@ private slots:
     void agentPassphraseRequested();
     void sendConnectedService();
     void enableWifi();
+    void checkState();
 
 private:
     ConnmanPrivate *d_ptr;

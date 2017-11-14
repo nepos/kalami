@@ -153,6 +153,28 @@ void Connman::enableWifi()
     }
 }
 
+void Connman::checkState()
+{
+    Q_D(Connman);
+
+    qInfo(ConnmanLog) << "Manager state" << d->manager->state();
+
+    switch (d->manager->state()) {
+    case Manager::Offline:
+        d->manager->setOfflineMode(false);
+        break;
+    case Manager::Idle:
+    case Manager::Ready:
+        enableWifi();
+        break;
+    case Manager::Online:
+        emit goneOnline();
+        break;
+    default:
+        break;
+    }
+}
+
 Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
 {
     Q_D(Connman);
@@ -161,11 +183,7 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
     d->availableWifis = QJsonArray();
 
     QObject::connect(d->manager, &Manager::stateChanged, [this, d]() {
-        qInfo(ConnmanLog) << "connman: stateChanged" << d->manager->state();
-        if (d->manager->state() == Manager::Online) {
-            enableWifi();
-            emit goneOnline();
-        }
+        checkState();
     });
 
     QObject::connect(d->manager, &Manager::offlineModeChanged, [this, d]() {
@@ -195,11 +213,7 @@ void Connman::start()
 
     d->manager->setOfflineMode(false);
     enableWifi();
-
-    qInfo(ConnmanLog) << "Manager state" << d->manager->state();
-
-    if (d->manager->state() == Manager::Online)
-        emit goneOnline();
+    checkState();
 }
 
 bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
