@@ -17,6 +17,7 @@ public:
     const QString metaError() const { return _meta["error"].toString(); };
     int requestId() const { return _meta["requestId"].toInt(); };
 
+    void setPayload(const QJsonValue &payload);
     void setType(const QString &string);
     const QJsonObject toJson() const;
 

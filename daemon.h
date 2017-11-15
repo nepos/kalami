@@ -59,4 +59,6 @@ private:
 
     PolyphantMessage *pendingWifiMessage;
     QString pendingWifiId;
+
+    PolyphantMessage *pendingUpdateCheckMessage;
 };

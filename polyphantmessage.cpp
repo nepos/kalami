@@ -15,6 +15,11 @@ PolyphantMessage::PolyphantMessage(const QString type, const QJsonValue payload,
     _meta["requestId"] = requestId;
 }
 
+void PolyphantMessage::setPayload(const QJsonValue &payload)
+{
+    _payload = payload;
+}
+
 void PolyphantMessage::setType(const QString &string)
 {
     _type = string;

@@ -45,34 +45,68 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     updater(new Updater(machine, this)),
     nfc(new Nfc(this)),
     pendingWifiMessage(NULL),
-    pendingWifiId(QString())
+    pendingWifiId(QString()),
+    pendingUpdateCheckMessage(NULL)
 {
     // Updater logic
     QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
         qInfo(DaemonLog) << "New update available, version" << version;
-        updater->install();
+
+        if (pendingUpdateCheckMessage) {
+            pendingUpdateCheckMessage->setType("policy/update/CHECK_SUCCESS");
+            pendingUpdateCheckMessage->setPayload(QJsonObject({{ "available", true }}));
+            polyphant->sendMessage(*pendingUpdateCheckMessage);
+            delete pendingUpdateCheckMessage;
+            pendingUpdateCheckMessage = NULL;
+        }
     });
 
     QObject::connect(updater, &Updater::alreadyUpToDate, this, [this]() {
         qInfo(DaemonLog) << "Already up-to-date!";
+
+        if (pendingUpdateCheckMessage) {
+            pendingUpdateCheckMessage->setType("policy/update/CHECK_SUCCESS");
+            pendingUpdateCheckMessage->setPayload(QJsonObject({{ "available", false }}));
+            polyphant->sendMessage(*pendingUpdateCheckMessage);
+            delete pendingUpdateCheckMessage;
+            pendingUpdateCheckMessage = NULL;
+        }
+
         // FIXME: more checks should be met before boot is considered verified!
         machine->verifyBootConfig();
     });
 
     QObject::connect(updater, &Updater::checkFailed, this, [this]() {
         qInfo(DaemonLog) << "Update check failed!";
+
+        if (pendingUpdateCheckMessage) {
+            pendingUpdateCheckMessage->setType("policy/update/CHECK_ERROR");
+            polyphant->sendMessage(*pendingUpdateCheckMessage);
+            delete pendingUpdateCheckMessage;
+            pendingUpdateCheckMessage = NULL;
+        }
     });
 
     QObject::connect(updater, &Updater::updateSucceeded, this, [this]() {
         qInfo(DaemonLog) << "Update succeeded!";
+        PolyphantMessage msg("policy/update/UPDATE_FINISHED",
+                             QJsonObject{{ "updateSuccessful", true }}, 0,
+                             QJsonObject{{ "commType", "one-way" }});
     });
 
     QObject::connect(updater, &Updater::updateFailed, this, [this]() {
         qInfo(DaemonLog) << "Update failed!";
+        PolyphantMessage msg("policy/update/UPDATE_FINISHED",
+                             QJsonObject{{ "updateSuccessful", false }}, 0,
+                             QJsonObject{{ "commType", "one-way" }});
     });
 
     QObject::connect(updater, &Updater::updateProgress, this, [this](float progress) {
         qInfo(DaemonLog) << "Updater progress:" << progress;
+        PolyphantMessage msg("policy/update/UPDATE_PROGRESS",
+                             QJsonObject{{ "progress", progress }}, 0,
+                             QJsonObject{{ "commType", "one-way" }});
+        polyphant->sendMessage(msg);
     });
 
     // ALSA
@@ -86,18 +120,22 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         PolyphantMessage msg(value > 0 ?
                                  "policy/volume/UP" :
                                  "policy/volume/DOWN",
-                             QJsonObject{}, 0);
+                             QJsonObject{}, 0,
+                             QJsonObject{{ "commType", "one-way" }});
         polyphant->sendMessage(msg);
     });
 
     // Connman connection
     QObject::connect(connman, &Connman::availableWifisUpdated, this, [this](const QJsonArray &list) {
-        PolyphantMessage msg("policy/wifi/SCAN_RESULT", list, 0);
+        PolyphantMessage msg("policy/wifi/SCAN_RESULT", list, 0, QJsonObject{{ "commType", "one-way" }});
         polyphant->sendMessage(msg);
     });
 
     QObject::connect(connman, &Connman::wifiChanged, this, [this](const QJsonObject &wifi) {
-        if (pendingWifiMessage && wifi["kalamiId"].toString() == pendingWifiId) {
+        if (wifi["kalamiId"].toString() != pendingWifiId)
+            return;
+
+        if (pendingWifiMessage) {
             bool send = false;
 
             if (wifi["state"].toString() == "online") {
@@ -121,7 +159,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     QObject::connect(connman, &Connman::goneOnline, this, [this]() {
         qInfo(DaemonLog) << "We are now online!";
-        updater->check("latest");
     });
 
     connman->start();
@@ -142,7 +179,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             PolyphantMessage msg("policy/homebutton/STATE_CHANGED", QJsonObject {
                                      { "id", "home" },
                                      { "state", state },
-                                 }, 0);
+                                 }, 0,
+                                 QJsonObject{{ "commType", "one-way" }});
             polyphant->sendMessage(msg);
         });
 
@@ -151,7 +189,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
                                      { "level", level },
                                      { "chargeCurrent", chargeCurrent },
                                      { "dischargeCurrent", dischargeCurrent },
-                                 }, 0);
+                                 }, 0,
+                                 QJsonObject{{ "commType", "one-way" }});
             polyphant->sendMessage(msg);
         });
 
@@ -161,6 +200,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
         machine->setDeviceSerial(fring->getDeviceSerial());
     }
+
+    updater->check("latest");
 }
 
 void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
@@ -171,6 +212,11 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
     qInfo() << "MSG type" << message.type() << "payload:" << payload;
     if (message.type() == "policy/display/SET_BRIGHTNESS") {
         displayBrightness->setBrightness(payload["value"].toDouble());
+
+        PolyphantMessage *response = message.makeResponse();
+        response->setType("policy/display/SET_BRIGHTNESS_SUCCESS");
+        polyphant->sendMessage(*response);
+        delete response;
     }
 
     if (message.type() == "policy/led/SET_STATE") {
@@ -191,15 +237,24 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
             ret = fring->setLedPulsating(id, color["red"].toDouble(), color["green"].toDouble(), color["blue"].toDouble(),
                                          payload["frequency"].toDouble());
 
-        if (ret) {
-            PolyphantMessage *response = message.makeResponse();
-            polyphant->sendMessage(*response);
-        } else {
-        }
+        PolyphantMessage *response = message.makeResponse();
+
+        if (ret)
+            response->setType("policy/led/SET_STATE_SUCCESS");
+        else
+            response->setType("policy/led/SET_STATE_ERROR");
+
+        polyphant->sendMessage(*response);
+        delete response;
     }
 
     if (message.type() == "policy/volume/SET") {
         mixer->setMasterVolume(payload["value"].toDouble());
+
+        PolyphantMessage *response = message.makeResponse();
+        response->setType("policy/volume/SET_SUCCESS");
+        polyphant->sendMessage(*response);
+        delete response;
     }
 
     if (message.type() == "policy/wifi/CONNECT") {
@@ -222,6 +277,21 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
 
     if (message.type() == "policy/wifi/DISCONNECT") {
         connman->disconnectFromWifi(payload["kalamiId"].toString());
+    }
+
+    if (message.type() == "policy/update/CHECK") {
+        if (pendingUpdateCheckMessage) {
+            pendingUpdateCheckMessage->setType("policy/update/CHECK_ERROR");
+            polyphant->sendMessage(*pendingUpdateCheckMessage);
+            delete pendingUpdateCheckMessage;
+            pendingUpdateCheckMessage = NULL;
+        }
+
+        pendingUpdateCheckMessage = message.makeResponse();
+        pendingUpdateCheckMessage->setType("policy/update/CHECK_PENDING");
+        polyphant->sendMessage(*pendingUpdateCheckMessage);
+
+        updater->check(payload["channel"].toString());
     }
 
     Q_UNUSED(ret);
