@@ -87,7 +87,7 @@ void Updater::downloadFinished()
         file.write(content);
         file.close();
 
-        if (jsonError.error != QJsonParseError::NoError) {
+        if (!doc.isObject() || jsonError.error != QJsonParseError::NoError) {
             emit checkFailed("Unable to parse Json content from update server:" + jsonError.errorString());
             break;
         }
@@ -142,7 +142,7 @@ void Updater::downloadFinished()
         break;
     }
 
-    reply->deleteLater();
+    //reply->deleteLater();
 }
 
 void Updater::check(const QString &updateChannel)
