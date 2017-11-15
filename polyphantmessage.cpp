@@ -15,6 +15,11 @@ PolyphantMessage::PolyphantMessage(const QString type, const QJsonValue payload,
     _meta["requestId"] = requestId;
 }
 
+void PolyphantMessage::setType(const QString &string)
+{
+    _type = string;
+}
+
 const QJsonObject PolyphantMessage::toJson() const {
     return QJsonObject {
         { "type", _type, },
@@ -23,11 +28,11 @@ const QJsonObject PolyphantMessage::toJson() const {
     };
 }
 
-PolyphantMessage PolyphantMessage::makeResponse(const QJsonValue payload) const
+PolyphantMessage* PolyphantMessage::makeResponse(const QJsonValue payload) const
 {
     QJsonObject meta({
                          { "commType", "response" },
                      });
 
-    return PolyphantMessage(_type, payload, _meta["requestId"].toInt(), meta);
+    return new PolyphantMessage(_type, payload, _meta["requestId"].toInt(), meta);
 }

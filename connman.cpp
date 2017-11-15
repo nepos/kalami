@@ -34,6 +34,7 @@ struct ConnmanPrivate {
     QJsonArray availableWifis;
     QString cachedPassphrase;
     QString cachedWifiId;
+    QString cachedWifiState;
 };
 
 void Connman::connectToKnownWifi()
@@ -49,6 +50,13 @@ void Connman::connectToKnownWifi()
     }
 }
 
+QString Connman::kalamiIdForService(const NetworkService *service)
+{
+    QStringList list;
+    list << service->name() << service->bssid();
+    return list.join("-").toUtf8().toBase64();
+}
+
 void Connman::iterateServices()
 {
     Q_D(Connman);
@@ -57,21 +65,30 @@ void Connman::iterateServices()
 
     connectToKnownWifi();
 
-    foreach (const NetworkService *service, d->manager->getServices()) {
-        if (service->type() != "wifi")
-            continue;
-
-        QString id = service->name().toUtf8().toBase64();
+    foreach (const NetworkService *service, d->manager->getServices("wifi")) {
+        QString id = kalamiIdForService(service);
 
         QJsonObject wifi {
             { "kalamiId", id, },
             { "ssid",     service->name() },
             { "security", service->security().join(" ") },
             { "strength", service->strength() / 100.0 },
-            { "state",    service->state() },
         };
 
         qInfo(ConnmanLog) << "Wifi" << service->name() << "Strength" << service->strength() << "State" << service->state();
+
+        if (id == d->cachedWifiId && service->state() != d->cachedWifiState) {
+            QJsonObject wifi {
+                { "kalamiId", kalamiIdForService(service) },
+                { "connected", service->state() == "connected" },
+                { "online", service->state() == "online" },
+                { "captivePortalUrl", "" },
+            };
+
+            emit wifiChanged(wifi);
+
+            d->cachedWifiState = service->state();
+        }
 
         d->availableWifis.append(wifi);
     }
@@ -88,23 +105,6 @@ void Connman::agentPassphraseRequested(const QString &servicePath, const QVarian
     QVariantMap reply;
     reply.insert("Passphrase", d->cachedPassphrase);
     d->agent->sendUserReply(reply);
-}
-
-void Connman::sendConnectedService()
-{
-    Q_D(Connman);
-
-#if 0
-    NetworkService *service = d->manager->connectedService();
-    if (!service)
-        return;
-
-    QJsonObject wifi {
-        { "SSID", service->name() },
-    };
-
-    emit connectedWifiChanged(wifi);
-#endif
 }
 
 void Connman::enableWifi()
@@ -139,6 +139,9 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
 
     d->manager = new NetworkManager(this);
     d->availableWifis = QJsonArray();
+    d->cachedWifiId = QString();
+    d->cachedPassphrase = QString();
+    d->cachedWifiState = QString();
 
     QObject::connect(d->manager, &NetworkManager::stateChanged, [this, d]() {
         checkState();
@@ -161,13 +164,6 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
         iterateServices();
     });
 
-#if 0
-    QObject::connect(d->manager, &NetworkManager::connectedServiceChanged, [this]() {
-        qInfo(ConnmanLog) << "connman: connectedServiceChanged";
-        sendConnectedService();
-    });
-#endif
-
     d->agent = new UserAgent(this);
     d->agent->setAgentPath("/io/nepos/ConnmanAgent");
     QObject::connect(d->agent, &UserAgent::userInputRequested, this, &Connman::agentPassphraseRequested);
@@ -188,12 +184,10 @@ bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
 
     d->cachedPassphrase = passphrase;
     d->cachedWifiId = wifiId;
+    d->cachedWifiState.clear();
 
-    foreach (NetworkService *service, d->manager->getServices()) {
-        if (service->type() != "wifi")
-            continue;
-
-        QString id = service->name().toUtf8().toBase64();
+    foreach (NetworkService *service, d->manager->getServices("wifi")) {
+        QString id = kalamiIdForService(service);
 
         if (id == wifiId) {
             service->requestConnect();
@@ -208,11 +202,8 @@ bool Connman::disconnectFromWifi(const QString &wifiId)
 {
     Q_D(Connman);
 
-    foreach (NetworkService *service, d->manager->getServices()) {
-        if (service->type() != "wifi")
-            continue;
-
-        QString id = service->name().toUtf8().toBase64();
+    foreach (NetworkService *service, d->manager->getServices("wifi")) {
+        QString id = kalamiIdForService(service);
 
         if (id == wifiId) {
             service->disconnect();

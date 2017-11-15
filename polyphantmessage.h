@@ -17,9 +17,10 @@ public:
     const QString metaError() const { return _meta["error"].toString(); };
     int requestId() const { return _meta["requestId"].toInt(); };
 
+    void setType(const QString &string);
     const QJsonObject toJson() const;
 
-    PolyphantMessage makeResponse(const QJsonValue payload = {}) const;
+    PolyphantMessage* makeResponse(const QJsonValue payload = {}) const;
 
 private:
     QString _type;

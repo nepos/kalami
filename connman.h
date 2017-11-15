@@ -9,6 +9,7 @@
 Q_DECLARE_LOGGING_CATEGORY(ConnmanLog)
 
 class ConnmanPrivate;
+class NetworkService;
 
 class Connman : public QObject
 {
@@ -21,18 +22,18 @@ public:
 
 signals:
     void availableWifisUpdated(const QJsonArray &list);
-    void connectedWifiChanged(const QJsonObject &wifi);
+    void wifiChanged(const QJsonObject &wifi);
     void goneOnline();
 
 private slots:
     void iterateServices();
     void connectToKnownWifi();
     void agentPassphraseRequested(const QString &servicePath, const QVariantMap &fields);
-    void sendConnectedService();
     void enableWifi();
     void checkState();
 
 private:
     ConnmanPrivate *d_ptr;
     Q_DECLARE_PRIVATE(Connman);
+    QString kalamiIdForService(const NetworkService *service);
 };

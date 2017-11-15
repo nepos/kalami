@@ -56,4 +56,7 @@ private:
     PolyphantConnection *polyphant;
     Updater *updater;
     Nfc *nfc;
+
+    PolyphantMessage *pendingWifiMessage;
+    QString pendingWifiId;
 };

@@ -43,7 +43,9 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     fring(new Fring()),
     polyphant(new PolyphantConnection(uri, this)),
     updater(new Updater(machine, this)),
-    nfc(new Nfc(this))
+    nfc(new Nfc(this)),
+    pendingWifiMessage(NULL),
+    pendingWifiId(QString())
 {
     // Updater logic
     QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
@@ -82,8 +84,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             return;
 
         PolyphantMessage msg(value > 0 ?
-                                 "policy/VOLUME/UP" :
-                                 "policy/VOLUME/DOWN",
+                                 "policy/volume/UP" :
+                                 "policy/volume/DOWN",
                              QJsonObject{}, 0);
         polyphant->sendMessage(msg);
     });
@@ -94,8 +96,27 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         polyphant->sendMessage(msg);
     });
 
-    QObject::connect(connman, &Connman::connectedWifiChanged, this, [this](const QJsonObject &wifi) {
-        // TODO
+    QObject::connect(connman, &Connman::wifiChanged, this, [this](const QJsonObject &wifi) {
+        if (pendingWifiMessage && wifi["kalamiId"].toString() == pendingWifiId) {
+            bool send = false;
+
+            if (wifi["state"].toString() == "online") {
+                pendingWifiMessage->setType("policy/wifi/CONNECT_SUCCESS");
+                send = true;
+            } else if (wifi["state"].toString() == "error") {
+                pendingWifiMessage->setType("policy/wifi/CONNECT_ERROR");
+                send = true;
+            }
+
+            if (send) {
+                polyphant->sendMessage(*pendingWifiMessage);
+                delete pendingWifiMessage;
+                pendingWifiMessage = NULL;
+            }
+        }
+
+        PolyphantMessage msg("policy/wifi/STATE_CHANGED", wifi, 0, QJsonObject{{ "commType", "one-way" }});
+        polyphant->sendMessage(msg);
     });
 
     QObject::connect(connman, &Connman::goneOnline, this, [this]() {
@@ -171,8 +192,8 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
                                          payload["frequency"].toDouble());
 
         if (ret) {
-            PolyphantMessage response = message.makeResponse();
-            polyphant->sendMessage(response);
+            PolyphantMessage *response = message.makeResponse();
+            polyphant->sendMessage(*response);
         } else {
         }
     }
@@ -181,11 +202,25 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
         mixer->setMasterVolume(payload["value"].toDouble());
     }
 
-    if (message.type() == "wifi/CONNECT") {
-        connman->connectToWifi(payload["kalamiId"].toString(), payload["passphrase"].toString());
+    if (message.type() == "policy/wifi/CONNECT") {
+        if (pendingWifiMessage) {
+            pendingWifiMessage->setType("policy/wifi/CONNECT_ERROR");
+            polyphant->sendMessage(*pendingWifiMessage);
+            delete pendingWifiMessage;
+            pendingWifiMessage = NULL;
+        }
+
+        QString id = payload["kalamiId"].toString();
+
+        pendingWifiMessage = message.makeResponse();
+        pendingWifiMessage->setType("policy/wifi/CONNECT_PENDING");
+        polyphant->sendMessage(*pendingWifiMessage);
+        pendingWifiId = id;
+
+        connman->connectToWifi(id, payload["passphrase"].toString());
     }
 
-    if (message.type() == "wifi/DISCONNECT") {
+    if (message.type() == "policy/wifi/DISCONNECT") {
         connman->disconnectFromWifi(payload["kalamiId"].toString());
     }
 
