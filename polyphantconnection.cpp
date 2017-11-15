@@ -40,6 +40,8 @@ PolyphantConnection::PolyphantConnection(const QUrl &uri, QObject *parent) :
     });
 
     QObject::connect(&socket, &QWebSocket::textMessageReceived, [this](const QString &message) {
+        qInfo(PolyphantConnectionLog) << "<" << QString(message);
+
         QJsonDocument doc = QJsonDocument::fromJson(message.toLocal8Bit());
 
         if (doc.isObject()) {
@@ -54,8 +56,8 @@ PolyphantConnection::PolyphantConnection(const QUrl &uri, QObject *parent) :
 void PolyphantConnection::sendMessage(const PolyphantMessage &message)
 {
     const QJsonObject obj = message.toJson();
-    QByteArray payload = QJsonDocument(obj).toJson(QJsonDocument::Compact);
-    qInfo() << "XXX SENDING TO POLYPHANT:" << QString(payload);
-    socket.sendBinaryMessage(payload);
+    qInfo(PolyphantConnectionLog) << ">" << obj;
+    QByteArray ba = QJsonDocument(obj).toJson(QJsonDocument::Compact);
+    socket.sendBinaryMessage(ba);
 }
 
