@@ -12,7 +12,7 @@ PolyphantMessage::PolyphantMessage(const QString type, const QJsonValue payload,
     _payload(payload),
     _meta(meta)
 {
-    _meta["requestId"] = requestId;
+    _requestId = requestId;
 }
 
 void PolyphantMessage::setPayload(const QJsonValue &payload)
@@ -32,6 +32,9 @@ const QJsonObject PolyphantMessage::toJson() const {
 
     if (!_payload.isNull())
         o["payload"] = _payload;
+
+    if (_requestId > 0)
+        _meta["requestId"] = _requestId;
 
     if (!_meta.isEmpty())
         o["meta"] = _meta;

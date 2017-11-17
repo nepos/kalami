@@ -27,6 +27,7 @@ private:
     QString _type;
     QJsonValue _payload;
     QJsonObject _meta;
+    int _requestId;
 };
 
 #endif // POLYPHANTMESSAGE_H
