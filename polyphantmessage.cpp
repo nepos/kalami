@@ -26,11 +26,17 @@ void PolyphantMessage::setType(const QString &string)
 }
 
 const QJsonObject PolyphantMessage::toJson() const {
-    return QJsonObject {
-        { "type", _type, },
-        { "payload", _payload, },
-        { "meta", _meta },
-    };
+    QJsonObject o({
+                      { "type", _type }
+                  });
+
+    if (!_payload.isNull())
+        o["payload"] = _payload;
+
+    if (!_meta.isEmpty())
+        o["meta"] = _meta;
+
+    return o;
 }
 
 PolyphantMessage* PolyphantMessage::makeResponse(const QJsonValue payload) const
