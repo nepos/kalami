@@ -53,7 +53,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qInfo(DaemonLog) << "New update available, version" << version;
 
         if (pendingUpdateCheckMessage) {
-            pendingUpdateCheckMessage->setType("policy/update/CHECK_SUCCESS");
+            pendingUpdateCheckMessage->setResponseSuccess(true);
             pendingUpdateCheckMessage->setPayload(QJsonObject({{ "available", true }}));
             polyphant->sendMessage(*pendingUpdateCheckMessage);
             delete pendingUpdateCheckMessage;
@@ -65,7 +65,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qInfo(DaemonLog) << "Already up-to-date!";
 
         if (pendingUpdateCheckMessage) {
-            pendingUpdateCheckMessage->setType("policy/update/CHECK_SUCCESS");
+            pendingUpdateCheckMessage->setResponseSuccess(true);
             pendingUpdateCheckMessage->setPayload(QJsonObject({{ "available", false }}));
             polyphant->sendMessage(*pendingUpdateCheckMessage);
             delete pendingUpdateCheckMessage;
@@ -80,7 +80,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qInfo(DaemonLog) << "Update check failed!";
 
         if (pendingUpdateCheckMessage) {
-            pendingUpdateCheckMessage->setType("policy/update/CHECK_ERROR");
+            pendingUpdateCheckMessage->setResponseSuccess(false);
             polyphant->sendMessage(*pendingUpdateCheckMessage);
             delete pendingUpdateCheckMessage;
             pendingUpdateCheckMessage = NULL;
@@ -139,10 +139,10 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             bool send = false;
 
             if (wifi["state"].toString() == "online") {
-                pendingWifiMessage->setType("policy/wifi/CONNECT_SUCCESS");
+                pendingWifiMessage->setResponseSuccess(true);
                 send = true;
             } else if (wifi["state"].toString() == "error") {
-                pendingWifiMessage->setType("policy/wifi/CONNECT_ERROR");
+                pendingWifiMessage->setResponseSuccess(false);
                 send = true;
             }
 
@@ -211,10 +211,9 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
 
     qInfo() << "MSG type" << message.type() << "payload:" << payload;
     if (message.type() == "policy/display/SET_BRIGHTNESS") {
-        displayBrightness->setBrightness(payload["value"].toDouble());
-
         PolyphantMessage *response = message.makeResponse();
-        response->setType("policy/display/SET_BRIGHTNESS_SUCCESS");
+        ret = displayBrightness->setBrightness(payload["value"].toDouble());
+        response->setResponseSuccess(ret);
         polyphant->sendMessage(*response);
         delete response;
     }
@@ -238,39 +237,28 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
                                          payload["frequency"].toDouble());
 
         PolyphantMessage *response = message.makeResponse();
-
-        if (ret)
-            response->setType("policy/led/SET_STATE_SUCCESS");
-        else
-            response->setType("policy/led/SET_STATE_ERROR");
-
+        response->setResponseSuccess(ret);
         polyphant->sendMessage(*response);
         delete response;
     }
 
     if (message.type() == "policy/volume/SET") {
-        mixer->setMasterVolume(payload["value"].toDouble());
-
         PolyphantMessage *response = message.makeResponse();
-        response->setType("policy/volume/SET_SUCCESS");
+        ret = mixer->setMasterVolume(payload["value"].toDouble());
+        response->setResponseSuccess(ret);
         polyphant->sendMessage(*response);
         delete response;
     }
 
     if (message.type() == "policy/wifi/CONNECT") {
         if (pendingWifiMessage) {
-            pendingWifiMessage->setType("policy/wifi/CONNECT_ERROR");
+            pendingWifiMessage->setResponseSuccess(false);
             polyphant->sendMessage(*pendingWifiMessage);
             delete pendingWifiMessage;
             pendingWifiMessage = NULL;
         }
 
         QString id = payload["kalamiId"].toString();
-
-        pendingWifiMessage = message.makeResponse();
-        pendingWifiMessage->setType("policy/wifi/CONNECT_PENDING");
-        polyphant->sendMessage(*pendingWifiMessage);
-        pendingWifiId = id;
 
         connman->connectToWifi(id, payload["passphrase"].toString());
     }
@@ -281,15 +269,11 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
 
     if (message.type() == "policy/update/CHECK") {
         if (pendingUpdateCheckMessage) {
-            pendingUpdateCheckMessage->setType("policy/update/CHECK_ERROR");
+            pendingUpdateCheckMessage->setResponseSuccess(false);
             polyphant->sendMessage(*pendingUpdateCheckMessage);
             delete pendingUpdateCheckMessage;
             pendingUpdateCheckMessage = NULL;
         }
-
-        pendingUpdateCheckMessage = message.makeResponse();
-        pendingUpdateCheckMessage->setType("policy/update/CHECK_PENDING");
-        polyphant->sendMessage(*pendingUpdateCheckMessage);
 
         updater->check(payload["channel"].toString());
     }

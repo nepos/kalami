@@ -75,17 +75,17 @@ ALSAMixer::~ALSAMixer()
         snd_mixer_close(d->handle);
 }
 
-void ALSAMixer::setPlaybackVolumeByName(const char *name, int val, int index)
+bool ALSAMixer::setPlaybackVolumeByName(const char *name, int val, int index)
 {
     Q_D(ALSAMixer);
 
     snd_mixer_elem_t *me = findMixerElement(d->handle, name, index);
     if (!me) {
         qWarning(ALSAMixerLog) << "Unable to find playback mixer element named" << name;
-        return;
+        return false;
     }
 
-    snd_mixer_selem_set_playback_volume(me, SND_MIXER_SCHN_FRONT_LEFT, val);
+    return snd_mixer_selem_set_playback_volume(me, SND_MIXER_SCHN_FRONT_LEFT, val) >= 0;
 }
 
 void ALSAMixer::setEnumByName(const char *name, const char *value, int index)
@@ -138,12 +138,12 @@ float ALSAMixer::getMasterVolume()
     return d->masterCurrent;
 }
 
-void ALSAMixer::setMasterVolume(float volume)
+bool ALSAMixer::setMasterVolume(float volume)
 {
     Q_D(ALSAMixer);
 
     float val = d->masterMin + (volume * (float) (d->masterMax - d->masterMin));
 
-    setPlaybackVolumeByName("RX1 Digital", val);
-    setPlaybackVolumeByName("RX2 Digital", val);
+    return setPlaybackVolumeByName("RX1 Digital", val) &&
+            setPlaybackVolumeByName("RX2 Digital", val);
 }

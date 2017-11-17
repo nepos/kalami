@@ -40,14 +40,19 @@ BrightnessControl::~BrightnessControl()
 {
 }
 
-void BrightnessControl::setBrightness(float value)
+bool BrightnessControl::setBrightness(float value)
 {
     if (brightnessFile.open(QIODevice::WriteOnly | QIODevice::Unbuffered)) {
         QString str = QString::number((int) (value * (float) maxBrightness));
         qInfo(BrightnessControlLog) << "Setting brightness of" << brightnessFile.fileName()
                                     << "to" << str;
-        brightnessFile.write(str.toLocal8Bit() + "\n");
+        str += "\n";
+        qint64 r = brightnessFile.write(str.toLocal8Bit());
         brightnessFile.close();
-    } else
+
+        return r == str.toLocal8Bit().length();
+    } else {
         qWarning(BrightnessControlLog) << "Unable to open brightness file!";
+        return false;
+    }
 }

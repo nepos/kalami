@@ -17,11 +17,11 @@ public:
     float getMasterVolume();
 
 public slots:
-    void setMasterVolume(float volume);
+    bool setMasterVolume(float volume);
 
 private:
     ALSAMixerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(ALSAMixer);
-    void setPlaybackVolumeByName(const char *name, int val, int index = 0);
+    bool setPlaybackVolumeByName(const char *name, int val, int index = 0);
     void setEnumByName(const char *name, const char *value, int index = 0);
 };

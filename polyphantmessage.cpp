@@ -20,9 +20,9 @@ void PolyphantMessage::setPayload(const QJsonValue &payload)
     _payload = payload;
 }
 
-void PolyphantMessage::setType(const QString &string)
+void PolyphantMessage::setResponseSuccess(bool success)
 {
-    _type = string;
+    _type += success ? "_SUCCESS" : "_ERROR";
 }
 
 const QJsonObject PolyphantMessage::toJson() const {
