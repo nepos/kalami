@@ -194,6 +194,14 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             polyphant->sendMessage(msg);
         });
 
+        QObject::connect(fring, &Fring::ambientLightChanged, this, [this](float value) {
+            PolyphantMessage msg("policy/battery/AMBIENT_LIGHT_CHANGED", QJsonObject {
+                                     { "value", value },
+                                 }, 0,
+                                 QJsonObject{{ "commType", "one-way" }});
+            polyphant->sendMessage(msg);
+        });
+
         QObject::connect(fring, &Fring::logMessageReceived, this, [this](const QString &message) {
             qInfo(DaemonLog) << "Message from fring:" << message;
         });
