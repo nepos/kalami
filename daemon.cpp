@@ -40,6 +40,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     volumeInputDevice(new InputDevice("/dev/input/event1")),
     connman(new Connman(this)),
     machine(new Machine(this)),
+    mediaCtl(new MediaCtl(0, this)),
     fring(new Fring()),
     polyphant(new PolyphantConnection(uri, this)),
     updater(new Updater(machine, this)),
@@ -208,6 +209,11 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
         machine->setDeviceSerial(fring->getDeviceSerial());
     }
+
+    if (!mediaCtl->initialize())
+        qWarning(DaemonLog) << "MediaCtl failed to initialize";
+
+    mediaCtl->setConfig(0, MediaCtl::UYVY8_2X8_1920x1080);
 
     updater->check("latest");
 }

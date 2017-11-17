@@ -27,7 +27,8 @@ SOURCES += main.cpp \
     polyphantconnection.cpp \
     brightnesscontrol.cpp \
     imagereader.cpp \
-    blockdevice.cpp
+    blockdevice.cpp \
+    mediactl.cpp
 
 HEADERS += \
     daemon.h \
@@ -47,7 +48,8 @@ HEADERS += \
     fring-protocol.h \
     imagereader.h \
     crc32table.h \
-    blockdevice.h
+    blockdevice.h \
+    mediactl.h
 
 LIBS += -ludev
 LIBS += -lconnman-qt5

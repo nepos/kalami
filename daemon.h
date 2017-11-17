@@ -30,6 +30,7 @@
 #include "fring.h"
 #include "inputdevice.h"
 #include "machine.h"
+#include "mediactl.h"
 #include "nfc.h"
 #include "polyphantconnection.h"
 #include "updater.h"
@@ -52,6 +53,7 @@ private:
     InputDevice *volumeInputDevice;
     Connman *connman;
     Machine *machine;
+    MediaCtl *mediaCtl;
     Fring *fring;
     PolyphantConnection *polyphant;
     Updater *updater;
