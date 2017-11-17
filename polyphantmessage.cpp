@@ -42,11 +42,11 @@ const QJsonObject PolyphantMessage::toJson() const {
     return o;
 }
 
-PolyphantMessage* PolyphantMessage::makeResponse(const QJsonValue payload) const
+PolyphantMessage* PolyphantMessage::makeResponse() const
 {
     QJsonObject meta({
                          { "commType", "response" },
                      });
 
-    return new PolyphantMessage(_type, payload, _meta["requestId"].toInt(), meta);
+    return new PolyphantMessage(_type, _payload, _meta["requestId"].toInt(), meta);
 }

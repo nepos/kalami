@@ -21,7 +21,7 @@ public:
     void setResponseSuccess(bool success);
     const QJsonObject toJson() const;
 
-    PolyphantMessage* makeResponse(const QJsonValue payload = {}) const;
+    PolyphantMessage* makeResponse() const;
 
 private:
     QString _type;
