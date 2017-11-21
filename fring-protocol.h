@@ -83,11 +83,14 @@ struct FringCommandRead {
 
         struct {
             uint8_t batteryLevel;
-            uint8_t batteryChargeCurrent;
-            uint8_t batteryDischargeCurrent;
+            int8_t batteryChargeCurrent;
             uint8_t ambientLightValue;
             uint32_t status;
             uint32_t hardwareErrors;
+            uint8_t temp0;
+            uint8_t temp1;
+            uint8_t temp2;
+            uint8_t temp3;
         } deviceStatus;
 
         struct {
