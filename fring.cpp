@@ -1,6 +1,7 @@
 #include <QtEndian>
 #include <QDir>
 #include <QThread>
+#include <QTime>
 
 #include "fring.h"
 #include "gpio.h"
@@ -299,8 +300,15 @@ bool Fring::readBatteryStatus()
     if (!batteryLogFileName.isEmpty()) {
         QFile f(batteryLogFileName);
         if (f.open(QFile::WriteOnly | QFile::Append | QFile::Unbuffered)) {
-            QStringList l;
+            static QTime *time = NULL;
 
+            if (!time) {
+                time = new QTime();
+                time->start();
+            }
+
+            QStringList l;
+            l << QString::number(time->elapsed());
             l << QString::number((float) rdCmd.batteryStatus.chargeCurrent * 0.05f);
             l << QString::number(rdCmd.batteryStatus.level);
             l << QString::number(rdCmd.batteryStatus.temp);
