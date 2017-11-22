@@ -185,11 +185,10 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             polyphant->sendMessage(msg);
         });
 
-        QObject::connect(fring, &Fring::batteryStateChanged, this, [this](float level, float chargeCurrent, float dischargeCurrent) {
+        QObject::connect(fring, &Fring::batteryStateChanged, this, [this](float level, float chargeCurrent) {
             PolyphantMessage msg("policy/battery/STATE_CHANGED", QJsonObject {
                                      { "level", level },
                                      { "chargeCurrent", chargeCurrent },
-                                     { "dischargeCurrent", dischargeCurrent },
                                  }, 0,
                                  QJsonObject{{ "commType", "one-way" }});
             polyphant->sendMessage(msg);

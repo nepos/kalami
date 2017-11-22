@@ -16,6 +16,7 @@ Fring::Fring(QObject *parent) :
     QObject(parent),
     client(this),
     interruptGpio(Fring::GPIONr, this),
+    mutex(),
     updateThread(0)
 {
     interruptGpio.setEdge(GPIO::EdgeFalling);
@@ -224,6 +225,7 @@ bool Fring::setLedPulsating(int id, float r, float g, float b, float frequency)
 
 bool Fring::readDeviceStatus()
 {
+    QMutexLocker locker(&mutex);
     struct FringCommandRead rdCmd = {};
     struct FringCommandWrite wrCmd = {};
 
@@ -243,16 +245,6 @@ bool Fring::readDeviceStatus()
 
     batteryPresent = !!battery;
 
-    if (batteryLevel != rdCmd.deviceStatus.batteryLevel ||
-            batteryChargeCurrent != rdCmd.deviceStatus.batteryChargeCurrent ||
-            batteryDischargeCurrent != rdCmd.deviceStatus.batteryDischargeCurrent) {
-        batteryLevel = rdCmd.deviceStatus.batteryLevel;
-        batteryChargeCurrent = rdCmd.deviceStatus.batteryChargeCurrent;
-        batteryDischargeCurrent = rdCmd.deviceStatus.batteryDischargeCurrent;
-
-        emit batteryStateChanged(255.0 / batteryLevel, (float) batteryChargeCurrent, (float) batteryDischargeCurrent);
-    }
-
     if (ambientLightValue == -1 ||
             ambientLightValue != rdCmd.deviceStatus.ambientLightValue) {
         ambientLightValue = rdCmd.deviceStatus.ambientLightValue;
@@ -266,8 +258,38 @@ bool Fring::readDeviceStatus()
     return true;
 }
 
+bool Fring::readBatteryStatus()
+{
+    QMutexLocker locker(&mutex);
+    struct FringCommandRead rdCmd = {};
+    struct FringCommandWrite wrCmd = {};
+
+    wrCmd.reg = FRING_REG_READ_BATTERY_STATUS;
+    if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.batteryStatus)))
+        return false;
+
+    qInfo(FringLog) << "Battery status upate:";
+    qInfo(FringLog) << QString::asprintf("Charge current %.2f mA", rdCmd.batteryStatus.chargeCurrent * 0.05f);
+    qInfo(FringLog) << QString::asprintf("Level %.2f%%", 100.0f * (255.0f / (float) rdCmd.batteryStatus.level));
+    qInfo(FringLog) << QString::asprintf("Temperature %d °C", rdCmd.batteryStatus.temp);
+    qInfo(FringLog) << QString::asprintf("Remaining capacity %d mAh", rdCmd.batteryStatus.remainingCapacity);
+    qInfo(FringLog) << QString::asprintf("Average time to full %d min, to empty %d min",
+                                         rdCmd.batteryStatus.averageTimeToFull, rdCmd.batteryStatus.averageTimeToEmpty);
+
+    if (batteryLevel != rdCmd.batteryStatus.level ||
+            batteryChargeCurrent != rdCmd.batteryStatus.chargeCurrent) {
+        batteryLevel = rdCmd.batteryStatus.level;
+        batteryChargeCurrent = rdCmd.batteryStatus.chargeCurrent;
+
+        emit batteryStateChanged(255.0f / (float) batteryLevel, (float) batteryChargeCurrent * 0.05f);
+    }
+
+    return true;
+}
+
 bool Fring::readLogMessage()
 {
+    QMutexLocker locker(&mutex);
     struct FringCommandWrite wrCmd = {};
     char buf[16];
 
@@ -298,6 +320,9 @@ void Fring::onInterrupt(GPIO::Value v)
 
     if (status & FRING_INTERRUPT_DEVICE_STATUS)
         readDeviceStatus();
+
+    if (status & FRING_INTERRUPT_BATTERY_STATUS)
+        readBatteryStatus();
 
     if (status & FRING_INTERRUPT_LOG_MESSAGE)
         readLogMessage();

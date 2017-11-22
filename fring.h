@@ -24,7 +24,7 @@ public:
 signals:
     void homeButtonChanged(bool state);
     void ambientLightChanged(float value);
-    void batteryStateChanged(float level, float chargeCurrent, float dischargeCurrent);
+    void batteryStateChanged(float level, float chargeCurrent);
     void logMessageReceived(const QString &message);
 
 public slots:
@@ -45,6 +45,7 @@ private:
 
     I2CClient client;
     GPIO interruptGpio;
+    QMutex mutex;
 
     int firmwareVersion;
     int boardRevisionA;
@@ -55,11 +56,11 @@ private:
     int batteryPresent;
     int batteryLevel;
     int batteryChargeCurrent;
-    int batteryDischargeCurrent;
     int ambientLightValue;
     uint32_t hardwareErrors;
 
     bool readDeviceStatus();
+    bool readBatteryStatus();
     bool readLogMessage();
     uint32_t calculateCRC(uint32_t crc, const char *buf, size_t len);
 
