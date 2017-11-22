@@ -8,10 +8,11 @@ enum {
     FRING_REG_READ_INTERRUPT_STATUS       = 0x04,
     FRING_REG_SET_LED                     = 0x05,
     FRING_REG_READ_DEVICE_STATUS          = 0x06,
-    FRING_REG_PUSH_FIRMWARE_UPDATE        = 0x07,
-    FRING_REG_READ_FIRMWARE_UPDATE_RESULT = 0x08,
-    FRING_REG_READ_LOG_MESSAGE            = 0x09,
-    FRING_REG_SET_SERIAL                  = 0x0a,
+    FRING_REG_READ_BATTERY_STATUS         = 0x07,
+    FRING_REG_PUSH_FIRMWARE_UPDATE        = 0x08,
+    FRING_REG_READ_FIRMWARE_UPDATE_RESULT = 0x09,
+    FRING_REG_READ_LOG_MESSAGE            = 0x0a,
+    FRING_REG_SET_SERIAL                  = 0x0b,
 };
 
 enum {
@@ -39,8 +40,9 @@ enum {
 
 enum {
     FRING_INTERRUPT_DEVICE_STATUS   = 0x01,
-    FRING_INTERRUPT_LOG_MESSAGE     = 0x02,
-    FRING_INTERRUPT_FIRMWARE_UPDATE = 0x04
+    FRING_INTERRUPT_BATTERY_STATUS  = 0x02,
+    FRING_INTERRUPT_LOG_MESSAGE     = 0x04,
+    FRING_INTERRUPT_FIRMWARE_UPDATE = 0x08
 };
 
 enum {
@@ -82,16 +84,24 @@ struct FringCommandRead {
         } interruptStatus;
 
         struct {
-            uint8_t batteryLevel;
-            int8_t batteryChargeCurrent;
             uint8_t ambientLightValue;
             uint32_t status;
             uint32_t hardwareErrors;
             uint8_t temp0;
             uint8_t temp1;
             uint8_t temp2;
-            uint8_t temp3;
         } deviceStatus;
+
+        struct {
+            int8_t chargeCurrent;
+            uint8_t level;
+            uint8_t temp;
+            uint8_t status;
+            uint16_t remainingCapacity;
+            uint16_t averageTimeToEmpty;
+            uint16_t averageTimeToFull;
+            uint16_t cycleCount;
+        } batteryStatus;
 
         struct {
             uint32_t status;
