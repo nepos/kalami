@@ -17,7 +17,6 @@ Fring::Fring(QObject *parent) :
     QObject(parent),
     client(this),
     interruptGpio(Fring::GPIONr, this),
-    mutex(),
     updateThread(0),
     batteryLogFileName()
 {
@@ -238,7 +237,6 @@ bool Fring::setLedPulsating(int id, float r, float g, float b, float frequency)
 
 bool Fring::readDeviceStatus()
 {
-    QMutexLocker locker(&mutex);
     struct FringCommandRead rdCmd = {};
     struct FringCommandWrite wrCmd = {};
 
@@ -273,7 +271,6 @@ bool Fring::readDeviceStatus()
 
 bool Fring::readBatteryStatus()
 {
-    QMutexLocker locker(&mutex);
     struct FringCommandRead rdCmd = {};
     struct FringCommandWrite wrCmd = {};
 
@@ -331,7 +328,6 @@ bool Fring::readBatteryStatus()
 
 bool Fring::readLogMessage()
 {
-    QMutexLocker locker(&mutex);
     struct FringCommandWrite wrCmd = {};
     char buf[16];
 

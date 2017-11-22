@@ -45,7 +45,6 @@ private:
 
     I2CClient client;
     GPIO interruptGpio;
-    QMutex mutex;
 
     int firmwareVersion;
     int boardRevisionA;
