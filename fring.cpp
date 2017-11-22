@@ -17,7 +17,8 @@ Fring::Fring(QObject *parent) :
     client(this),
     interruptGpio(Fring::GPIONr, this),
     mutex(),
-    updateThread(0)
+    updateThread(0),
+    batteryLogFileName()
 {
     interruptGpio.setEdge(GPIO::EdgeFalling);
     interruptGpio.setDirection(GPIO::DirectionIn);
@@ -28,6 +29,17 @@ Fring::Fring(QObject *parent) :
     ambientLightValue = -1;
 
     ledCacheValid = false;
+
+    QByteArray batteryLogDir = qgetenv("KALAMI_BATTERY_LOG_DIR");
+    if (!batteryLogDir.isEmpty()) {
+        int i = 0;
+
+        do {
+            batteryLogFileName = QString(batteryLogDir) + "/batterylog-" + QString::number(++i) + ".log";
+        } while(QFile::exists(batteryLogFileName));
+
+        qInfo(FringLog) << "Using" << batteryLogFileName << "to store battery logs";
+    }
 }
 
 bool Fring::initialize()
@@ -282,6 +294,27 @@ bool Fring::readBatteryStatus()
         batteryChargeCurrent = rdCmd.batteryStatus.chargeCurrent;
 
         emit batteryStateChanged(255.0f / (float) batteryLevel, (float) batteryChargeCurrent * 0.05f);
+    }
+
+    if (!batteryLogFileName.isEmpty()) {
+        QFile f(batteryLogFileName);
+        if (f.open(QFile::WriteOnly | QFile::Append | QFile::Unbuffered)) {
+            QStringList l;
+
+            l << QString::number((float) rdCmd.batteryStatus.chargeCurrent * 0.05f);
+            l << QString::number(rdCmd.batteryStatus.level);
+            l << QString::number(rdCmd.batteryStatus.temp);
+            l << QString::number(rdCmd.batteryStatus.remainingCapacity);
+            l << QString::number(rdCmd.batteryStatus.averageTimeToFull);
+            l << QString::number(rdCmd.batteryStatus.averageTimeToEmpty);
+            l << QString::number(rdCmd.batteryStatus.status, 16);
+
+            QTextStream stream(&f);
+            stream << l.join(";") << endl;
+            f.close();
+        } else {
+            qWarning(FringLog) << "Unable to write" << batteryLogFileName;
+        }
     }
 
     return true;

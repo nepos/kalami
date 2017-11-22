@@ -66,6 +66,8 @@ private:
 
     FringUpdateThread *updateThread;
 
+    QString batteryLogFileName;
+
     struct FringCommandWrite ledCache[2];
     bool ledCacheValid;
 
