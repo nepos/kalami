@@ -18,6 +18,7 @@ public:
 
 public slots:
     bool setMasterVolume(float volume);
+    void setMasterScale(float scale);
 
 private:
     ALSAMixerPrivate *d_ptr;

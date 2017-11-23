@@ -10,7 +10,7 @@ struct ALSAMixerPrivate {
 
     snd_mixer_t *handle;
     long masterMin, masterMax;
-    float masterCurrent;
+    float masterCurrent, masterScale;
 };
 
 static snd_mixer_elem_t *findMixerElement(snd_mixer_t *handle, const char *name, int index)
@@ -32,6 +32,7 @@ ALSAMixer::ALSAMixer(const QString &deviceName, QObject *parent) :
 
     memset(d, 0, sizeof(ALSAMixerPrivate));
     d->masterCurrent = -INFINITY;
+    d->masterScale = 1.0f;
 
     ret = snd_mixer_open(&d->handle, 0);
     if (ret < 0) {
@@ -73,6 +74,13 @@ ALSAMixer::~ALSAMixer()
 
     if (d->handle)
         snd_mixer_close(d->handle);
+}
+
+void ALSAMixer::setMasterScale(float scale)
+{
+    Q_D(ALSAMixer);
+
+    d->masterScale = scale;
 }
 
 bool ALSAMixer::setPlaybackVolumeByName(const char *name, int val, int index)
@@ -135,7 +143,7 @@ float ALSAMixer::getMasterVolume()
             d->masterCurrent = (float) (d->masterCurrent - d->masterMin) / (float) (d->masterMax - d->masterMin);
     }
 
-    return d->masterCurrent;
+    return d->masterCurrent / d->masterScale;
 }
 
 bool ALSAMixer::setMasterVolume(float volume)
@@ -143,6 +151,8 @@ bool ALSAMixer::setMasterVolume(float volume)
     Q_D(ALSAMixer);
 
     float val = d->masterMin + (volume * (float) (d->masterMax - d->masterMin));
+
+    val *= d->masterScale;
 
     return setPlaybackVolumeByName("RX1 Digital", val) &&
             setPlaybackVolumeByName("RX2 Digital", val);

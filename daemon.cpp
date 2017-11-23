@@ -111,6 +111,9 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     });
 
     // ALSA
+    if (machine->getModel() == Machine::NEPOS1)
+        mixer->setMasterScale(0.55);
+
     qInfo(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
 
     // Input devices
