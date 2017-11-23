@@ -18,7 +18,7 @@ public:
     int requestId() const { return _meta["requestId"].toInt(); };
 
     void setPayload(const QJsonValue &payload);
-    void setResponseSuccess(bool success);
+    void setResponseError(bool error);
     const QJsonObject toJson() const;
 
     PolyphantMessage* makeResponse() const;

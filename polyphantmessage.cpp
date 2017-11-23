@@ -20,9 +20,9 @@ void PolyphantMessage::setPayload(const QJsonValue &payload)
     _payload = payload;
 }
 
-void PolyphantMessage::setResponseSuccess(bool success)
+void PolyphantMessage::setResponseError(bool error)
 {
-    _type += success ? "_SUCCESS" : "_ERROR";
+    _meta["error"] = error;
 }
 
 const QJsonObject PolyphantMessage::toJson() const {
@@ -46,6 +46,7 @@ PolyphantMessage* PolyphantMessage::makeResponse() const
 {
     QJsonObject meta({
                          { "commType", "response" },
+                         { "destination", _meta["source"] }
                      });
 
     return new PolyphantMessage(_type, QJsonObject(), _meta["requestId"].toInt(), meta);
