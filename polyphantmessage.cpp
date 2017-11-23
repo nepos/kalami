@@ -48,5 +48,5 @@ PolyphantMessage* PolyphantMessage::makeResponse() const
                          { "commType", "response" },
                      });
 
-    return new PolyphantMessage(_type, _payload, _meta["requestId"].toInt(), meta);
+    return new PolyphantMessage(_type, QJsonObject(), _meta["requestId"].toInt(), meta);
 }
