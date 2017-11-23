@@ -89,22 +89,19 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject::connect(updater, &Updater::updateSucceeded, this, [this]() {
         qInfo(DaemonLog) << "Update succeeded!";
         PolyphantMessage msg("policy/update/UPDATE_FINISHED",
-                             QJsonObject{{ "updateSuccessful", true }}, 0,
-                             QJsonObject{{ "commType", "one-way" }});
+                             QJsonObject{{ "updateSuccessful", true }});
     });
 
     QObject::connect(updater, &Updater::updateFailed, this, [this]() {
         qInfo(DaemonLog) << "Update failed!";
         PolyphantMessage msg("policy/update/UPDATE_FINISHED",
-                             QJsonObject{{ "updateSuccessful", false }}, 0,
-                             QJsonObject{{ "commType", "one-way" }});
+                             QJsonObject{{ "updateSuccessful", false }});
     });
 
     QObject::connect(updater, &Updater::updateProgress, this, [this](float progress) {
         qInfo(DaemonLog) << "Updater progress:" << progress;
         PolyphantMessage msg("policy/update/UPDATE_PROGRESS",
-                             QJsonObject{{ "progress", progress }}, 0,
-                             QJsonObject{{ "commType", "one-way" }});
+                             QJsonObject{{ "progress", progress }});
         polyphant->sendMessage(msg);
     });
 
@@ -122,14 +119,13 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         PolyphantMessage msg(value > 0 ?
                                  "policy/rotary/CW" :
                                  "policy/rotary/CCW",
-                             QJsonObject{}, 0,
-                             QJsonObject{{ "commType", "one-way" }});
+                             QJsonObject{});
         polyphant->sendMessage(msg);
     });
 
     // Connman connection
     QObject::connect(connman, &Connman::availableWifisUpdated, this, [this](const QJsonArray &list) {
-        PolyphantMessage msg("policy/wifi/SCAN_RESULT", list, 0, QJsonObject{{ "commType", "one-way" }});
+        PolyphantMessage msg("policy/wifi/SCAN_RESULT", list);
         polyphant->sendMessage(msg);
     });
 
@@ -154,7 +150,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             }
         }
 
-        PolyphantMessage msg("policy/wifi/STATE_CHANGED", wifi, 0, QJsonObject{{ "commType", "one-way" }});
+        PolyphantMessage msg("policy/wifi/STATE_CHANGED", wifi);
         polyphant->sendMessage(msg);
     });
 
@@ -180,8 +176,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             PolyphantMessage msg("policy/homebutton/STATE_CHANGED", QJsonObject {
                                      { "id", "home" },
                                      { "state", state },
-                                 }, 0,
-                                 QJsonObject{{ "commType", "one-way" }});
+                                 });
             polyphant->sendMessage(msg);
         });
 
@@ -189,16 +184,14 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             PolyphantMessage msg("policy/battery/STATE_CHANGED", QJsonObject {
                                      { "level", level },
                                      { "chargeCurrent", chargeCurrent },
-                                 }, 0,
-                                 QJsonObject{{ "commType", "one-way" }});
+                                 });
             polyphant->sendMessage(msg);
         });
 
         QObject::connect(fring, &Fring::ambientLightChanged, this, [this](float value) {
             PolyphantMessage msg("policy/battery/AMBIENT_LIGHT_CHANGED", QJsonObject {
                                      { "value", value },
-                                 }, 0,
-                                 QJsonObject{{ "commType", "one-way" }});
+                                 });
             polyphant->sendMessage(msg);
         });
 

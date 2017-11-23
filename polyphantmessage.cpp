@@ -13,6 +13,9 @@ PolyphantMessage::PolyphantMessage(const QString type, const QJsonValue payload,
     _meta(meta)
 {
     _requestId = requestId;
+
+    if (!_meta["commType"].isString())
+        _meta["commType"] = "one-way";
 }
 
 void PolyphantMessage::setPayload(const QJsonValue &payload)
