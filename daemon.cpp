@@ -119,8 +119,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             return;
 
         PolyphantMessage msg(value > 0 ?
-                                 "policy/volume/UP" :
-                                 "policy/volume/DOWN",
+                                 "policy/rotary/CW" :
+                                 "policy/rotary/CCW",
                              QJsonObject{}, 0,
                              QJsonObject{{ "commType", "one-way" }});
         polyphant->sendMessage(msg);
