@@ -59,7 +59,7 @@ ALSAMixer::ALSAMixer(const QString &deviceName, QObject *parent) :
     setEnumByName("HPHR", "Switch");
 
     // Read volume ranges for master volume control, so we can scale
-    snd_mixer_elem_t *me = findMixerElement(d->handle, "RX1 Digital Volume", 0);
+    snd_mixer_elem_t *me = findMixerElement(d->handle, "RX1 Digital", 0);
     if (me)
         snd_mixer_selem_get_playback_volume_range(me, &d->masterMin, &d->masterMax);
     else
