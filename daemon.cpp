@@ -249,7 +249,7 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
 
     if (message.type() == "policy/volume/SET") {
         PolyphantMessage *response = message.makeResponse();
-        ret = mixer->setMasterVolume(payload["value"].toDouble());
+        ret = mixer->setMasterVolume(payload["volume"].toDouble());
         response->setResponseError(!ret);
         polyphant->sendMessage(*response);
         delete response;
