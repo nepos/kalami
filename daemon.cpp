@@ -37,7 +37,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject(parent),
     mixer(new ALSAMixer("hw:0", this)),
     displayBrightness(new BrightnessControl("/sys/class/backlight/1a98000.dsi.0")),
-    volumeInputDevice(new InputDevice("/dev/input/event1")),
+    rotaryInputDevice(new InputDevice("/dev/input/by-path/platform-rotary-event")),
     connman(new Connman(this)),
     machine(new Machine(this)),
     mediaCtl(new MediaCtl(0, this)),
@@ -112,7 +112,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     qInfo(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
 
     // Input devices
-    QObject::connect(volumeInputDevice, &InputDevice::inputEvent, this, [this](int type, int code, int value) {
+    QObject::connect(rotaryInputDevice, &InputDevice::inputEvent, this, [this](int type, int code, int value) {
         if (type != EV_REL || code != REL_X)
             return;
 

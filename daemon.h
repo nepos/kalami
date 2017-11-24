@@ -50,7 +50,7 @@ private slots:
 private:
     ALSAMixer *mixer;
     BrightnessControl *displayBrightness;
-    InputDevice *volumeInputDevice;
+    InputDevice *rotaryInputDevice;
     Connman *connman;
     Machine *machine;
     MediaCtl *mediaCtl;

@@ -17,12 +17,12 @@
   along with this software; If not, see <http://www.gnu.org/licenses/>.
 ***/
 
-#pragma once
+#ifndef INPUTDEVICE_H
+#define INPUTDEVICE_H
 
 #include <QObject>
 #include <QFile>
 #include <QtCore/QLoggingCategory>
-
 #include <linux/input.h>
 
 Q_DECLARE_LOGGING_CATEGORY(InputDeviceLog)
@@ -45,3 +45,5 @@ signals:
 private:
     QFile device;
 };
+
+#endif // INPUTDEVICE_H
