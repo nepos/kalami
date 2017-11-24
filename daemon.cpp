@@ -283,10 +283,18 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
 
         QString id = payload["kalamiId"].toString();
 
+        pendingWifiMessage = message.makeResponse();
         connman->connectToWifi(id, payload["passphrase"].toString());
     }
 
     if (message.type() == "policy/wifi/DISCONNECT") {
+        if (pendingWifiMessage) {
+            pendingWifiMessage->setResponseError(true);
+            polyphant->sendMessage(*pendingWifiMessage);
+            delete pendingWifiMessage;
+            pendingWifiMessage = NULL;
+        }
+
         connman->disconnectFromWifi(payload["kalamiId"].toString());
     }
 
@@ -298,6 +306,7 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
             pendingUpdateCheckMessage = NULL;
         }
 
+        pendingUpdateCheckMessage = message.makeResponse();
         updater->check(payload["channel"].toString());
     }
 
