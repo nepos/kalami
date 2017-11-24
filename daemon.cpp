@@ -112,12 +112,20 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qInfo(DaemonLog) << "Orientation changed to" << o;
         switch (o) {
         case Accelerometer::Standing:
-        default:
+        default: {
+            PolyphantMessage msg("policy/orientation/CHANGED",
+                                 QJsonObject{{ "orientation", "standing" }});
+            polyphant->sendMessage(msg);
             nubbock->setTransform("90");
             break;
-        case Accelerometer::Laying:
+        }
+        case Accelerometer::Laying: {
+            PolyphantMessage msg("policy/orientation/CHANGED",
+                                 QJsonObject{{ "orientation", "laying" }});
+            polyphant->sendMessage(msg);
             nubbock->setTransform("270");
             break;
+        }
         }
     });
 
@@ -136,8 +144,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
         PolyphantMessage msg(value > 0 ?
                                  "policy/rotary/CW" :
-                                 "policy/rotary/CCW",
-                             QJsonObject{});
+                                 "policy/rotary/CCW");
         polyphant->sendMessage(msg);
     });
 
