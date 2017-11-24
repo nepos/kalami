@@ -125,7 +125,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     // ALSA
     if (machine->getModel() == Machine::NEPOS1)
-        mixer->setMasterScale(0.55);
+        mixer->setMasterScale(0.5f);
 
     qInfo(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
 
