@@ -6,7 +6,10 @@
 
 Q_LOGGING_CATEGORY(NubbockLog, "Nubbock")
 
-Nubbock::Nubbock(QObject *parent) : QObject(parent), transform(), socket(this)
+Nubbock::Nubbock(QObject *parent) :
+    QObject(parent),
+    transform(),
+    socket(this)
 {
     endpoint = "/run/nubbock/socket";
 
@@ -15,7 +18,10 @@ Nubbock::Nubbock(QObject *parent) : QObject(parent), transform(), socket(this)
         sendState();
     });
 
-    QObject::connect(&socket, &QLocalSocket::disconnected, [this]() {
+    QObject::connect(&socket, static_cast<void(QLocalSocket::*)(QLocalSocket::LocalSocketError)>(&QLocalSocket::error),
+          [=](QLocalSocket::LocalSocketError socketError){
+        Q_UNUSED(socketError);
+
         qWarning(NubbockLog) << "Nubbock disconnected, trying to reconnect ...";
 
         QTimer::singleShot(1000, [this]() {
@@ -29,6 +35,7 @@ Nubbock::Nubbock(QObject *parent) : QObject(parent), transform(), socket(this)
 void  Nubbock::setTransform(const QString &t)
 {
     transform = t;
+    sendState();
 }
 
 bool Nubbock::sendState(void)
