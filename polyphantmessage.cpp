@@ -7,13 +7,11 @@ PolyphantMessage::PolyphantMessage(const QJsonObject json)
     _meta = json["meta"].toObject();
 }
 
-PolyphantMessage::PolyphantMessage(const QString type, const QJsonValue payload, int requestId, const QJsonObject meta) :
+PolyphantMessage::PolyphantMessage(const QString type, const QJsonValue payload, const QJsonObject meta) :
     _type(type),
     _payload(payload),
     _meta(meta)
 {
-    _requestId = requestId;
-
     if (!_meta["commType"].isString())
         _meta["commType"] = "one-way";
 }
@@ -36,9 +34,6 @@ const QJsonObject PolyphantMessage::toJson() const {
     if (!_payload.isNull())
         o["payload"] = _payload;
 
-    if (_requestId > 0)
-        _meta["requestId"] = _requestId;
-
     if (!_meta.isEmpty())
         o["meta"] = _meta;
 
@@ -49,8 +44,10 @@ PolyphantMessage* PolyphantMessage::makeResponse() const
 {
     QJsonObject meta({
                          { "commType", "response" },
-                         { "destination", _meta["source"] }
+                         { "requestId", _meta["requestId"]},
+                         { "destination", _meta["source"] },
+                         { "source", "KALAMI" }
                      });
 
-    return new PolyphantMessage(_type, QJsonObject(), _meta["requestId"].toInt(), meta);
+    return new PolyphantMessage(_type, QJsonObject(), meta);
 }

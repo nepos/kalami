@@ -7,7 +7,7 @@ class PolyphantMessage
 {
 public:
     explicit PolyphantMessage(const QJsonObject json);
-    explicit PolyphantMessage(const QString type, const QJsonValue payload, int requestId = 0, const QJsonObject meta = {});
+    explicit PolyphantMessage(const QString type, const QJsonValue payload, const QJsonObject meta = {});
 
     const QString type() const { return _type; };
     const QString messageId() const { return _payload.toObject()["id"].toString(); };
@@ -27,7 +27,6 @@ private:
     QString _type;
     QJsonValue _payload;
     QJsonObject _meta;
-    int _requestId;
 };
 
 #endif // POLYPHANTMESSAGE_H
