@@ -215,7 +215,6 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
     bool ret = true;
     QJsonObject payload = message.payload().toObject();
 
-    qInfo() << "MSG type" << message.type() << "payload:" << payload;
     if (message.type() == "policy/display/SET_BRIGHTNESS") {
         PolyphantMessage *response = message.makeResponse();
         ret = displayBrightness->setBrightness(payload["value"].toDouble());
