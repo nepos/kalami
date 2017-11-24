@@ -12,6 +12,7 @@ DEFINES += QT_NO_DEBUG_OUTPUT
 TEMPLATE = app
 
 SOURCES += main.cpp \
+    accelerometer.cpp \
     daemon.cpp \
     inputdevice.cpp \
     connman.cpp \
@@ -28,9 +29,11 @@ SOURCES += main.cpp \
     brightnesscontrol.cpp \
     imagereader.cpp \
     blockdevice.cpp \
-    mediactl.cpp
+    mediactl.cpp \
+    nubbock.cpp
 
 HEADERS += \
+    accelerometer.h \
     daemon.h \
     inputdevice.h \
     connman.h \
@@ -49,7 +52,8 @@ HEADERS += \
     imagereader.h \
     crc32table.h \
     blockdevice.h \
-    mediactl.h
+    mediactl.h \
+    nubbock.h
 
 LIBS += -ludev
 LIBS += -lconnman-qt5

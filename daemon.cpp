@@ -35,6 +35,7 @@ Q_LOGGING_CATEGORY(DaemonLog, "Daemon")
 
 Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject(parent),
+    accelerometer(new Accelerometer("/dev/input/by-path/platform-lis3lv02d-event", this)),
     mixer(new ALSAMixer("hw:0", this)),
     displayBrightness(new BrightnessControl("/sys/class/backlight/1a98000.dsi.0")),
     rotaryInputDevice(new InputDevice("/dev/input/by-path/platform-rotary-event")),
@@ -45,6 +46,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     polyphant(new PolyphantConnection(uri, this)),
     updater(new Updater(machine, this)),
     nfc(new Nfc(this)),
+    nubbock(new Nubbock(this)),
     pendingWifiMessage(NULL),
     pendingWifiId(QString()),
     pendingUpdateCheckMessage(NULL)
@@ -104,6 +106,22 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
                              QJsonObject{{ "progress", progress }});
         polyphant->sendMessage(msg);
     });
+
+    // Accelerometer
+    QObject::connect(accelerometer, &Accelerometer::orientationChanged, this, [this](Accelerometer::Orientation o) {
+        qInfo(DaemonLog) << "Orientation changed to" << o;
+        switch (o) {
+        case Accelerometer::Standing:
+        default:
+            nubbock->setTransform("90");
+            break;
+        case Accelerometer::Laying:
+            nubbock->setTransform("270");
+            break;
+        }
+    });
+
+    accelerometer->emitCurrent();
 
     // ALSA
     if (machine->getModel() == Machine::NEPOS1)

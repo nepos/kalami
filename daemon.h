@@ -24,6 +24,7 @@
 #include <QtDBus/QDBusInterface>
 #include <QtCore/QLoggingCategory>
 
+#include "accelerometer.h"
 #include "alsamixer.h"
 #include "brightnesscontrol.h"
 #include "connman.h"
@@ -34,6 +35,7 @@
 #include "nfc.h"
 #include "polyphantconnection.h"
 #include "updater.h"
+#include "nubbock.h"
 
 Q_DECLARE_LOGGING_CATEGORY(DaemonLog)
 
@@ -48,6 +50,7 @@ private slots:
     void polyphantMessageReceived(const PolyphantMessage &message);
 
 private:
+    Accelerometer *accelerometer;
     ALSAMixer *mixer;
     BrightnessControl *displayBrightness;
     InputDevice *rotaryInputDevice;
@@ -58,6 +61,7 @@ private:
     PolyphantConnection *polyphant;
     Updater *updater;
     Nfc *nfc;
+    Nubbock *nubbock;
 
     PolyphantMessage *pendingWifiMessage;
     QString pendingWifiId;
