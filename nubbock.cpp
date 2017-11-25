@@ -35,7 +35,9 @@ Nubbock::Nubbock(QObject *parent) :
 void  Nubbock::setTransform(const QString &t)
 {
     transform = t;
-    sendState();
+
+    if (socket.isWritable())
+        sendState();
 }
 
 bool Nubbock::sendState(void)
@@ -45,7 +47,7 @@ bool Nubbock::sendState(void)
                     });
 
     QByteArray ba = QJsonDocument(obj).toJson(QJsonDocument::Compact);
-    qint64 r = socket.write(ba.constData(), ba.length());
+    qint64 r = socket.write(ba.constData(), ba.length() + 1);
 
     return r == ba.length();
 }
