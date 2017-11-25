@@ -110,24 +110,23 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     // Accelerometer
     QObject::connect(accelerometer, &Accelerometer::orientationChanged, this, [this](Accelerometer::Orientation o) {
         qInfo(DaemonLog) << "Orientation changed to" << o;
+        PolyphantMessage msg("policy/orientation/CHANGED");
+
         switch (o) {
         case Accelerometer::Standing:
-        default: {
-            PolyphantMessage msg("policy/orientation/CHANGED",
-                                 QJsonObject{{ "orientation", "standing" }});
-            polyphant->sendMessage(msg);
+        default:
+            msg.setPayload(QJsonObject{{ "orientation", "standing" }});
             nubbock->setTransform("90");
             break;
-        }
-        case Accelerometer::Laying: {
-            PolyphantMessage msg("policy/orientation/CHANGED",
-                                 QJsonObject{{ "orientation", "laying" }});
-            polyphant->sendMessage(msg);
+
+        case Accelerometer::Laying:
+            msg.setPayload(QJsonObject{{ "orientation", "laying" }});
             nubbock->setTransform("270");
             break;
+
+            polyphant->sendMessage(msg);
         }
-        }
-    });
+        });
 
     accelerometer->emitCurrent();
 
