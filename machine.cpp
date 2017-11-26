@@ -174,7 +174,9 @@ bool Machine::verifyBootConfig()
     bootConfigFile.reset();
 
     // Only take action in case the currently booted rootfs differers from
-    // the one configured in the boot config partition.
+    // the one configured in the boot config partition. If that's the case,
+    // the machine was recently updated, and the bootloader reverted the
+    // boot configuration before booting into the current image.
 
     if (b == 'A' && currentBootConfig != Machine::BOOTCONFIG_A) {
         b = 'B';
