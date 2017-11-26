@@ -43,6 +43,7 @@ public:
 
     void setDeviceSerial(const QString &serial);
 
+    void suspend();
     void restart();
     void powerOff();
 

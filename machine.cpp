@@ -191,6 +191,16 @@ bool Machine::verifyBootConfig()
     return true;
 }
 
+void Machine::suspend()
+{
+    QFile state("/sys/power/state");
+    state.open(QFile::WriteOnly | QFile::Unbuffered);
+    qInfo(MachineLog) << "Entering suspend";
+    state.write("freeze");
+    qInfo(MachineLog) << "Returned from suspend";
+    state.close();
+}
+
 void Machine::restart()
 {
     reboot(LINUX_REBOOT_CMD_RESTART);
