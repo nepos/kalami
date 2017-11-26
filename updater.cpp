@@ -151,6 +151,12 @@ void Updater::check(const QString &updateChannel)
     QString currentVersion = QString::number(machine->getOsVersion());
     QString model;
 
+    if (!machine->eligibleForUpdate()) {
+        qInfo(UpdaterLog) << "Machine is not eligible for updates!";
+        emit updateFailed();
+        return;
+    }
+
     switch (machine->getModel()) {
     case Machine::DT410C_EVALBOARD:
     case Machine::NEPOS1:

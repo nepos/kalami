@@ -98,6 +98,10 @@ Machine::Machine(QObject *parent) : QObject(parent)
         }
     }
 
+    bootSource = currentRootfsDevice.startsWith("/dev/mmcblk0") ?
+                BootSource::BOOTSOURCE_INTERNAL :
+                BootSource::BOOTSOURCE_EXTERNAL;
+
     bootDevPrefix = currentRootfsDevice.mid(0, strlen("/dev/mmcblk0"));
     GPTParser parser(bootDevPrefix);
 
@@ -108,17 +112,17 @@ Machine::Machine(QObject *parent) : QObject(parent)
         altRootfsDevice = parser.deviceNameForPartitionName("rootfs-b");
         currentBootDevice = parser.deviceNameForPartitionName("boot-a");
         altBootDevice = parser.deviceNameForPartitionName("boot-b");
-        currentBootConfig = Machine::BOOT_A;
+        currentBootConfig = Machine::BOOTCONFIG_A;
     } else {
         altRootfsDevice = parser.deviceNameForPartitionName("rootfs-a");
         currentBootDevice = parser.deviceNameForPartitionName("boot-b");
         altBootDevice = parser.deviceNameForPartitionName("boot-a");
-        currentBootConfig = Machine::BOOT_B;
+        currentBootConfig = Machine::BOOTCONFIG_B;
     }
 
     bootConfigDevice = parser.deviceNameForPartitionName("bootcfg");
 
-    qInfo(MachineLog) << "Boot config" << (currentBootConfig == Machine::BOOT_A ? "A" : "B");
+    qInfo(MachineLog) << "Boot config" << (currentBootConfig == Machine::BOOTCONFIG_A ? "A" : "B");
     qInfo(MachineLog) << "Current rootfs on" << currentRootfsDevice << "boot image on" << currentBootDevice;
     qInfo(MachineLog) << "Alt rootfs on" << altRootfsDevice << "alt boot image on" << altBootDevice;
 }
@@ -127,6 +131,15 @@ void Machine::setDeviceSerial(const QString &serial)
 {
     deviceSerial = serial;
     qInfo(MachineLog) << "Device serial set to" << serial;
+}
+
+bool Machine::eligibleForUpdate() const
+{
+//    Make sure to enable this check before release!
+//    if (bootSource != BootSource::BOOTSOURCE_INTERNAL)
+//        return false;
+
+    return true;
 }
 
 bool Machine::setAltBootConfig() const
@@ -143,7 +156,7 @@ bool Machine::setAltBootConfig() const
     // alternative rootfs. verifyBootConfig() can detect this mismatch and make the
     // new version permanent.
 
-    char b = currentBootConfig == Machine::BOOT_A ? 'b' : 'a';
+    char b = currentBootConfig == Machine::BOOTCONFIG_A ? 'b' : 'a';
     bootConfigFile.write(&b, sizeof(b));
     bootConfigFile.close();
 
@@ -163,11 +176,11 @@ bool Machine::verifyBootConfig()
     // Only take action in case the currently booted rootfs differers from
     // the one configured in the boot config partition.
 
-    if (b == 'A' && currentBootConfig != Machine::BOOT_A) {
+    if (b == 'A' && currentBootConfig != Machine::BOOTCONFIG_A) {
         b = 'B';
         qInfo(MachineLog) << "Making boot B permanent";
         bootConfigFile.write(&b, sizeof(b));
-    } else if (b == 'B' && currentBootConfig != Machine::BOOT_B) {
+    } else if (b == 'B' && currentBootConfig != Machine::BOOTCONFIG_B) {
         b = 'A';
         qInfo(MachineLog) << "Making boot A permanent";
         bootConfigFile.write(&b, sizeof(b));

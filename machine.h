@@ -19,9 +19,14 @@ public:
         NEPOS1,
     };
 
+    enum BootSource {
+        BOOTSOURCE_INTERNAL,
+        BOOTSOURCE_EXTERNAL
+    };
+
     enum BootConfig {
-        BOOT_A,
-        BOOT_B
+        BOOTCONFIG_A,
+        BOOTCONFIG_B
     };
 
     enum Model getModel()                   const { return model;          }
@@ -41,11 +46,13 @@ public:
     void restart();
     void powerOff();
 
+    bool eligibleForUpdate() const;
     bool setAltBootConfig() const;
     bool verifyBootConfig();
 
 private:
     enum Model model;
+    enum BootSource bootSource;
     enum BootConfig currentBootConfig;
     unsigned int osVersion;
     QString modelName;
