@@ -60,7 +60,7 @@ signals:
 
 public slots:
     void check(const QString &updateChannel);
-    void install();
+    bool install();
 
 private slots:
     bool verifySignature(const QString &contentFile, const QString &signatureFile);

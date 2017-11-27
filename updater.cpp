@@ -189,12 +189,10 @@ void Updater::check(const QString &updateChannel)
     QObject::connect(pendingReply, &QNetworkReply::finished, this, &Updater::downloadFinished);
 }
 
-void Updater::install()
+bool Updater::install()
 {
-    if (availableUpdate.version == 0) {
-        emit updateFailed();
-        return;
-    }
+    if (availableUpdate.version == 0)
+        return false;
 
     if (thread) {
         thread->quit();
@@ -218,6 +216,8 @@ void Updater::install()
     });
 
     thread->start();
+
+    return true;
 }
 
 //

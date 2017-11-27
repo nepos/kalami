@@ -317,6 +317,14 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
         updater->check(payload["channel"].toString());
     }
 
+    if (message.type() == "policy/update/UPDATE") {
+        PolyphantMessage *response = message.makeResponse();
+        ret = updater->install();
+        response->setResponseError(!ret);
+        polyphant->sendMessage(*response);
+        delete response;
+    }
+
     Q_UNUSED(ret);
 }
 
