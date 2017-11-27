@@ -307,7 +307,11 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
 
     if (message.type() == "policy/wifi/DISCONNECT") {
         cancelResponse(&pendingWifiMessage);
-        connman->disconnectFromWifi(payload["kalamiId"].toString());
+        QString id = payload["kalamiId"].toString();
+        if (id == pendingWifiId)
+            pendingWifiId.clear();
+
+        connman->disconnectFromWifi(id);
     }
 
     if (message.type() == "policy/update/CHECK") {
