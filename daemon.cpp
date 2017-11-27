@@ -51,6 +51,11 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     pendingWifiId(QString()),
     pendingUpdateCheckMessage(NULL)
 {
+    // Defaults
+    fring->setLedOff(0);
+    fring->setLedOff(1);
+    mixer->setMasterVolume(0.0);
+
     // Updater logic
     QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
         qInfo(DaemonLog) << "New update available, version" << version;
