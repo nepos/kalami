@@ -160,7 +160,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         if (pendingWifiMessage) {
             bool send = false;
 
-            if (state == "online") {
+            if (wifi["online"].toBool()) {
                 pendingWifiMessage->setResponseError(false);
                 send = true;
             } else if (state == "failure") {
@@ -288,10 +288,10 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
             pendingWifiMessage = NULL;
         }
 
-        QString id = payload["kalamiId"].toString();
+        pendingWifiId = payload["kalamiId"].toString();
 
         pendingWifiMessage = message.makeResponse();
-        connman->connectToWifi(id, payload["passphrase"].toString());
+        connman->connectToWifi(pendingWifiId, payload["passphrase"].toString());
     }
 
     if (message.type() == "policy/wifi/DISCONNECT") {

@@ -80,7 +80,7 @@ void Connman::iterateServices()
         if (id == d->cachedWifiId && service->state() != d->cachedWifiState) {
             QJsonObject wifi {
                 { "kalamiId", kalamiIdForService(service) },
-                { "connected", service->state() == "connected" },
+                { "connected", service->state() == "ready" || service->state() == "online" },
                 { "online", service->state() == "online" },
                 { "captivePortalUrl", "" },
             };
