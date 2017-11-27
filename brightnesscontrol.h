@@ -33,6 +33,7 @@ public:
     BrightnessControl(const QString &rootPath, QObject *parent = 0);
     ~BrightnessControl();
     bool setBrightness(float value);
+    float getBrightness();
 
 private:
     QFile brightnessFile;

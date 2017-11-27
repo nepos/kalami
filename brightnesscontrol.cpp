@@ -56,3 +56,16 @@ bool BrightnessControl::setBrightness(float value)
         return false;
     }
 }
+
+float BrightnessControl::getBrightness()
+{
+    int val = 0;
+
+    if (brightnessFile.open(QIODevice::ReadOnly)) {
+        QString value = brightnessFile.readLine();
+        val = value.toInt();
+        brightnessFile.close();
+    }
+
+    return  (float) val / (float) maxBrightness;
+}

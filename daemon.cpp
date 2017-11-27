@@ -324,6 +324,16 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
         delete response;
     }
 
+    if (message.type() == "policy/suspend/SUSPEND") {
+        float v = displayBrightness->getBrightness();
+        displayBrightness->setBrightness(0.0);
+        machine->suspend();
+        displayBrightness->setBrightness(v);
+
+        KirbyMessage msg("policy/suspend/RESUMED");
+        kirby->sendMessage(msg);
+    }
+
     Q_UNUSED(ret);
 }
 
