@@ -161,6 +161,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             bool send = false;
 
             if (wifi["state"].toString() == "online") {
+                pendingWifiMessage->setResponseError(false);
                 send = true;
             } else if (wifi["state"].toString() == "error") {
                 pendingWifiMessage->setResponseError(true);
