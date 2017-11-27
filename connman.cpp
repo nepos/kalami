@@ -85,7 +85,7 @@ void Connman::iterateServices()
                 { "captivePortalUrl", "" },
             };
 
-            emit wifiChanged(wifi);
+            emit wifiChanged(wifi, service->state());
 
             d->cachedWifiState = service->state();
         }

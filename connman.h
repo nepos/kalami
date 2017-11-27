@@ -22,7 +22,7 @@ public:
 
 signals:
     void availableWifisUpdated(const QJsonArray &list);
-    void wifiChanged(const QJsonObject &wifi);
+    void wifiChanged(const QJsonObject &wifi, const QString &state);
     void goneOnline();
 
 private slots:

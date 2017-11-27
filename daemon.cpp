@@ -153,17 +153,17 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         polyphant->sendMessage(msg);
     });
 
-    QObject::connect(connman, &Connman::wifiChanged, this, [this](const QJsonObject &wifi) {
+    QObject::connect(connman, &Connman::wifiChanged, this, [this](const QJsonObject &wifi, const QString &state) {
         if (wifi["kalamiId"].toString() != pendingWifiId)
             return;
 
         if (pendingWifiMessage) {
             bool send = false;
 
-            if (wifi["state"].toString() == "online") {
+            if (state == "online") {
                 pendingWifiMessage->setResponseError(false);
                 send = true;
-            } else if (wifi["state"].toString() == "error") {
+            } else if (state == "failure") {
                 pendingWifiMessage->setResponseError(true);
                 send = true;
             }
