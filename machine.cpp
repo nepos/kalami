@@ -16,14 +16,6 @@ Machine::Machine(QObject *parent) : QObject(parent)
     struct utsname uts;
     int ret;
 
-    currentRootfsDevice = "/dev/mmcblk0p12";
-    altRootfsDevice = "/dev/mmcblk0p13";
-    currentBootDevice = "/dev/mmcblk0p10";
-    altBootDevice = "/dev/mmcblk0p11";
-    osVersion = 363;
-    model = Machine::NEPOS1;
-    return;
-
     ret = uname(&uts);
     if (ret < 0)
         qInfo() << "Unable to get uname():" << strerror(-errno);
