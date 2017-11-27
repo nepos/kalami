@@ -24,13 +24,13 @@ SOURCES += main.cpp \
     fring.cpp \
     nfc.cpp \
     gpio.cpp \
-    polyphantmessage.cpp \
-    polyphantconnection.cpp \
     brightnesscontrol.cpp \
     imagereader.cpp \
     blockdevice.cpp \
     mediactl.cpp \
-    nubbock.cpp
+    nubbock.cpp \
+    kirbymessage.cpp \
+    kirbyconnection.cpp
 
 HEADERS += \
     accelerometer.h \
@@ -45,15 +45,15 @@ HEADERS += \
     fring.h \
     nfc.h \
     gpio.h \
-    polyphantmessage.h \
-    polyphantconnection.h \
     brightnesscontrol.h \
     fring-protocol.h \
     imagereader.h \
     crc32table.h \
     blockdevice.h \
     mediactl.h \
-    nubbock.h
+    nubbock.h \
+    kirbyconnection.h \
+    kirbymessage.h
 
 LIBS += -ludev
 LIBS += -lconnman-qt5

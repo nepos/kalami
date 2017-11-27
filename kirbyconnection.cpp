@@ -20,19 +20,19 @@
 #include <QTimer>
 #include <QJsonArray>
 #include <QJsonDocument>
-#include "polyphantconnection.h"
+#include "kirbyconnection.h"
 
-Q_LOGGING_CATEGORY(PolyphantConnectionLog, "PolyphantConnection")
+Q_LOGGING_CATEGORY(KirbyConnectionLog, "KirbyConnection")
 
-PolyphantConnection::PolyphantConnection(const QUrl &uri, QObject *parent) :
+KirbyConnection::KirbyConnection(const QUrl &uri, QObject *parent) :
     QObject(parent), socket()
 {
     QObject::connect(&socket, &QWebSocket::connected, [this]() {
-        qInfo(PolyphantConnectionLog) << "Now connected to polyphant at" << socket.requestUrl();
+        qInfo(KirbyConnectionLog) << "Now connected to Kirby at" << socket.requestUrl();
     });
 
     QObject::connect(&socket, &QWebSocket::disconnected, [this, uri]() {
-        qWarning(PolyphantConnectionLog) << "Polyphant disconnected, trying to reconnect ...";
+        qWarning(KirbyConnectionLog) << "Kirby disconnected, trying to reconnect ...";
 
         QTimer::singleShot(1000, [this, uri]() {
             socket.open(uri);
@@ -40,12 +40,12 @@ PolyphantConnection::PolyphantConnection(const QUrl &uri, QObject *parent) :
     });
 
     QObject::connect(&socket, &QWebSocket::textMessageReceived, [this](const QString &message) {
-        qInfo(PolyphantConnectionLog) << "<" << QString(message);
+        qInfo(KirbyConnectionLog) << "<" << QString(message);
 
         QJsonDocument doc = QJsonDocument::fromJson(message.toLocal8Bit());
 
         if (doc.isObject()) {
-            const PolyphantMessage pmessage(doc.object());
+            const KirbyMessage pmessage(doc.object());
             emit messageReceived(pmessage);
         }
     });
@@ -53,10 +53,10 @@ PolyphantConnection::PolyphantConnection(const QUrl &uri, QObject *parent) :
     socket.open(uri);
 }
 
-void PolyphantConnection::sendMessage(const PolyphantMessage &message)
+void KirbyConnection::sendMessage(const KirbyMessage &message)
 {
     const QJsonObject obj = message.toJson();
-    qInfo(PolyphantConnectionLog) << ">" << obj;
+    qInfo(KirbyConnectionLog) << ">" << obj;
     QByteArray ba = QJsonDocument(obj).toJson(QJsonDocument::Compact);
     socket.sendBinaryMessage(ba);
 }

@@ -1,13 +1,13 @@
-#include "polyphantmessage.h"
+#include "kirbymessage.h"
 
-PolyphantMessage::PolyphantMessage(const QJsonObject json)
+KirbyMessage::KirbyMessage(const QJsonObject json)
 {
     _type = json["type"].toString();
     _payload = json["payload"].toObject();
     _meta = json["meta"].toObject();
 }
 
-PolyphantMessage::PolyphantMessage(const QString type, const QJsonValue payload, const QJsonObject meta) :
+KirbyMessage::KirbyMessage(const QString type, const QJsonValue payload, const QJsonObject meta) :
     _type(type),
     _payload(payload),
     _meta(meta)
@@ -16,17 +16,17 @@ PolyphantMessage::PolyphantMessage(const QString type, const QJsonValue payload,
         _meta["commType"] = "one-way";
 }
 
-void PolyphantMessage::setPayload(const QJsonValue &payload)
+void KirbyMessage::setPayload(const QJsonValue &payload)
 {
     _payload = payload;
 }
 
-void PolyphantMessage::setResponseError(bool error)
+void KirbyMessage::setResponseError(bool error)
 {
     _meta["error"] = error;
 }
 
-const QJsonObject PolyphantMessage::toJson() const {
+const QJsonObject KirbyMessage::toJson() const {
     QJsonObject o({
                       { "type", _type }
                   });
@@ -40,7 +40,7 @@ const QJsonObject PolyphantMessage::toJson() const {
     return o;
 }
 
-PolyphantMessage* PolyphantMessage::makeResponse() const
+KirbyMessage* KirbyMessage::makeResponse() const
 {
     QJsonObject meta({
                          { "commType", "response" },
@@ -49,5 +49,5 @@ PolyphantMessage* PolyphantMessage::makeResponse() const
                          { "source", "KALAMI" }
                      });
 
-    return new PolyphantMessage(_type, QJsonObject(), meta);
+    return new KirbyMessage(_type, QJsonObject(), meta);
 }

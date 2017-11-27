@@ -1,13 +1,12 @@
-#ifndef POLYPHANTMESSAGE_H
-#define POLYPHANTMESSAGE_H
+#pragma once
 
 #include <QJsonObject>
 
-class PolyphantMessage
+class KirbyMessage
 {
 public:
-    explicit PolyphantMessage(const QJsonObject json);
-    explicit PolyphantMessage(const QString type, const QJsonValue payload = {}, const QJsonObject meta = {});
+    explicit KirbyMessage(const QJsonObject json);
+    explicit KirbyMessage(const QString type, const QJsonValue payload = {}, const QJsonObject meta = {});
 
     const QString type() const { return _type; };
     const QString messageId() const { return _payload.toObject()["id"].toString(); };
@@ -21,12 +20,10 @@ public:
     void setResponseError(bool error);
     const QJsonObject toJson() const;
 
-    PolyphantMessage* makeResponse() const;
+    KirbyMessage* makeResponse() const;
 
 private:
     QString _type;
     QJsonValue _payload;
     QJsonObject _meta;
 };
-
-#endif // POLYPHANTMESSAGE_H

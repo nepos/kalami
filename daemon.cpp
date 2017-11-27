@@ -43,7 +43,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     machine(new Machine(this)),
     mediaCtl(new MediaCtl(0, this)),
     fring(new Fring()),
-    polyphant(new PolyphantConnection(uri, this)),
+    kirby(new KirbyConnection(uri, this)),
     updater(new Updater(machine, this)),
     nfc(new Nfc(this)),
     nubbock(new Nubbock(this)),
@@ -57,7 +57,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
         if (pendingUpdateCheckMessage) {
             pendingUpdateCheckMessage->setPayload(QJsonObject({{ "available", true }}));
-            polyphant->sendMessage(*pendingUpdateCheckMessage);
+            kirby->sendMessage(*pendingUpdateCheckMessage);
             delete pendingUpdateCheckMessage;
             pendingUpdateCheckMessage = NULL;
         }
@@ -68,7 +68,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
         if (pendingUpdateCheckMessage) {
             pendingUpdateCheckMessage->setPayload(QJsonObject({{ "available", false }}));
-            polyphant->sendMessage(*pendingUpdateCheckMessage);
+            kirby->sendMessage(*pendingUpdateCheckMessage);
             delete pendingUpdateCheckMessage;
             pendingUpdateCheckMessage = NULL;
         }
@@ -82,7 +82,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
         if (pendingUpdateCheckMessage) {
             pendingUpdateCheckMessage->setResponseError(true);
-            polyphant->sendMessage(*pendingUpdateCheckMessage);
+            kirby->sendMessage(*pendingUpdateCheckMessage);
             delete pendingUpdateCheckMessage;
             pendingUpdateCheckMessage = NULL;
         }
@@ -90,27 +90,27 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     QObject::connect(updater, &Updater::updateSucceeded, this, [this]() {
         qInfo(DaemonLog) << "Update succeeded!";
-        PolyphantMessage msg("policy/update/UPDATE_FINISHED",
+        KirbyMessage msg("policy/update/UPDATE_FINISHED",
                              QJsonObject{{ "updateSuccessful", true }});
     });
 
     QObject::connect(updater, &Updater::updateFailed, this, [this]() {
         qInfo(DaemonLog) << "Update failed!";
-        PolyphantMessage msg("policy/update/UPDATE_FINISHED",
+        KirbyMessage msg("policy/update/UPDATE_FINISHED",
                              QJsonObject{{ "updateSuccessful", false }});
     });
 
     QObject::connect(updater, &Updater::updateProgress, this, [this](float progress) {
         qInfo(DaemonLog) << "Updater progress:" << progress;
-        PolyphantMessage msg("policy/update/UPDATE_PROGRESS",
+        KirbyMessage msg("policy/update/UPDATE_PROGRESS",
                              QJsonObject{{ "progress", progress }});
-        polyphant->sendMessage(msg);
+        kirby->sendMessage(msg);
     });
 
     // Accelerometer
     QObject::connect(accelerometer, &Accelerometer::orientationChanged, this, [this](Accelerometer::Orientation o) {
         qInfo(DaemonLog) << "Orientation changed to" << o;
-        PolyphantMessage msg("policy/orientation/CHANGED");
+        KirbyMessage msg("policy/orientation/CHANGED");
 
         switch (o) {
         case Accelerometer::Standing:
@@ -124,7 +124,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             nubbock->setTransform("270");
             break;
 
-            polyphant->sendMessage(msg);
+            kirby->sendMessage(msg);
         }
         });
 
@@ -141,16 +141,16 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         if (type != EV_REL || code != REL_X)
             return;
 
-        PolyphantMessage msg(value > 0 ?
+        KirbyMessage msg(value > 0 ?
                                  "policy/rotary/CW" :
                                  "policy/rotary/CCW");
-        polyphant->sendMessage(msg);
+        kirby->sendMessage(msg);
     });
 
     // Connman connection
     QObject::connect(connman, &Connman::availableWifisUpdated, this, [this](const QJsonArray &list) {
-        PolyphantMessage msg("policy/wifi/SCAN_RESULT", list);
-        polyphant->sendMessage(msg);
+        KirbyMessage msg("policy/wifi/SCAN_RESULT", list);
+        kirby->sendMessage(msg);
     });
 
     QObject::connect(connman, &Connman::wifiChanged, this, [this](const QJsonObject &wifi, const QString &state) {
@@ -169,14 +169,14 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             }
 
             if (send) {
-                polyphant->sendMessage(*pendingWifiMessage);
+                kirby->sendMessage(*pendingWifiMessage);
                 delete pendingWifiMessage;
                 pendingWifiMessage = NULL;
             }
         }
 
-        PolyphantMessage msg("policy/wifi/STATE_CHANGED", wifi);
-        polyphant->sendMessage(msg);
+        KirbyMessage msg("policy/wifi/STATE_CHANGED", wifi);
+        kirby->sendMessage(msg);
     });
 
     QObject::connect(connman, &Connman::goneOnline, this, [this]() {
@@ -186,7 +186,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     connman->start();
 
     // Websocket connection
-    QObject::connect(polyphant, &PolyphantConnection::messageReceived, this, &Daemon::polyphantMessageReceived);
+    QObject::connect(kirby, &KirbyConnection::messageReceived, this, &Daemon::kirbyMessageReceived);
 
     // D-Bus connection
     QDBusConnection bus = QDBusConnection::systemBus();
@@ -198,26 +198,26 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     // fring
     if (fring->initialize()) {
         QObject::connect(fring, &Fring::homeButtonChanged, this, [this](bool state) {
-            PolyphantMessage msg("policy/homebutton/STATE_CHANGED", QJsonObject {
+            KirbyMessage msg("policy/homebutton/STATE_CHANGED", QJsonObject {
                                      { "id", "home" },
                                      { "state", state },
                                  });
-            polyphant->sendMessage(msg);
+            kirby->sendMessage(msg);
         });
 
         QObject::connect(fring, &Fring::batteryStateChanged, this, [this](float level, float chargeCurrent) {
-            PolyphantMessage msg("policy/battery/STATE_CHANGED", QJsonObject {
+            KirbyMessage msg("policy/battery/STATE_CHANGED", QJsonObject {
                                      { "level", level },
                                      { "chargeCurrent", chargeCurrent },
                                  });
-            polyphant->sendMessage(msg);
+            kirby->sendMessage(msg);
         });
 
         QObject::connect(fring, &Fring::ambientLightChanged, this, [this](float value) {
-            PolyphantMessage msg("policy/battery/AMBIENT_LIGHT_CHANGED", QJsonObject {
+            KirbyMessage msg("policy/battery/AMBIENT_LIGHT_CHANGED", QJsonObject {
                                      { "value", value },
                                  });
-            polyphant->sendMessage(msg);
+            kirby->sendMessage(msg);
         });
 
         QObject::connect(fring, &Fring::logMessageReceived, this, [this](const QString &message) {
@@ -235,16 +235,29 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     updater->check("latest");
 }
 
-void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
+void Daemon::cancelResponse(KirbyMessage **msg)
+{
+    if (!*msg)
+        return;
+
+    KirbyMessage *m = *msg;
+
+    m->setResponseError(true);
+    kirby->sendMessage(*m);
+    delete m;
+    *msg = NULL;
+}
+
+void Daemon::kirbyMessageReceived(const KirbyMessage &message)
 {
     bool ret = true;
     QJsonObject payload = message.payload().toObject();
 
     if (message.type() == "policy/display/SET_BRIGHTNESS") {
-        PolyphantMessage *response = message.makeResponse();
+        KirbyMessage *response = message.makeResponse();
         ret = displayBrightness->setBrightness(payload["value"].toDouble());
         response->setResponseError(!ret);
-        polyphant->sendMessage(*response);
+        kirby->sendMessage(*response);
         delete response;
     }
 
@@ -266,62 +279,43 @@ void Daemon::polyphantMessageReceived(const PolyphantMessage &message)
             ret = fring->setLedPulsating(id, color["red"].toDouble(), color["green"].toDouble(), color["blue"].toDouble(),
                                          payload["frequency"].toDouble());
 
-        PolyphantMessage *response = message.makeResponse();
+        KirbyMessage *response = message.makeResponse();
         response->setResponseError(!ret);
-        polyphant->sendMessage(*response);
+        kirby->sendMessage(*response);
         delete response;
     }
 
     if (message.type() == "policy/volume/SET") {
-        PolyphantMessage *response = message.makeResponse();
+        KirbyMessage *response = message.makeResponse();
         ret = mixer->setMasterVolume(payload["volume"].toDouble());
         response->setResponseError(!ret);
-        polyphant->sendMessage(*response);
+        kirby->sendMessage(*response);
         delete response;
     }
 
     if (message.type() == "policy/wifi/CONNECT") {
-        if (pendingWifiMessage) {
-            pendingWifiMessage->setResponseError(true);
-            polyphant->sendMessage(*pendingWifiMessage);
-            delete pendingWifiMessage;
-            pendingWifiMessage = NULL;
-        }
-
+        cancelResponse(&pendingWifiMessage);
         pendingWifiId = payload["kalamiId"].toString();
-
         pendingWifiMessage = message.makeResponse();
         connman->connectToWifi(pendingWifiId, payload["passphrase"].toString());
     }
 
     if (message.type() == "policy/wifi/DISCONNECT") {
-        if (pendingWifiMessage) {
-            pendingWifiMessage->setResponseError(true);
-            polyphant->sendMessage(*pendingWifiMessage);
-            delete pendingWifiMessage;
-            pendingWifiMessage = NULL;
-        }
-
+        cancelResponse(&pendingWifiMessage);
         connman->disconnectFromWifi(payload["kalamiId"].toString());
     }
 
     if (message.type() == "policy/update/CHECK") {
-        if (pendingUpdateCheckMessage) {
-            pendingUpdateCheckMessage->setResponseError(true);
-            polyphant->sendMessage(*pendingUpdateCheckMessage);
-            delete pendingUpdateCheckMessage;
-            pendingUpdateCheckMessage = NULL;
-        }
-
+        cancelResponse(&pendingUpdateCheckMessage);
         pendingUpdateCheckMessage = message.makeResponse();
         updater->check(payload["channel"].toString());
     }
 
     if (message.type() == "policy/update/UPDATE") {
-        PolyphantMessage *response = message.makeResponse();
+        KirbyMessage *response = message.makeResponse();
         ret = updater->install();
         response->setResponseError(!ret);
-        polyphant->sendMessage(*response);
+        kirby->sendMessage(*response);
         delete response;
     }
 

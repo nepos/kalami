@@ -33,7 +33,7 @@
 #include "machine.h"
 #include "mediactl.h"
 #include "nfc.h"
-#include "polyphantconnection.h"
+#include "kirbyconnection.h"
 #include "updater.h"
 #include "nubbock.h"
 
@@ -47,7 +47,8 @@ public:
     ~Daemon();
 
 private slots:
-    void polyphantMessageReceived(const PolyphantMessage &message);
+    void kirbyMessageReceived(const KirbyMessage &message);
+    void cancelResponse(KirbyMessage **msg);
 
 private:
     Accelerometer *accelerometer;
@@ -58,13 +59,13 @@ private:
     Machine *machine;
     MediaCtl *mediaCtl;
     Fring *fring;
-    PolyphantConnection *polyphant;
+    KirbyConnection *kirby;
     Updater *updater;
     Nfc *nfc;
     Nubbock *nubbock;
 
-    PolyphantMessage *pendingWifiMessage;
+    KirbyMessage *pendingWifiMessage;
     QString pendingWifiId;
 
-    PolyphantMessage *pendingUpdateCheckMessage;
+    KirbyMessage *pendingUpdateCheckMessage;
 };

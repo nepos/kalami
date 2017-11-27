@@ -23,21 +23,21 @@
 #include <QJsonObject>
 #include <QWebSocket>
 #include <QtCore/QLoggingCategory>
-#include "polyphantmessage.h"
+#include "kirbymessage.h"
 
-Q_DECLARE_LOGGING_CATEGORY(PolyphantConnectionLog)
+Q_DECLARE_LOGGING_CATEGORY(KirbyConnectionLog)
 
-class PolyphantConnection : public QObject
+class KirbyConnection : public QObject
 {
     Q_OBJECT
 public:
-    explicit PolyphantConnection(const QUrl &uri, QObject *parent = 0);
+    explicit KirbyConnection(const QUrl &uri, QObject *parent = 0);
 
 signals:
-    void messageReceived(const PolyphantMessage &message);
+    void messageReceived(const KirbyMessage &message);
 
 public slots:
-    void sendMessage(const PolyphantMessage &message);
+    void sendMessage(const KirbyMessage &message);
 
 private:
     QWebSocket socket;
