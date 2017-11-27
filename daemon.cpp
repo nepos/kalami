@@ -242,15 +242,15 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
 void Daemon::cancelResponse(KirbyMessage **msg)
 {
-    if (!*msg)
-        return;
-
     KirbyMessage *m = *msg;
+    *msg = NULL;
+
+    if (!m)
+        return;
 
     m->setResponseError(true);
     kirby->sendMessage(*m);
     delete m;
-    *msg = NULL;
 }
 
 void Daemon::kirbyMessageReceived(const KirbyMessage &message)
