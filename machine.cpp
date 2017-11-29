@@ -166,6 +166,10 @@ bool Machine::setAltBootConfig() const
 bool Machine::verifyBootConfig()
 {
     QFile bootConfigFile(bootConfigDevice);
+
+    if (!bootConfigFile.exists())
+        return false;
+
     if (!bootConfigFile.open(QIODevice::ReadWrite | QIODevice::Unbuffered))
         return false;
 

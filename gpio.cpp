@@ -16,7 +16,7 @@ GPIO::GPIO(int number, QObject *parent) :
     pathUnexport(GPIO::basePath + "/unexport")
 {
     QFile f(pathExport);
-    if (!f.open(QFile::WriteOnly)) {
+    if (!f.exists() || !f.open(QFile::WriteOnly)) {
         qWarning(GPIOLog) << "Can not open file: " << pathExport;
         return;
     }
@@ -29,7 +29,7 @@ GPIO::~GPIO()
     closeValueFile();
 
     QFile f(pathUnexport);
-    if (!f.open(QFile::WriteOnly)) {
+    if (!f.exists() || !f.open(QFile::WriteOnly)) {
         qWarning(GPIOLog) << "Can not open file: " << pathUnexport;
         return;
     }
@@ -41,7 +41,7 @@ void GPIO::setDirection(Direction io)
 {
     direction = io;
     QFile f(gpioPath + "/direction");
-    if (!f.open(QFile::WriteOnly)) {
+    if (!f.exists() || !f.open(QFile::WriteOnly)) {
         qWarning(GPIOLog) << "Can not open file: " << gpioPath << "/direction";
         return;
     }
@@ -114,7 +114,7 @@ void GPIO::setEdge(Edge e)
 void GPIO::openValueFile(QIODevice::OpenModeFlag f)
 {
     valueFile.setFileName(gpioPath + "/value");
-    if (!valueFile.open(f)) {
+    if (!valueFile.exists() || !valueFile.open(f)) {
         qWarning(GPIOLog) << "Can not open file: " << gpioPath << "/value";
         return;
     }

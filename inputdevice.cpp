@@ -36,7 +36,8 @@ Q_LOGGING_CATEGORY(InputDeviceLog, "InputDevice")
 InputDevice::InputDevice(const QString &path, QObject *parent) :
     QObject(parent), device(path)
 {
-    if (!device.open(QIODevice::ReadWrite | QIODevice::Unbuffered)) {
+    if (!device.exists() ||
+        !device.open(QIODevice::ReadWrite | QIODevice::Unbuffered)) {
         qWarning(InputDeviceLog) << "Unable to open file " << path << ":" << device.errorString();
         return;
     }

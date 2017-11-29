@@ -21,8 +21,12 @@ I2CClient::~I2CClient()
 bool I2CClient::open(int bus, int _address)
 {
     file.setFileName(QString("/dev/i2c-%1").arg(bus));
+
+    if (!file.exists())
+        return false;
+
     if (!file.open(QIODevice::ReadWrite | QIODevice::Unbuffered))
-            return false;
+        return false;
 
     if (ioctl(file.handle(), I2C_SLAVE, _address) < 0)
         return false;
