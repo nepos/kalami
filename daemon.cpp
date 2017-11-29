@@ -112,8 +112,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         kirby->sendMessage(msg);
     });
 
-
-#if 0
     // Accelerometer
     QObject::connect(accelerometer, &Accelerometer::orientationChanged, this, [this](Accelerometer::Orientation o) {
         qInfo(DaemonLog) << "Orientation changed to" << o;
@@ -136,7 +134,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         });
 
     accelerometer->emitCurrent();
-#endif
 
     // ALSA
     if (machine->getModel() == Machine::NEPOS1)
