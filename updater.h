@@ -15,7 +15,7 @@
 Q_DECLARE_LOGGING_CATEGORY(UpdaterLog)
 
 struct AvailableUpdate {
-    unsigned long version;
+    QString version;
     QUrl rootfsUrl;
     QString rootfsSha512;
     QUrl bootimgUrl;

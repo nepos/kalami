@@ -51,7 +51,7 @@ Machine::Machine(QObject *parent) : QObject(parent)
     while (modelName.endsWith('\n'))
         modelName.chop(1);
 
-    osVersion = 0;
+    osVersionNumber = 0;
     QFile os("/etc/os-release");
     if (os.open(QIODevice::ReadOnly)) {
         while (!os.atEnd()) {
@@ -60,8 +60,17 @@ Machine::Machine(QObject *parent) : QObject(parent)
             while (line.endsWith('\n') || line.endsWith('"'))
                 line.chop(1);
 
-            if (line.startsWith("VERSION_ID="))
-                osVersion = line.mid(12).toUInt();
+            if (line.startsWith("VERSION_ID=")) {
+                osVersion = line.mid(12);
+                QStringList l = osVersion.split("-");
+
+                if (l.length() == 2) {
+                    osChannel = l[0];
+                    osVersionNumber = l[1].toULong();
+                } else {
+                    qWarning(MachineLog) << "Unable to parse VERSION_ID field in /etc/os-release" << osVersion;
+                }
+            }
         }
 
         os.close();
@@ -82,7 +91,8 @@ Machine::Machine(QObject *parent) : QObject(parent)
     qInfo(MachineLog) << "Detected Hardware:" << architecture << "architecture,"
                       << "model name" << modelName
                       << "revision" << deviceRevision
-                      << "os version" << QString::number(osVersion)
+                      << "os channel" << osChannel
+                      << "os version" << QString::number(osVersionNumber)
                       << "serial" << deviceSerial;
 
     QFile cmdlineFile("/proc/cmdline");

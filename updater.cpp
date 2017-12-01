@@ -92,10 +92,10 @@ void Updater::downloadFinished()
             break;
         }
 
-        QString version = QString::number(machine->getOsVersion());
+        QString version = machine->getOsVersion();
 
         QJsonObject json = doc.object();
-        availableUpdate.version = json["build_id"].toString().toULong();
+        availableUpdate.version = json["build_id"].toString();
         availableUpdate.rootfsUrl = QUrl(json["rootfs"].toString());
         availableUpdate.rootfsSha512 = json["rootfs_sha512"].toString();
         availableUpdate.bootimgUrl = QUrl(json["bootimg"].toString());
@@ -131,10 +131,25 @@ void Updater::downloadFinished()
             break;
         }
 
-        if (availableUpdate.version > machine->getOsVersion())
-            emit updateAvailable(QString::number(availableUpdate.version));
-        else
+        QStringList l = availableUpdate.version.split("-");
+
+        if (l.length() != 0) {
+            emit checkFailed("Cannot parse update version from server" + availableUpdate.version);
+            return;
+        }
+
+        unsigned long version = l[1].toULong();
+
+        if (l[0] != machine->getOsChannel()) {
+            qInfo(UpdaterLog) << "Channel of update" << l[0]
+                              << "differs from current device channel" << machine->getOsChannel();
+            qInfo(UpdaterLog) << "Forcing update to" << availableUpdate.version;
+            emit updateAvailable(availableUpdate.version);
+        } else if (version > machine->getOsVersionNumber()) {
+            emit updateAvailable(availableUpdate.version);
+        } else {
             emit alreadyUpToDate();
+        }
 
         break;
     }
@@ -148,7 +163,6 @@ void Updater::downloadFinished()
 void Updater::check(const QString &updateChannel)
 {
     QUrlQuery query;
-    QString currentVersion = QString::number(machine->getOsVersion());
     QString model;
 
     if (!machine->eligibleForUpdate()) {
@@ -173,7 +187,7 @@ void Updater::check(const QString &updateChannel)
     qInfo(UpdaterLog) << "Checking for updates on" << url;
 
     QNetworkRequest request(url);
-    request.setRawHeader(QString("X-nepos-current").toLocal8Bit(), currentVersion.toLocal8Bit());
+    request.setRawHeader(QString("X-nepos-current").toLocal8Bit(), machine->getOsVersion().toLocal8Bit());
     request.setRawHeader(QString("X-nepos-machine-id").toLocal8Bit(), machine->getMachineId().toLocal8Bit());
     request.setRawHeader(QString("X-nepos-device-model").toLocal8Bit(), machine->getModelName().toLocal8Bit());
     request.setRawHeader(QString("X-nepos-device-revision").toLocal8Bit(), machine->getDeviceRevision().toLocal8Bit());
