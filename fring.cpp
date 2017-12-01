@@ -38,7 +38,11 @@ Fring::Fring(QObject *parent) :
             batteryLogFileName = QString(batteryLogDir) + "/batterylog-" + QString::number(++i) + ".log";
         } while(QFile::exists(batteryLogFileName));
 
-        qInfo(FringLog) << "Using" << batteryLogFileName << "to store battery logs";
+        QFile f(batteryLogFileName);
+        if (f.open(QFile::ReadWrite))
+            qInfo(FringLog) << "Using" << batteryLogFileName << "to store battery logs";
+        else
+            batteryLogFileName.clear();
     }
 }
 
