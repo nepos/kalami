@@ -283,7 +283,7 @@ bool Fring::readBatteryStatus()
         return false;
 
     qInfo(FringLog) << "Battery status upate:";
-    qInfo(FringLog) << QString::asprintf("Charge current %.2f mA", rdCmd.batteryStatus.chargeCurrent * 0.05f);
+    qInfo(FringLog) << QString::asprintf("Charge current %.2f A", rdCmd.batteryStatus.chargeCurrent * 0.05f);
     qInfo(FringLog) << QString::asprintf("Level %d%%", rdCmd.batteryStatus.level);
     qInfo(FringLog) << QString::asprintf("Temperature %d degree celcius", rdCmd.batteryStatus.temp);
     qInfo(FringLog) << QString::asprintf("Remaining capacity %d mAh", rdCmd.batteryStatus.remainingCapacity);
