@@ -14,8 +14,6 @@ public:
     explicit ALSAMixer(const QString &deviceName = "default", QObject *parent = 0);
     ~ALSAMixer();
 
-    float getMasterVolume();
-
 public slots:
     bool setMasterVolume(float volume);
     void setMasterScale(float scale);

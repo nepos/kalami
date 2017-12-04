@@ -139,8 +139,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     if (machine->getModel() == Machine::NEPOS1)
         mixer->setMasterScale(0.5f);
 
-    qInfo(DaemonLog) << "Current master volume:" << mixer->getMasterVolume();
-
     // Input devices
     QObject::connect(rotaryInputDevice, &InputDevice::inputEvent, this, [this](int type, int code, int value) {
         if (type != EV_REL || code != REL_X)

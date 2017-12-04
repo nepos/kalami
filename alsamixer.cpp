@@ -1,4 +1,5 @@
 #include <QDebug>
+#include <QtCore/qmath.h>
 #include <alsa/asoundlib.h>
 #include <math.h>
 #include "alsamixer.h"
@@ -64,8 +65,6 @@ ALSAMixer::ALSAMixer(const QString &deviceName, QObject *parent) :
         snd_mixer_selem_get_playback_volume_range(me, &d->masterMin, &d->masterMax);
     else
         qWarning(ALSAMixerLog) << "Unable to find playback mixer element";
-
-    getMasterVolume();
 }
 
 ALSAMixer::~ALSAMixer()
@@ -124,34 +123,19 @@ void ALSAMixer::setEnumByName(const char *name, const char *value, int index)
     qWarning(ALSAMixerLog) << "Unable to find enum value" << value << "in mixer element!";
 }
 
-float ALSAMixer::getMasterVolume()
-{
-    Q_D(ALSAMixer);
-
-    snd_mixer_elem_t *me = findMixerElement(d->handle, "RX1 Digital", 0);
-    if (!me) {
-        qWarning(ALSAMixerLog) << "Unable to find playback mixer element";
-        d->masterCurrent = 0.0f;
-    } else {
-        int ret;
-        long current;
-
-        ret = snd_mixer_selem_get_playback_volume(me, SND_MIXER_SCHN_FRONT_LEFT, &current);
-        if (ret < 0)
-            d->masterCurrent = 0.0f;
-        else
-            d->masterCurrent = (float) (d->masterCurrent - d->masterMin) / (float) (d->masterMax - d->masterMin);
-    }
-
-    return d->masterCurrent / d->masterScale;
-}
-
 bool ALSAMixer::setMasterVolume(float volume)
 {
     Q_D(ALSAMixer);
 
-    float val = d->masterMin + (volume * (float) (d->masterMax - d->masterMin));
+    float val;
 
+    // scale to ALSA mixer control range
+    val = d->masterMin + (volume * (float) (d->masterMax - d->masterMin));
+
+    // linearize
+    val = qPow(val, 0.3f);
+
+    // scale to hardware limits
     val *= d->masterScale;
 
     return setPlaybackVolumeByName("RX1 Digital", val) &&
