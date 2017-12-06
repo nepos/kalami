@@ -75,6 +75,7 @@ struct FringCommandRead {
         } bootInfo _packed_;
 
         struct {
+            uint8_t hardwareType;
             uint8_t boardRevisionA;
             uint8_t boardRevisionB;
         } boardRevision;
