@@ -57,11 +57,11 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     mixer->setMasterVolume(0.0);
 
     //Machine
-    QObject::connect(machine, &Machine::bootstrapInternalMemoryFinished, this, [this](bool success) {
+    QObject::connect(machine, &Machine::bootstrapInternalMemoryFinished, [this](bool success) {
     });
 
     // Updater logic
-    QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
+    QObject::connect(updater, &Updater::updateAvailable, [this](const QString &version) {
         qInfo(DaemonLog) << "New update available, version" << version;
 
         if (pendingUpdateCheckMessage) {
@@ -72,7 +72,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         }
     });
 
-    QObject::connect(updater, &Updater::alreadyUpToDate, this, [this]() {
+    QObject::connect(updater, &Updater::alreadyUpToDate, [this]() {
         qInfo(DaemonLog) << "Already up-to-date!";
 
         if (pendingUpdateCheckMessage) {
@@ -86,7 +86,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         machine->verifyBootConfig();
     });
 
-    QObject::connect(updater, &Updater::checkFailed, this, [this]() {
+    QObject::connect(updater, &Updater::checkFailed, [this]() {
         qInfo(DaemonLog) << "Update check failed!";
 
         if (pendingUpdateCheckMessage) {
@@ -97,19 +97,19 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         }
     });
 
-    QObject::connect(updater, &Updater::updateSucceeded, this, [this]() {
+    QObject::connect(updater, &Updater::updateSucceeded, [this]() {
         qInfo(DaemonLog) << "Update succeeded!";
         KirbyMessage msg("policy/update/UPDATE_FINISHED",
                              QJsonObject{{ "updateSuccessful", true }});
     });
 
-    QObject::connect(updater, &Updater::updateFailed, this, [this]() {
+    QObject::connect(updater, &Updater::updateFailed, [this]() {
         qInfo(DaemonLog) << "Update failed!";
         KirbyMessage msg("policy/update/UPDATE_FINISHED",
                              QJsonObject{{ "updateSuccessful", false }});
     });
 
-    QObject::connect(updater, &Updater::updateProgress, this, [this](float progress) {
+    QObject::connect(updater, &Updater::updateProgress, [this](float progress) {
         qInfo(DaemonLog) << "Updater progress:" << progress;
         KirbyMessage msg("policy/update/UPDATE_PROGRESS",
                              QJsonObject{{ "progress", progress }});
@@ -117,7 +117,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     });
 
     // Accelerometer
-    QObject::connect(accelerometer, &Accelerometer::orientationChanged, this, [this](Accelerometer::Orientation o) {
+    QObject::connect(accelerometer, &Accelerometer::orientationChanged, [this](Accelerometer::Orientation o) {
         qInfo(DaemonLog) << "Orientation changed to" << o;
         KirbyMessage msg("policy/orientation/CHANGED");
 
@@ -144,7 +144,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         mixer->setMasterScale(0.5f);
 
     // Input devices
-    QObject::connect(rotaryInputDevice, &InputDevice::inputEvent, this, [this](int type, int code, int value) {
+    QObject::connect(rotaryInputDevice, &InputDevice::inputEvent, [this](int type, int code, int value) {
         if (type != EV_REL || code != REL_X)
             return;
 
@@ -155,12 +155,12 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     });
 
     // Connman connection
-    QObject::connect(connman, &Connman::availableWifisUpdated, this, [this](const QJsonArray &list) {
+    QObject::connect(connman, &Connman::availableWifisUpdated, [this](const QJsonArray &list) {
         KirbyMessage msg("policy/wifi/SCAN_RESULT", list);
         kirby->sendMessage(msg);
     });
 
-    QObject::connect(connman, &Connman::wifiChanged, this, [this](const QJsonObject &wifi, const QString &state) {
+    QObject::connect(connman, &Connman::wifiChanged, [this](const QJsonObject &wifi, const QString &state) {
         if (wifi["kalamiId"].toString() != pendingWifiId)
             return;
 
@@ -186,7 +186,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         kirby->sendMessage(msg);
     });
 
-    QObject::connect(connman, &Connman::goneOnline, this, [this]() {
+    QObject::connect(connman, &Connman::goneOnline, [this]() {
         qInfo(DaemonLog) << "We are now online!";
     });
 
@@ -204,7 +204,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     // fring
     if (fring->initialize()) {
-        QObject::connect(fring, &Fring::homeButtonChanged, this, [this](bool state) {
+        QObject::connect(fring, &Fring::homeButtonChanged, [this](bool state) {
             KirbyMessage msg("policy/homebutton/STATE_CHANGED", QJsonObject {
                                      { "id", "home" },
                                      { "state", state },
@@ -212,7 +212,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             kirby->sendMessage(msg);
         });
 
-        QObject::connect(fring, &Fring::batteryStateChanged, this, [this](float level, float chargeCurrent) {
+        QObject::connect(fring, &Fring::batteryStateChanged, [this](float level, float chargeCurrent) {
             KirbyMessage msg("policy/battery/STATE_CHANGED", QJsonObject {
                                      { "level", level },
                                      { "chargeCurrent", chargeCurrent },
@@ -220,14 +220,14 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             kirby->sendMessage(msg);
         });
 
-        QObject::connect(fring, &Fring::ambientLightChanged, this, [this](float value) {
+        QObject::connect(fring, &Fring::ambientLightChanged, [this](float value) {
             KirbyMessage msg("policy/battery/AMBIENT_LIGHT_CHANGED", QJsonObject {
                                      { "value", value },
                                  });
             kirby->sendMessage(msg);
         });
 
-        QObject::connect(fring, &Fring::logMessageReceived, this, [this](const QString &message) {
+        QObject::connect(fring, &Fring::logMessageReceived, [this](const QString &message) {
             qInfo(DaemonLog) << "Message from fring:" << message;
         });
 

@@ -53,7 +53,7 @@ void GPIO::setDirection(Direction io)
         openValueFile(QFile::ReadOnly);
 
         auto sn = new QSocketNotifier(valueFile.handle(), QSocketNotifier::Exception, this);
-        QObject::connect(sn, &QSocketNotifier::activated, this, [this](int fd) {
+        QObject::connect(sn, &QSocketNotifier::activated, [this](int fd) {
             Q_UNUSED(fd);
             valueFile.reset();
             auto buf = valueFile.readAll();

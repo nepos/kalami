@@ -216,16 +216,16 @@ bool Updater::install()
 
     thread = new UpdateThread(this);
 
-    QObject::connect(thread, &UpdateThread::succeeded, this, [this]() {
+    QObject::connect(thread, &UpdateThread::succeeded, [this]() {
         machine->setAltBootConfig();
         emit updateSucceeded();
     });
 
-    QObject::connect(thread, &UpdateThread::failed, this, [this]() {
+    QObject::connect(thread, &UpdateThread::failed, [this]() {
         emit updateFailed();
     });
 
-    QObject::connect(thread, &UpdateThread::progress, this, [this](float v) {
+    QObject::connect(thread, &UpdateThread::progress, [this](float v) {
         emit updateProgress(v);
     });
 
@@ -323,7 +323,7 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
     decoder.SetMaximumTargetFileSize(output.maxSize());
     decoder.StartDecoding(buf, dict.size(), output.map(), output.maxSize());
 
-    QObject::connect(reply, &QNetworkReply::readyRead, this, [this, &loop, &decoder, &error]() {
+    QObject::connect(reply, &QNetworkReply::readyRead, [this, &loop, &decoder, &error]() {
         QNetworkReply *reply = (QNetworkReply *) sender();
 
         if (reply->error() != QNetworkReply::NoError) {
@@ -352,7 +352,7 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
         loop.quit();
     });
 
-    QObject::connect(reply, &QNetworkReply::finished, this, [this, &loop, &decoder, &ret, &error]() {
+    QObject::connect(reply, &QNetworkReply::finished, [this, &loop, &decoder, &ret, &error]() {
         if (!error)
             decoder.FinishDecoding();
 
@@ -360,7 +360,7 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
         loop.quit();
     });
 
-    QObject::connect(reply, &QNetworkReply::downloadProgress, this, [this](qint64 bytesReceived, qint64 bytesTotal) {
+    QObject::connect(reply, &QNetworkReply::downloadProgress, [this](qint64 bytesReceived, qint64 bytesTotal) {
         emitProgress(true, (float) bytesReceived / (float) bytesTotal);
     });
 
@@ -399,7 +399,7 @@ bool UpdateThread::downloadFullImage(const QUrl &url, const QString &outputPath)
 
     qInfo(UpdaterLog) << "Downloading full image from" << url;
 
-    QObject::connect(reply, &QNetworkReply::readyRead, this, [this, &output]() {
+    QObject::connect(reply, &QNetworkReply::readyRead, [this, &output]() {
         QNetworkReply *reply = (QNetworkReply *) sender();
 
         if (reply->error() != QNetworkReply::NoError) {
@@ -422,12 +422,12 @@ bool UpdateThread::downloadFullImage(const QUrl &url, const QString &outputPath)
         loop.quit();
     });
 
-    QObject::connect(reply, &QNetworkReply::finished, this, [this, &loop, &ret]() {
+    QObject::connect(reply, &QNetworkReply::finished, [this, &loop, &ret]() {
         ret = true;
         loop.quit();
     });
 
-    QObject::connect(reply, &QNetworkReply::downloadProgress, this, [this](qint64 bytesReceived, qint64 bytesTotal) {
+    QObject::connect(reply, &QNetworkReply::downloadProgress, [this](qint64 bytesReceived, qint64 bytesTotal) {
         emitProgress(true, (float) bytesReceived / (float) bytesTotal);
     });
 
