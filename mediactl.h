@@ -14,6 +14,7 @@ public:
 
     enum Config {
         UYVY8_2X8_1920x1080,
+        UYVY8_2X8_2592x1944,
     };
 
     bool initialize();

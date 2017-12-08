@@ -8,7 +8,7 @@ MediaCtl::MediaCtl(int index, QObject *parent) : QObject(parent), sensorNames()
 {
     mediaDevice = "/dev/media" + QString::number(index);
     sensorNames << "ov5640 1-003c";
-    sensorNames << "ov5640 1-003x"; // !!
+    sensorNames << "ov5640 1-004c";
 }
 
 bool MediaCtl::initialize()
@@ -63,6 +63,9 @@ bool MediaCtl::setConfig(int index, enum Config config)
     switch (config) {
     case UYVY8_2X8_1920x1080:
         configString = "UYVY8_2X8_1920x1080";
+        break;
+    case UYVY8_2X8_2592x1944:
+        configString = "UYVY8_2X8_2592x1944";
         break;
     default:
         qWarning(MediaCtlLog) << "Unsupported config" << config;
