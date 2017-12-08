@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QProcess>
 #include <QtCore/QLoggingCategory>
 
 Q_DECLARE_LOGGING_CATEGORY(MachineLog)
@@ -51,7 +52,12 @@ public:
 
     bool eligibleForUpdate() const;
     bool setAltBootConfig() const;
-    bool verifyBootConfig();
+    bool verifyBootConfig() const;
+
+    void bootstrapInternalMemory();
+
+signals:
+    void bootstrapInternalMemoryFinished(bool success);
 
 private:
     enum Model model;
@@ -72,4 +78,5 @@ private:
     QString altRootfsDevice;
     QString bootConfigDevice;
     QString bootDevPrefix;
+    QProcess bootstrapProcess;
 };

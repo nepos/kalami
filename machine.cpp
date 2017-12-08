@@ -11,10 +11,17 @@
 
 Q_LOGGING_CATEGORY(MachineLog, "Machine")
 
-Machine::Machine(QObject *parent) : QObject(parent)
+Machine::Machine(QObject *parent) :
+    QObject(parent),
+    bootstrapProcess(this)
 {
     struct utsname uts;
     int ret;
+
+    QObject::connect(&bootstrapProcess, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+                     [this](int exitCode, QProcess::ExitStatus exitStatus) {
+        emit bootstrapInternalMemoryFinished(exitCode == 0 && exitStatus == QProcess::NormalExit);
+    });
 
     ret = uname(&uts);
     if (ret < 0)
@@ -173,7 +180,7 @@ bool Machine::setAltBootConfig() const
     return true;
 }
 
-bool Machine::verifyBootConfig()
+bool Machine::verifyBootConfig() const
 {
     QFile bootConfigFile(bootConfigDevice);
 
@@ -205,6 +212,12 @@ bool Machine::verifyBootConfig()
     bootConfigFile.close();
 
     return true;
+}
+
+void Machine::bootstrapInternalMemory()
+{
+    bootstrapProcess.kill();
+    bootstrapProcess.start("/app/bin/bootstrap.sh", QStringList());
 }
 
 void Machine::suspend()

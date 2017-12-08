@@ -56,6 +56,10 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     fring->setLedOff(1);
     mixer->setMasterVolume(0.0);
 
+    //Machine
+    QObject::connect(machine, &Machine::bootstrapInternalMemoryFinished, this, [this](bool success) {
+    });
+
     // Updater logic
     QObject::connect(updater, &Updater::updateAvailable, this, [this](const QString &version) {
         qInfo(DaemonLog) << "New update available, version" << version;
