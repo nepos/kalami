@@ -43,6 +43,8 @@ public:
     const QString &getCurrentRootfsDevice() const { return currentRootfsDevice; }
     const QString &getAltBootDevice()       const { return altBootDevice;   }
     const QString &getAltRootfsDevice()     const { return altRootfsDevice; }
+    const BootSource &getBootSource()       const { return bootSource; }
+    const BootConfig &getBootConfig()       const { return currentBootConfig; }
 
     void setDeviceSerial(const QString &serial);
 
@@ -51,6 +53,7 @@ public:
     void powerOff();
 
     bool eligibleForUpdate() const;
+    bool isTentativeBoot() const;
     bool setAltBootConfig() const;
     bool verifyBootConfig() const;
 

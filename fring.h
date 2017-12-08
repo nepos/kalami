@@ -21,6 +21,9 @@ public:
     bool initialize();
     const QString &getDeviceSerial();
 
+    int getFirmwareVersion() const { return firmwareVersion; }
+    uint32_t getHardwareErrors() const { return hardwareErrors; }
+
 signals:
     void homeButtonChanged(bool state);
     void ambientLightChanged(float value);

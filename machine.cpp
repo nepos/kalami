@@ -180,6 +180,29 @@ bool Machine::setAltBootConfig() const
     return true;
 }
 
+bool Machine::isTentativeBoot() const
+{
+    QFile bootConfigFile(bootConfigDevice);
+
+    if (!bootConfigFile.exists())
+        return false;
+
+    if (!bootConfigFile.open(QIODevice::ReadOnly))
+        return false;
+
+    char b;
+    bootConfigFile.read(&b, sizeof(b));
+    bootConfigFile.reset();
+
+    if (b == 'A' && currentBootConfig != Machine::BOOTCONFIG_A)
+        return true;
+
+    if (b == 'B' && currentBootConfig != Machine::BOOTCONFIG_B)
+        return true;
+
+    return false;
+}
+
 bool Machine::verifyBootConfig() const
 {
     QFile bootConfigFile(bootConfigDevice);
