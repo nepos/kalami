@@ -127,13 +127,13 @@ bool ALSAMixer::setMasterVolume(float volume)
 {
     Q_D(ALSAMixer);
 
+    // linearize
+    volume = qPow(volume, 0.3f);
+
     float val;
 
     // scale to ALSA mixer control range
     val = d->masterMin + (volume * (float) (d->masterMax - d->masterMin));
-
-    // linearize
-    val = qPow(val, 0.3f);
 
     // scale to hardware limits
     val *= d->masterScale;
