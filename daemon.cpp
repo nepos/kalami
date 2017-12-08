@@ -49,7 +49,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     nubbock(new Nubbock(this)),
     pendingWifiMessage(NULL),
     pendingWifiId(QString()),
-    pendingUpdateCheckMessage(NULL)
+    pendingUpdateCheckMessage(NULL),
+    pendingBootstrapInternalMessage(NULL)
 {
     // Defaults
     fring->setLedOff(0);
@@ -58,6 +59,12 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     //Machine
     QObject::connect(machine, &Machine::bootstrapInternalMemoryFinished, [this](bool success) {
+        if (pendingBootstrapInternalMessage) {
+            pendingBootstrapInternalMessage->setResponseError(!success);
+            kirby->sendMessage(*pendingBootstrapInternalMessage);
+            delete pendingBootstrapInternalMessage;
+            pendingBootstrapInternalMessage = NULL;
+        }
     });
 
     // Updater logic
@@ -338,6 +345,30 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
 
         KirbyMessage msg("policy/suspend/RESUMED");
         kirby->sendMessage(msg);
+    }
+
+    if (message.type() == "policy/bootstrap/BOOTSTRAP_INTERNAL_MEMORY") {
+        cancelResponse(&pendingBootstrapInternalMessage);
+        pendingBootstrapInternalMessage = message.makeResponse();
+    }
+
+    if (message.type() == "policy/device_information/DEVICE_INFORMATION") {
+        KirbyMessage *response = message.makeResponse();
+
+        QJsonObject info {
+            { "model", machine->getModelName() },
+            { "osVersion", QString::number(machine->getOsVersionNumber()) },
+            { "osChannel", machine->getOsChannel() },
+            { "bootSource", (machine->getBootSource() == Machine::BOOTSOURCE_INTERNAL ? "internal" : "external") },
+            { "bootConfig", (machine->getBootConfig() == Machine::BOOTCONFIG_A ? "A" : "B") },
+            { "tentativeBoot", machine->isTentativeBoot() },
+            { "firmwareVersion", fring->getFirmwareVersion() },
+            { "hardwareErrors", QString::number(fring->getHardwareErrors()) },
+        };
+
+        response->setPayload(info);
+        kirby->sendMessage(*response);
+        delete response;
     }
 
     Q_UNUSED(ret);

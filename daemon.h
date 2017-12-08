@@ -68,4 +68,5 @@ private:
     QString pendingWifiId;
 
     KirbyMessage *pendingUpdateCheckMessage;
+    KirbyMessage *pendingBootstrapInternalMessage;
 };
