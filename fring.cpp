@@ -292,11 +292,22 @@ bool Fring::readBatteryStatus()
     qInfo(FringLog) << QString::asprintf("Status 0x%02x", rdCmd.batteryStatus.status);
 
     if (batteryLevel != rdCmd.batteryStatus.level ||
-            batteryChargeCurrent != rdCmd.batteryStatus.chargeCurrent) {
+            batteryChargeCurrent != rdCmd.batteryStatus.chargeCurrent ||
+            batteryTemperature != rdCmd.batteryStatus.temp ||
+            batteryTimeToEmpty != rdCmd.batteryStatus.averageTimeToEmpty ||
+            batteryTimeToFull != rdCmd.batteryStatus.averageTimeToFull) {
+
         batteryLevel = rdCmd.batteryStatus.level;
         batteryChargeCurrent = rdCmd.batteryStatus.chargeCurrent;
+        batteryTemperature = rdCmd.batteryStatus.temp;
+        batteryTimeToEmpty = rdCmd.batteryStatus.averageTimeToEmpty;
+        batteryTimeToFull = rdCmd.batteryStatus.averageTimeToFull;
 
-        emit batteryStateChanged(255.0f / (float) batteryLevel, (float) batteryChargeCurrent * 0.05f);
+        emit batteryStateChanged(255.0f / (float) batteryLevel,
+                                 (float) batteryChargeCurrent * 0.05f,
+                                 (float) batteryTemperature  * 0.5f,
+                                 (float) batteryTimeToEmpty,
+                                 (float) batteryTimeToFull);
     }
 
     if (!batteryLogFileName.isEmpty()) {

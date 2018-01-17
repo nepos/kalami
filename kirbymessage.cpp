@@ -14,6 +14,9 @@ KirbyMessage::KirbyMessage(const QString type, const QJsonValue payload, const Q
 {
     if (!_meta["commType"].isString())
         _meta["commType"] = "one-way";
+
+    if (!_meta["destination"].isString())
+        _meta["destination"] = "POLYPHANT_CLIENT";
 }
 
 void KirbyMessage::setPayload(const QJsonValue &payload)

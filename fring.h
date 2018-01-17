@@ -27,7 +27,7 @@ public:
 signals:
     void homeButtonChanged(bool state);
     void ambientLightChanged(float value);
-    void batteryStateChanged(float level, float chargeCurrent);
+    void batteryStateChanged(float level, float chargeCurrent, float temperature, float timeToEmpty, float timeToFull);
     void logMessageReceived(const QString &message);
 
 public slots:
@@ -58,6 +58,10 @@ private:
     int batteryPresent;
     int batteryLevel;
     int batteryChargeCurrent;
+    int batteryTemperature;
+    int batteryTimeToEmpty;
+    int batteryTimeToFull;
+
     int ambientLightValue;
     uint32_t hardwareErrors;
 

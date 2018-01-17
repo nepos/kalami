@@ -107,19 +107,19 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject::connect(updater, &Updater::updateSucceeded, [this]() {
         qInfo(DaemonLog) << "Update succeeded!";
         KirbyMessage msg("policy/update/UPDATE_FINISHED",
-                             QJsonObject{{ "updateSuccessful", true }});
+                         QJsonObject{{ "updateSuccessful", true }});
     });
 
     QObject::connect(updater, &Updater::updateFailed, [this]() {
         qInfo(DaemonLog) << "Update failed!";
         KirbyMessage msg("policy/update/UPDATE_FINISHED",
-                             QJsonObject{{ "updateSuccessful", false }});
+                         QJsonObject{{ "updateSuccessful", false }});
     });
 
     QObject::connect(updater, &Updater::updateProgress, [this](float progress) {
         qInfo(DaemonLog) << "Updater progress:" << progress;
         KirbyMessage msg("policy/update/UPDATE_PROGRESS",
-                             QJsonObject{{ "progress", progress }});
+                         QJsonObject{{ "progress", progress }});
         kirby->sendMessage(msg);
     });
 
@@ -142,7 +142,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
             kirby->sendMessage(msg);
         }
-        });
+    });
 
     accelerometer->emitCurrent();
 
@@ -156,8 +156,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             return;
 
         KirbyMessage msg(value > 0 ?
-                                 "policy/rotary/CW" :
-                                 "policy/rotary/CCW");
+                             "policy/rotary/CW" :
+                             "policy/rotary/CCW");
         kirby->sendMessage(msg);
     });
 
@@ -213,24 +213,27 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     if (fring->initialize()) {
         QObject::connect(fring, &Fring::homeButtonChanged, [this](bool state) {
             KirbyMessage msg("policy/homebutton/STATE_CHANGED", QJsonObject {
-                                     { "id", "home" },
-                                     { "state", state },
-                                 });
+                                 { "id", "home" },
+                                 { "state", state },
+                             });
             kirby->sendMessage(msg);
         });
 
-        QObject::connect(fring, &Fring::batteryStateChanged, [this](float level, float chargeCurrent) {
+        QObject::connect(fring, &Fring::batteryStateChanged, [this](float level, float chargeCurrent, float temperature, float timeToEmpty, float timeToFull) {
             KirbyMessage msg("policy/battery/STATE_CHANGED", QJsonObject {
-                                     { "level", level },
-                                     { "chargeCurrent", chargeCurrent },
-                                 });
+                                 { "level", level },
+                                 { "chargingCurrent", chargeCurrent },
+                                 { "temperature", temperature },
+                                 { "timeToEmpty", timeToEmpty },
+                                 { "timeToFull", timeToFull },
+                             });
             kirby->sendMessage(msg);
         });
 
         QObject::connect(fring, &Fring::ambientLightChanged, [this](float value) {
             KirbyMessage msg("policy/battery/AMBIENT_LIGHT_CHANGED", QJsonObject {
-                                     { "value", value },
-                                 });
+                                 { "value", value },
+                             });
             kirby->sendMessage(msg);
         });
 
@@ -287,11 +290,11 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
 
         if (payload["mode"] == "flash")
             ret = fring->setLedFlashing(id, color["red"].toDouble(), color["green"].toDouble(), color["blue"].toDouble(),
-                                        payload["onPhase"].toDouble(), payload["offPhase"].toDouble());
+                    payload["onPhase"].toDouble(), payload["offPhase"].toDouble());
 
         if (payload["mode"] == "pulse")
             ret = fring->setLedPulsating(id, color["red"].toDouble(), color["green"].toDouble(), color["blue"].toDouble(),
-                                         payload["frequency"].toDouble());
+                    payload["frequency"].toDouble());
 
         KirbyMessage *response = message.makeResponse();
         response->setResponseError(!ret);
