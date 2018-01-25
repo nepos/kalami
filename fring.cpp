@@ -291,12 +291,12 @@ bool Fring::readBatteryStatus()
         return false;
 
     qInfo(FringLog) << "Battery status upate:";
-    qInfo(FringLog) << QString::asprintf("  Charge current       : %.2f A", rdCmd.batteryStatus.chargeCurrent * 0.05f);
-    qInfo(FringLog) << QString::asprintf("  Level                : %d%%", rdCmd.batteryStatus.level);
-    qInfo(FringLog) << QString::asprintf("  Temperature          : %d degree celcius", rdCmd.batteryStatus.temp);
-    qInfo(FringLog) << QString::asprintf("  Remaining capacity   : %d mAh", rdCmd.batteryStatus.remainingCapacity);
-    qInfo(FringLog) << QString::asprintf("  Average time to full : %d min", rdCmd.batteryStatus.averageTimeToFull);
-    qInfo(FringLog) << QString::asprintf("              to empty : %d min", rdCmd.batteryStatus.averageTimeToEmpty);
+    qInfo(FringLog) << QString::asprintf("  Charge current        : %.2f A", rdCmd.batteryStatus.chargeCurrent * 0.05f);
+    qInfo(FringLog) << QString::asprintf("  Level                 : %d%%", rdCmd.batteryStatus.level);
+    qInfo(FringLog) << QString::asprintf("  Temperature           : %d degree celcius", rdCmd.batteryStatus.temp);
+    qInfo(FringLog) << QString::asprintf("  Remaining capacity    : %d mAh", rdCmd.batteryStatus.remainingCapacity);
+    qInfo(FringLog) << QString::asprintf("  Average time to full  : %d min", rdCmd.batteryStatus.averageTimeToFull);
+    qInfo(FringLog) << QString::asprintf("              to empty  : %d min", rdCmd.batteryStatus.averageTimeToEmpty);
     qInfo(FringLog) << QString::asprintf("  Status 0x%02x", rdCmd.batteryStatus.status);
 
     if (batteryLevel != rdCmd.batteryStatus.level ||
