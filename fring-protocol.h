@@ -97,7 +97,7 @@ struct FringCommandRead {
             int8_t chargeCurrent;
             uint8_t level;
             int8_t temp;
-            uint8_t status;
+            uint16_t status;
             uint16_t remainingCapacity;
             uint16_t averageTimeToEmpty;
             uint16_t averageTimeToFull;

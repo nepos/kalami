@@ -297,7 +297,7 @@ bool Fring::readBatteryStatus()
     qInfo(FringLog) << QString::asprintf("  Remaining capacity    : %d mAh", rdCmd.batteryStatus.remainingCapacity);
     qInfo(FringLog) << QString::asprintf("  Average time to full  : %d min", rdCmd.batteryStatus.averageTimeToFull);
     qInfo(FringLog) << QString::asprintf("              to empty  : %d min", rdCmd.batteryStatus.averageTimeToEmpty);
-    qInfo(FringLog) << QString::asprintf("  Status 0x%02x", rdCmd.batteryStatus.status);
+    qInfo(FringLog) << QString::asprintf("  Status                : 0x%04x", rdCmd.batteryStatus.status);
 
     if (batteryLevel != rdCmd.batteryStatus.level ||
             batteryChargeCurrent != rdCmd.batteryStatus.chargeCurrent ||
