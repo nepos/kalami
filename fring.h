@@ -23,6 +23,8 @@ public:
 
     int getFirmwareVersion() const { return firmwareVersion; }
     uint32_t getHardwareErrors() const { return hardwareErrors; }
+    int getBoardRevisionA() const { return boardRevisionA; }
+    int getBoardRevisionB() const { return boardRevisionB; }
 
 signals:
     void homeButtonChanged(bool state);

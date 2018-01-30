@@ -367,6 +367,9 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
             { "tentativeBoot", machine->isTentativeBoot() },
             { "firmwareVersion", fring->getFirmwareVersion() },
             { "hardwareErrors", QString::number(fring->getHardwareErrors()) },
+            { "deviceSerial", fring->getDeviceSerial() },
+            { "boardRevisionA", fring->getBoardRevisionA() },
+            { "boardRevisionB", fring->getBoardRevisionB() },
         };
 
         response->setPayload(info);
