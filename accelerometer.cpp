@@ -40,13 +40,13 @@ void Accelerometer::update(int type, int code, int value)
     if (type != EV_ABS || code != ABS_X)
         return;
 
-    if (currentOrientation != Orientation::Laying && value < 250) {
+    if (currentOrientation != Orientation::Laying && value < 240) {
         currentOrientation = Orientation::Laying;
         emit orientationChanged(currentOrientation);
         return;
     }
 
-    if (currentOrientation != Orientation::Standing && value > 250) {
+    if (currentOrientation != Orientation::Standing && value > 260) {
         currentOrientation = Orientation::Standing;
         emit orientationChanged(currentOrientation);
         return;
