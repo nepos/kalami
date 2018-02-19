@@ -340,13 +340,13 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
         delete response;
     }
 
-    if (message.type() == "policy/suspend/SUSPEND") {
+    if (message.type() == "policy/power-management/SUSPEND") {
         float v = displayBrightness->getBrightness();
         displayBrightness->setBrightness(0.0);
         machine->suspend();
         displayBrightness->setBrightness(v);
 
-        KirbyMessage msg("policy/suspend/RESUMED");
+        KirbyMessage msg("policy/power-management/RESUMED");
         kirby->sendMessage(msg);
     }
 
