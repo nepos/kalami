@@ -89,15 +89,15 @@ struct FringCommandRead {
             uint8_t ambientLightValue;
             uint32_t status;
             uint32_t hardwareErrors;
-            int8_t temp0;
-            int8_t temp1;
-            int8_t temp2;
+            uint8_t temp0;
+            uint8_t temp1;
+            uint8_t temp2;
         } deviceStatus;
 
         struct {
             int8_t chargeCurrent;
             uint8_t level;
-            int8_t temp;
+            uint8_t temp;
             uint16_t status;
             uint16_t remainingCapacity;
             uint16_t averageTimeToEmpty;
