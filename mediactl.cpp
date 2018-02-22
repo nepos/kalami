@@ -27,8 +27,13 @@ bool MediaCtl::invokeBinary(const QStringList extraArgs)
     proc.start("/usr/bin/media-ctl", args);
     proc.waitForFinished();
 
-    return proc.exitStatus() == QProcess::NormalExit &&
-            proc.exitCode() == 0;
+    auto ret = proc.exitStatus() == QProcess::NormalExit && proc.exitCode() == 0;
+    if (!ret) {
+        qInfo(MediaCtlLog) << "Error while calling media-ctl:";
+        qInfo(MediaCtlLog) << proc.readAll();
+    }
+
+    return ret;
 }
 
 bool MediaCtl::reset()
