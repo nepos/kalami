@@ -67,10 +67,10 @@ bool MediaCtl::setConfig(int index, enum Config config)
 
     switch (config) {
     case UYVY8_2X8_1920x1080:
-        configString = "UYVY8_2X8_1920x1080";
+        configString = "UYVY8_2X8/1920x1080";
         break;
     case UYVY8_2X8_2592x1944:
-        configString = "UYVY8_2X8_2592x1944";
+        configString = "UYVY8_2X8/2592x1944";
         break;
     default:
         qWarning(MediaCtlLog) << "Unsupported config" << config;
