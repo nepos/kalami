@@ -251,14 +251,11 @@ bool Fring::readDeviceStatus()
     uint32_t status = qFromLittleEndian(rdCmd.deviceStatus.status);
 
     bool home = !!(status & FRING_DEVICE_STATUS_HOME_BUTTON);
-    bool battery = !!(status & FRING_DEVICE_STATUS_BATTERY_PRESENT);
 
     if (homeButtonState != home) {
         homeButtonState = !!home;
         emit homeButtonChanged(homeButtonState);
     }
-
-    batteryPresent = !!battery;
 
     if (ambientLightValue == -1 ||
             ambientLightValue != rdCmd.deviceStatus.ambientLightValue) {
@@ -269,6 +266,8 @@ bool Fring::readDeviceStatus()
     hardwareErrors = qFromLittleEndian(rdCmd.deviceStatus.hardwareErrors);
     if (hardwareErrors)
         qWarning(FringLog) << "Detected hardware errors: " << QString::number(hardwareErrors, 16);
+
+    batteryPresent = !(hardwareErrors & (FRING_HWERR_BATTERY_NOT_RESPONDING | FRING_HWERR_BATTERY_INIT_ERROR));
 
     qInfo(FringLog) << "Device status upate:";
     qInfo(FringLog) << QString::asprintf("  Status                : 0x%08x", rdCmd.deviceStatus.status);
