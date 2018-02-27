@@ -16,7 +16,7 @@ bool MediaCtl::initialize()
     return reset() && makeLinks();
 }
 
-bool MediaCtl::invokeBinary(const QStringList extraArgs)
+bool MediaCtl::invokeBinary(const QStringList &extraArgs)
 {
     QStringList args;
 

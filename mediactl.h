@@ -23,7 +23,7 @@ public:
 private:
     QString mediaDevice;
     QStringList sensorNames;
-    bool invokeBinary(const QStringList extraArgs);
+    bool invokeBinary(const QStringList &extraArgs);
     bool reset();
     bool makeLinks();
 };
