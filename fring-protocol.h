@@ -34,7 +34,8 @@ enum {
 };
 
 enum {
-    FRING_DEVICE_STATUS_HOME_BUTTON     = 0x01
+    FRING_DEVICE_STATUS_HOME_BUTTON     = 0x01,
+    FRING_DEVICE_STATUS_RTC_WAKEUP      = 0x02
 };
 
 enum {
