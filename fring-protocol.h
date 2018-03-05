@@ -13,6 +13,7 @@ enum {
     FRING_REG_READ_FIRMWARE_UPDATE_RESULT = 0x09,
     FRING_REG_READ_LOG_MESSAGE            = 0x0a,
     FRING_REG_SET_SERIAL                  = 0x0b,
+    FRING_REG_SET_SOM_SUSPEND             = 0x0c,
 };
 
 enum {
@@ -34,8 +35,7 @@ enum {
 };
 
 enum {
-    FRING_DEVICE_STATUS_HOME_BUTTON     = 0x01,
-    FRING_DEVICE_STATUS_RTC_WAKEUP      = 0x02
+    FRING_DEVICE_STATUS_HOME_BUTTON     = 0x01
 };
 
 enum {
@@ -157,6 +157,10 @@ struct FringCommandWrite {
             uint32_t crc;
             char payload[0];
         } firmwareUpdate;
+
+        struct {
+            uint32_t wakeup_time;
+        } somSuspend;
 
         struct {
             uint8_t serial[12];
