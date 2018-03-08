@@ -25,6 +25,10 @@
 #include <connman-qt5/networkmanager.h>
 #include <connman-qt5/networktechnology.h>
 
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QUrlQuery>
+
 Q_LOGGING_CATEGORY(ConnmanLog, "Connman")
 
 struct ConnmanPrivate {
@@ -35,6 +39,13 @@ struct ConnmanPrivate {
     QString cachedPassphrase;
     QString cachedWifiId;
     QString cachedWifiState;
+
+    QJsonObject testWifis;
+    int testIndex;
+    QTimer *testTimer;
+    QNetworkReply *testReply;
+    QNetworkAccessManager *testNetworkAccessManager;
+    QCryptographicHash *testHash;
 };
 
 void Connman::connectToKnownWifi()
@@ -75,7 +86,7 @@ void Connman::iterateServices()
             { "strength", service->strength() / 100.0 },
         };
 
-        qInfo(ConnmanLog) << "Wifi" << service->name() << "Strength" << service->strength() << "State" << service->state();
+        //qInfo(ConnmanLog) << "Wifi" << service->name() << "Strength" << service->strength() << "State" << service->state();
 
         if (id == d->cachedWifiId && service->state() != d->cachedWifiState) {
             QJsonObject wifi {
@@ -118,6 +129,65 @@ void Connman::enableWifi()
     }
 }
 
+void Connman::testDownload()
+{
+    Q_D(Connman);
+
+    if (d->testReply) {
+        d->testReply->abort();
+        d->testReply->deleteLater();
+    }
+
+    qInfo() << "Attempting download";
+
+    QNetworkRequest req(QUrl("http://zonque.de/test.bin"));
+    d->testReply = d->testNetworkAccessManager->get(req);
+    d->testReply->setReadBufferSize(1024 * 1024);
+
+    d->testHash->reset();
+
+    QObject::connect(d->testReply, &QNetworkReply::readyRead, [this]() {
+        Q_D(Connman);
+
+        if (d->testReply->error() != QNetworkReply::NoError) {
+            qInfo(ConnmanLog) << "Error downloading file: " << d->testReply->error();
+            d->testReply->abort();
+            d->testReply = NULL;
+            return;
+        }
+
+        const QByteArray data = d->testReply->readAll();
+        d->testHash->addData(data);
+    });
+
+    connect(d->testReply, static_cast<void(QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error),
+          [this](QNetworkReply::NetworkError code){
+        Q_D(Connman);
+
+        qInfo(ConnmanLog) << "Error downloading" << d->testReply->url() << ":" << d->testReply->errorString();
+        d->testReply->abort();
+        d->testReply = NULL;
+        nextTest();
+    });
+
+    QObject::connect(d->testReply, &QNetworkReply::finished, [this]() {
+        Q_D(Connman);
+
+        if (d->testHash->result().toHex() == "b6699178c2d3f15240ad26804455077a46fce01074605857d083d9f69da87a4ee70a49d515a89b4a4eb44318c465fe4126c4fb98eaf89d45a12c914ce9eeb851") {
+            QStringList keys = d->testWifis.keys();
+            QString ssid = keys[d->testIndex];
+
+            qInfo(ConnmanLog) << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX SSID" << ssid << "OKAY!";
+        } else {
+            qInfo(ConnmanLog) << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX WRONG SHA512!?" << d->testHash->result().toHex();
+        }
+
+        d->testReply = NULL;
+
+        nextTest();
+    });
+}
+
 void Connman::checkState()
 {
     Q_D(Connman);
@@ -127,10 +197,53 @@ void Connman::checkState()
     if (d->manager->state() == "offline") {
         d->manager->setOfflineMode(false);
     } else if (d->manager->state() ==  "idle" || d->manager->state() == "ready") {
-        enableWifi();
+        //enableWifi();
     } else if (d->manager->state() == "online") {
-        emit goneOnline();
+        //emit goneOnline();
+
+        testDownload();
     }
+}
+
+bool Connman::testConnect(int index)
+{
+    Q_D(Connman);
+
+    QStringList keys = d->testWifis.keys();
+    QString ssid = keys[index];
+    QString passphrase = d->testWifis[ssid].toString();
+
+    qInfo(ConnmanLog) << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX CONNECTING TO" << ssid << "PW" << passphrase;
+    d->cachedPassphrase = passphrase;
+
+    //d->manager->disconnectServices();
+
+    d->testTimer->stop();
+    d->testTimer->start(30000);
+
+    foreach (NetworkService *service, d->manager->getServices("wifi")) {
+        if (service->name() == ssid) {
+            service->requestConnect();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Connman::nextTest()
+{
+    Q_D(Connman);
+
+    d->testIndex++;
+    d->testIndex %= d->testWifis.keys().length();
+
+//    d->manager->setOfflineMode(true);
+//    QThread::sleep(2);
+//    d->manager->setOfflineMode(false);
+//    enableWifi();
+
+    return testConnect(d->testIndex);
 }
 
 Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
@@ -142,6 +255,13 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
     d->cachedWifiId = QString();
     d->cachedPassphrase = QString();
     d->cachedWifiState = QString();
+
+    d->testIndex = 0;
+    d->testWifis = QJsonObject();
+    d->testTimer = new QTimer(this);
+    d->testNetworkAccessManager = new QNetworkAccessManager(this);
+    d->testReply = NULL;
+    d->testHash = new QCryptographicHash(QCryptographicHash::Sha512);
 
     QObject::connect(d->manager, &NetworkManager::stateChanged, [this, d]() {
         checkState();
@@ -157,16 +277,34 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
         if (!d->manager->offlineMode())
             enableWifi();
 
-        iterateServices();
+        //iterateServices();
     });
 
     QObject::connect(d->manager, &NetworkManager::servicesChanged, [this]() {
-        iterateServices();
+        //iterateServices();
     });
 
     d->agent = new UserAgent(this);
     d->agent->setAgentPath("/io/nepos/ConnmanAgent");
     QObject::connect(d->agent, &UserAgent::userInputRequested, this, &Connman::agentPassphraseRequested);
+
+
+    d->testTimer->setSingleShot(true);
+    QObject::connect(d->testTimer, &QTimer::timeout, [this, d]() {
+        QStringList keys = d->testWifis.keys();
+        QString ssid = keys[d->testIndex];
+        qInfo(ConnmanLog) << "TIMEOUT waiting for Wifi" << ssid << "to become ready.";
+        nextTest();
+    });
+
+    QFile file("/var/wifis.json");
+    if (file.open(QIODevice::ReadOnly)) {
+        QByteArray data = file.readAll();
+        file.close();
+        d->testWifis = QJsonDocument::fromJson(data).object();
+        d->testIndex = 0;
+        nextTest();
+    }
 }
 
 void Connman::start()
@@ -181,6 +319,8 @@ void Connman::start()
 bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
 {
     Q_D(Connman);
+
+    return false;
 
     d->cachedPassphrase = passphrase;
     d->cachedWifiId = wifiId;
@@ -201,6 +341,8 @@ bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
 bool Connman::disconnectFromWifi(const QString &wifiId)
 {
     Q_D(Connman);
+
+    return false;
 
     foreach (NetworkService *service, d->manager->getServices("wifi")) {
         QString id = kalamiIdForService(service);

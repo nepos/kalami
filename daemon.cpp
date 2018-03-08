@@ -41,20 +41,20 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     rotaryInputDevice(new InputDevice("/dev/input/by-path/platform-rotary-event")),
     connman(new Connman(this)),
     machine(new Machine(this)),
-    mediaCtl(new MediaCtl(0, this)),
-    fring(new Fring()),
-    kirby(new KirbyConnection(uri, this)),
-    updater(new Updater(machine, this)),
-    nfc(new Nfc(this)),
-    nubbock(new Nubbock(this)),
+//    mediaCtl(new MediaCtl(0, this)),
+//    fring(new Fring()),
+//    kirby(new KirbyConnection(uri, this)),
+//    updater(new Updater(machine, this)),
+//    nfc(new Nfc(this)),
+//    nubbock(new Nubbock(this)),
     pendingWifiMessage(NULL),
     pendingWifiId(QString()),
     pendingUpdateCheckMessage(NULL),
     pendingBootstrapInternalMessage(NULL)
 {
     // Defaults
-    fring->setLedOff(0);
-    fring->setLedOff(1);
+//    fring->setLedOff(0);
+//    fring->setLedOff(1);
     mixer->setMasterVolume(0.0);
 
     //Machine
@@ -67,61 +67,61 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         }
     });
 
-    // Updater logic
-    QObject::connect(updater, &Updater::updateAvailable, [this](const QString &version) {
-        qInfo(DaemonLog) << "New update available, version" << version;
+//    // Updater logic
+//    QObject::connect(updater, &Updater::updateAvailable, [this](const QString &version) {
+//        qInfo(DaemonLog) << "New update available, version" << version;
 
-        if (pendingUpdateCheckMessage) {
-            pendingUpdateCheckMessage->setPayload(QJsonObject({{ "available", true }}));
-            kirby->sendMessage(*pendingUpdateCheckMessage);
-            delete pendingUpdateCheckMessage;
-            pendingUpdateCheckMessage = NULL;
-        }
-    });
+//        if (pendingUpdateCheckMessage) {
+//            pendingUpdateCheckMessage->setPayload(QJsonObject({{ "available", true }}));
+//            kirby->sendMessage(*pendingUpdateCheckMessage);
+//            delete pendingUpdateCheckMessage;
+//            pendingUpdateCheckMessage = NULL;
+//        }
+//    });
 
-    QObject::connect(updater, &Updater::alreadyUpToDate, [this]() {
-        qInfo(DaemonLog) << "Already up-to-date!";
+//    QObject::connect(updater, &Updater::alreadyUpToDate, [this]() {
+//        qInfo(DaemonLog) << "Already up-to-date!";
 
-        if (pendingUpdateCheckMessage) {
-            pendingUpdateCheckMessage->setPayload(QJsonObject({{ "available", false }}));
-            kirby->sendMessage(*pendingUpdateCheckMessage);
-            delete pendingUpdateCheckMessage;
-            pendingUpdateCheckMessage = NULL;
-        }
+//        if (pendingUpdateCheckMessage) {
+//            pendingUpdateCheckMessage->setPayload(QJsonObject({{ "available", false }}));
+//            kirby->sendMessage(*pendingUpdateCheckMessage);
+//            delete pendingUpdateCheckMessage;
+//            pendingUpdateCheckMessage = NULL;
+//        }
 
-        // FIXME: more checks should be met before boot is considered verified!
-        machine->verifyBootConfig();
-    });
+//        // FIXME: more checks should be met before boot is considered verified!
+//        machine->verifyBootConfig();
+//    });
 
-    QObject::connect(updater, &Updater::checkFailed, [this]() {
-        qInfo(DaemonLog) << "Update check failed!";
+//    QObject::connect(updater, &Updater::checkFailed, [this]() {
+//        qInfo(DaemonLog) << "Update check failed!";
 
-        if (pendingUpdateCheckMessage) {
-            pendingUpdateCheckMessage->setResponseError(true);
-            kirby->sendMessage(*pendingUpdateCheckMessage);
-            delete pendingUpdateCheckMessage;
-            pendingUpdateCheckMessage = NULL;
-        }
-    });
+//        if (pendingUpdateCheckMessage) {
+//            pendingUpdateCheckMessage->setResponseError(true);
+//            kirby->sendMessage(*pendingUpdateCheckMessage);
+//            delete pendingUpdateCheckMessage;
+//            pendingUpdateCheckMessage = NULL;
+//        }
+//    });
 
-    QObject::connect(updater, &Updater::updateSucceeded, [this]() {
-        qInfo(DaemonLog) << "Update succeeded!";
-        KirbyMessage msg("policy/update/UPDATE_FINISHED",
-                         QJsonObject{{ "updateSuccessful", true }});
-    });
+//    QObject::connect(updater, &Updater::updateSucceeded, [this]() {
+//        qInfo(DaemonLog) << "Update succeeded!";
+//        KirbyMessage msg("policy/update/UPDATE_FINISHED",
+//                         QJsonObject{{ "updateSuccessful", true }});
+//    });
 
-    QObject::connect(updater, &Updater::updateFailed, [this]() {
-        qInfo(DaemonLog) << "Update failed!";
-        KirbyMessage msg("policy/update/UPDATE_FINISHED",
-                         QJsonObject{{ "updateSuccessful", false }});
-    });
+//    QObject::connect(updater, &Updater::updateFailed, [this]() {
+//        qInfo(DaemonLog) << "Update failed!";
+//        KirbyMessage msg("policy/update/UPDATE_FINISHED",
+//                         QJsonObject{{ "updateSuccessful", false }});
+//    });
 
-    QObject::connect(updater, &Updater::updateProgress, [this](float progress) {
-        qInfo(DaemonLog) << "Updater progress:" << progress;
-        KirbyMessage msg("policy/update/UPDATE_PROGRESS",
-                         QJsonObject{{ "progress", progress }});
-        kirby->sendMessage(msg);
-    });
+//    QObject::connect(updater, &Updater::updateProgress, [this](float progress) {
+//        qInfo(DaemonLog) << "Updater progress:" << progress;
+//        KirbyMessage msg("policy/update/UPDATE_PROGRESS",
+//                         QJsonObject{{ "progress", progress }});
+//        kirby->sendMessage(msg);
+//    });
 
     // Accelerometer
     QObject::connect(accelerometer, &Accelerometer::orientationChanged, [this](Accelerometer::Orientation o) {
@@ -162,45 +162,45 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     });
 
     // Connman connection
-    QObject::connect(connman, &Connman::availableWifisUpdated, [this](const QJsonArray &list) {
-        KirbyMessage msg("policy/wifi/SCAN_RESULT", list);
-        kirby->sendMessage(msg);
-    });
+//    QObject::connect(connman, &Connman::availableWifisUpdated, [this](const QJsonArray &list) {
+//        KirbyMessage msg("policy/wifi/SCAN_RESULT", list);
+//        kirby->sendMessage(msg);
+//    });
 
-    QObject::connect(connman, &Connman::wifiChanged, [this](const QJsonObject &wifi, const QString &state) {
-        if (wifi["kalamiId"].toString() != pendingWifiId)
-            return;
+//    QObject::connect(connman, &Connman::wifiChanged, [this](const QJsonObject &wifi, const QString &state) {
+//        if (wifi["kalamiId"].toString() != pendingWifiId)
+//            return;
 
-        if (pendingWifiMessage) {
-            bool send = false;
+//        if (pendingWifiMessage) {
+//            bool send = false;
 
-            if (wifi["online"].toBool()) {
-                pendingWifiMessage->setResponseError(false);
-                send = true;
-            } else if (state == "failure") {
-                pendingWifiMessage->setResponseError(true);
-                send = true;
-            }
+//            if (wifi["online"].toBool()) {
+//                pendingWifiMessage->setResponseError(false);
+//                send = true;
+//            } else if (state == "failure") {
+//                pendingWifiMessage->setResponseError(true);
+//                send = true;
+//            }
 
-            if (send) {
-                kirby->sendMessage(*pendingWifiMessage);
-                delete pendingWifiMessage;
-                pendingWifiMessage = NULL;
-            }
-        }
+//            if (send) {
+//                kirby->sendMessage(*pendingWifiMessage);
+//                delete pendingWifiMessage;
+//                pendingWifiMessage = NULL;
+//            }
+//        }
 
-        KirbyMessage msg("policy/wifi/STATE_CHANGED", wifi);
-        kirby->sendMessage(msg);
-    });
+//        KirbyMessage msg("policy/wifi/STATE_CHANGED", wifi);
+//        kirby->sendMessage(msg);
+//    });
 
-    QObject::connect(connman, &Connman::goneOnline, [this]() {
-        qInfo(DaemonLog) << "We are now online!";
-    });
+//    QObject::connect(connman, &Connman::goneOnline, [this]() {
+//        qInfo(DaemonLog) << "We are now online!";
+//    });
 
     connman->start();
 
     // Websocket connection
-    QObject::connect(kirby, &KirbyConnection::messageReceived, this, &Daemon::kirbyMessageReceived);
+    //QObject::connect(kirby, &KirbyConnection::messageReceived, this, &Daemon::kirbyMessageReceived);
 
     // D-Bus connection
     QDBusConnection bus = QDBusConnection::systemBus();
@@ -210,46 +210,46 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qWarning(DaemonLog) << "D-Bus connection failed:" << bus.lastError();
 
     // fring
-    if (fring->initialize()) {
-        QObject::connect(fring, &Fring::homeButtonChanged, [this](bool state) {
-            KirbyMessage msg("policy/homebutton/STATE_CHANGED", QJsonObject {
-                                 { "id", "home" },
-                                 { "state", state },
-                             });
-            kirby->sendMessage(msg);
-        });
+//    if (fring->initialize()) {
+//        QObject::connect(fring, &Fring::homeButtonChanged, [this](bool state) {
+//            KirbyMessage msg("policy/homebutton/STATE_CHANGED", QJsonObject {
+//                                 { "id", "home" },
+//                                 { "state", state },
+//                             });
+//            kirby->sendMessage(msg);
+//        });
 
-        QObject::connect(fring, &Fring::batteryStateChanged, [this](float level, float chargeCurrent, float temperature, float timeToEmpty, float timeToFull) {
-            KirbyMessage msg("policy/battery/STATE_CHANGED", QJsonObject {
-                                 { "level", level },
-                                 { "chargingCurrent", chargeCurrent },
-                                 { "temperature", temperature },
-                                 { "timeToEmpty", timeToEmpty },
-                                 { "timeToFull", timeToFull },
-                             });
-            kirby->sendMessage(msg);
-        });
+//        QObject::connect(fring, &Fring::batteryStateChanged, [this](float level, float chargeCurrent, float temperature, float timeToEmpty, float timeToFull) {
+//            KirbyMessage msg("policy/battery/STATE_CHANGED", QJsonObject {
+//                                 { "level", level },
+//                                 { "chargingCurrent", chargeCurrent },
+//                                 { "temperature", temperature },
+//                                 { "timeToEmpty", timeToEmpty },
+//                                 { "timeToFull", timeToFull },
+//                             });
+//            kirby->sendMessage(msg);
+//        });
 
-        QObject::connect(fring, &Fring::ambientLightChanged, [this](float value) {
-            KirbyMessage msg("policy/battery/AMBIENT_LIGHT_CHANGED", QJsonObject {
-                                 { "value", value },
-                             });
-            kirby->sendMessage(msg);
-        });
+//        QObject::connect(fring, &Fring::ambientLightChanged, [this](float value) {
+//            KirbyMessage msg("policy/battery/AMBIENT_LIGHT_CHANGED", QJsonObject {
+//                                 { "value", value },
+//                             });
+//            kirby->sendMessage(msg);
+//        });
 
-        QObject::connect(fring, &Fring::logMessageReceived, [this](const QString &message) {
-            qInfo(DaemonLog) << "Message from fring:" << message;
-        });
+//        QObject::connect(fring, &Fring::logMessageReceived, [this](const QString &message) {
+//            qInfo(DaemonLog) << "Message from fring:" << message;
+//        });
 
-        machine->setDeviceSerial(fring->getDeviceSerial());
-    }
+//        machine->setDeviceSerial(fring->getDeviceSerial());
+//    }
 
-    if (!mediaCtl->initialize())
-        qWarning(DaemonLog) << "MediaCtl failed to initialize";
+//    if (!mediaCtl->initialize())
+//        qWarning(DaemonLog) << "MediaCtl failed to initialize";
 
-    mediaCtl->setConfig(0, MediaCtl::UYVY8_2X8_1920x1080);
+//    mediaCtl->setConfig(0, MediaCtl::UYVY8_2X8_1920x1080);
 
-    updater->check("latest");
+    //updater->check("latest");
 }
 
 void Daemon::cancelResponse(KirbyMessage **msg)
@@ -269,6 +269,8 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
 {
     bool ret = true;
     QJsonObject payload = message.payload().toObject();
+
+    return;
 
     if (message.type() == "policy/display/SET_BRIGHTNESS") {
         KirbyMessage *response = message.makeResponse();

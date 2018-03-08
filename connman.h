@@ -36,4 +36,7 @@ private:
     ConnmanPrivate *d_ptr;
     Q_DECLARE_PRIVATE(Connman);
     QString kalamiIdForService(const NetworkService *service);
+    bool nextTest();
+    bool testConnect(int index);
+    void testDownload();
 };
