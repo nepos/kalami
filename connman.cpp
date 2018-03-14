@@ -172,6 +172,7 @@ bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
         QString id = kalamiIdForService(service);
 
         if (id == wifiId) {
+            service->setAutoConnect(false);
             service->requestConnect();
             return true;
         }
@@ -188,6 +189,7 @@ bool Connman::disconnectFromWifi(const QString &wifiId)
         QString id = kalamiIdForService(service);
 
         if (id == wifiId) {
+            service->setAutoConnect(false);
             service->disconnect();
             return true;
         }
