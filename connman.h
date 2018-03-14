@@ -27,8 +27,6 @@ signals:
 
 private slots:
     void iterateServices();
-    void connectToKnownWifi();
-    void agentPassphraseRequested(const QString &servicePath, const QVariantMap &fields);
     void enableWifi();
     void checkState();
 
