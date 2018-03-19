@@ -37,19 +37,6 @@ struct ConnmanPrivate {
     QString cachedWifiState;
 };
 
-void Connman::connectToKnownWifi()
-{
-    Q_D(Connman);
-
-    if (d->manager->state() == "online")
-        return;
-
-    foreach (NetworkService *service, d->manager->getServices()) {
-        if (service->type() != "wifi")
-            continue;
-    }
-}
-
 QString Connman::kalamiIdForService(const NetworkService *service)
 {
     QStringList list;
@@ -62,8 +49,6 @@ void Connman::iterateServices()
     Q_D(Connman);
 
     d->availableWifis = QJsonArray();
-
-    connectToKnownWifi();
 
     foreach (const NetworkService *service, d->manager->getServices("wifi")) {
         QString id = kalamiIdForService(service);
@@ -94,17 +79,6 @@ void Connman::iterateServices()
     }
 
     emit availableWifisUpdated(d->availableWifis);
-}
-
-void Connman::agentPassphraseRequested(const QString &servicePath, const QVariantMap &fields)
-{
-    Q_UNUSED(servicePath);
-    Q_UNUSED(fields);
-    Q_D(Connman);
-
-    QVariantMap reply;
-    reply.insert("Passphrase", d->cachedPassphrase);
-    d->agent->sendUserReply(reply);
 }
 
 void Connman::enableWifi()
@@ -166,7 +140,15 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
 
     d->agent = new UserAgent(this);
     d->agent->setAgentPath("/io/nepos/ConnmanAgent");
-    QObject::connect(d->agent, &UserAgent::userInputRequested, this, &Connman::agentPassphraseRequested);
+
+    QObject::connect(d->agent, &UserAgent::userInputRequested, [this, d](const QString &servicePath, const QVariantMap &fields) {
+        Q_UNUSED(servicePath);
+        Q_UNUSED(fields);
+
+        QVariantMap reply;
+        reply.insert("Passphrase", d->cachedPassphrase);
+        d->agent->sendUserReply(reply);
+    });
 }
 
 void Connman::start()
@@ -190,6 +172,7 @@ bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
         QString id = kalamiIdForService(service);
 
         if (id == wifiId) {
+            service->setAutoConnect(false);
             service->requestConnect();
             return true;
         }
@@ -206,6 +189,7 @@ bool Connman::disconnectFromWifi(const QString &wifiId)
         QString id = kalamiIdForService(service);
 
         if (id == wifiId) {
+            service->setAutoConnect(false);
             service->disconnect();
             return true;
         }
