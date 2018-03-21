@@ -30,7 +30,9 @@ Q_LOGGING_CATEGORY(ConnmanLog, "Connman")
 struct ConnmanPrivate {
     ConnmanPrivate() {};
     NetworkManager *manager;
+    QString currentWifiId;
     UserAgent *agent;
+    QTimer *checkTimer;
     QJsonArray availableWifis;
     QString cachedPassphrase;
     QString cachedWifiId;
@@ -96,14 +98,21 @@ void Connman::checkState()
 {
     Q_D(Connman);
 
-    qInfo(ConnmanLog) << "Manager state" << d->manager->state();
+    foreach (NetworkService *service, d->manager->getServices("wifi")) {
+        QString id = kalamiIdForService(service);
 
-    if (d->manager->state() == "offline") {
-        d->manager->setOfflineMode(false);
-    } else if (d->manager->state() ==  "idle" || d->manager->state() == "ready") {
-        enableWifi();
-    } else if (d->manager->state() == "online") {
-        emit goneOnline();
+        if (id == d->currentWifiId) {
+            qInfo(ConnmanLog) << "Check timer: service" << service->name() << "state" << service->state();
+
+            if (service->state() == "idle" ||
+                service->state() == "association" ||
+                service->state() == "configuration" ||
+                service->state() == "ready") {
+
+                service->requestDisconnect();
+                service->requestConnect();
+            }
+        }
     }
 }
 
@@ -112,13 +121,25 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
     Q_D(Connman);
 
     d->manager = new NetworkManager(this);
+    d->currentWifiId = QString();
+    d->checkTimer = new QTimer(this);
     d->availableWifis = QJsonArray();
     d->cachedWifiId = QString();
     d->cachedPassphrase = QString();
     d->cachedWifiState = QString();
 
+    d->checkTimer->setSingleShot(false);
+    d->checkTimer->setInterval(5000);
+    QObject::connect(d->checkTimer, &QTimer::timeout, this, &Connman::checkState);
+
     QObject::connect(d->manager, &NetworkManager::stateChanged, [this, d]() {
-        checkState();
+        qInfo(ConnmanLog) << "Manager state" << d->manager->state();
+
+        if (d->manager->state() == "offline") {
+            d->manager->setOfflineMode(false);
+        } else if (d->manager->state() ==  "idle" || d->manager->state() == "ready") {
+            enableWifi();
+        }
     });
 
     QObject::connect(d->manager, &NetworkManager::technologiesChanged, [this, d]() {
@@ -157,7 +178,6 @@ void Connman::start()
 
     d->manager->setOfflineMode(false);
     enableWifi();
-    checkState();
 }
 
 bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
@@ -172,8 +192,10 @@ bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
         QString id = kalamiIdForService(service);
 
         if (id == wifiId) {
+            d->currentWifiId = id;
             service->setAutoConnect(false);
             service->requestConnect();
+            d->checkTimer->start();
             return true;
         }
     }
@@ -184,6 +206,8 @@ bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
 bool Connman::disconnectFromWifi(const QString &wifiId)
 {
     Q_D(Connman);
+
+    d->currentWifiId = QString();
 
     foreach (NetworkService *service, d->manager->getServices("wifi")) {
         QString id = kalamiIdForService(service);

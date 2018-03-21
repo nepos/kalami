@@ -193,10 +193,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         kirby->sendMessage(msg);
     });
 
-    QObject::connect(connman, &Connman::goneOnline, [this]() {
-        qInfo(DaemonLog) << "We are now online!";
-    });
-
     connman->start();
 
     // Websocket connection
