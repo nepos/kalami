@@ -311,7 +311,7 @@ bool Fring::readBatteryStatus()
         batteryTimeToEmpty = rdCmd.batteryStatus.averageTimeToEmpty;
         batteryTimeToFull = rdCmd.batteryStatus.averageTimeToFull;
 
-        emit batteryStateChanged((float) batteryLevel / 100.f,
+        emit batteryStateChanged((float) batteryLevel,
                                  (float) batteryChargeCurrent * 0.05f,
                                  (float) batteryTemperature  * 0.5f,
                                  (float) batteryTimeToEmpty,
