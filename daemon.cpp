@@ -341,11 +341,22 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
     }
 
     if (message.type() == "policy/power-management/SUSPEND") {
+
+        int wakeupTime = 0;
+
+        if (payload.contains("wakeup_time"))
+            wakeupTime = payload["wakeup_time"].toInt();
+
+        // Set wakeuptime in any case (0 = disabled), since fring also sets
+        // it's som_state to SUSPENDED, based on that call.
+        fring->setWakeupTime(wakeupTime);
+
         float v = displayBrightness->getBrightness();
         displayBrightness->setBrightness(0.0);
         machine->suspend();
         displayBrightness->setBrightness(v);
 
+        //TODO: Here we should act depending on wakeup reason!
         KirbyMessage msg("policy/power-management/RESUMED");
         kirby->sendMessage(msg);
     }

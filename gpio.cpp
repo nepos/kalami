@@ -111,6 +111,25 @@ void GPIO::setEdge(Edge e)
     f.flush();
 }
 
+void GPIO::setWakeupSource(WakeupSource w)
+{
+    QString data;
+
+    if (w == GPIO::Wakeup)
+        data = "enabled";
+    else if (w == GPIO::DontWakeup)
+        data = "disabled";
+
+    QFile f(gpioPath + "/wakeup");
+    if (!f.open(QFile::WriteOnly)) {
+        qWarning(GPIOLog) << "Can not open file: " << gpioPath << "/wakeup";
+        return;
+    }
+
+    f.write(data.toLocal8Bit());
+    f.flush();
+}
+
 void GPIO::openValueFile(QIODevice::OpenModeFlag f)
 {
     valueFile.setFileName(gpioPath + "/value");

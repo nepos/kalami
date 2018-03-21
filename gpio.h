@@ -29,6 +29,11 @@ public:
         ValueLo      = '0'
     };
 
+    enum WakeupSource {
+        Wakeup       = 0,
+        DontWakeup   = 1
+    };
+
 signals:
     void onDataReady(Value v);
 
@@ -36,6 +41,7 @@ public slots:
     void set(GPIO::Value v);
     void setDirection(Direction io);
     void setEdge(Edge e);
+    void setWakeupSource(WakeupSource w);
 
 private:
     Q_DISABLE_COPY(GPIO)

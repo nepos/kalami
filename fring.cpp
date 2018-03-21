@@ -22,6 +22,7 @@ Fring::Fring(QObject *parent) :
 {
     interruptGpio.setEdge(GPIO::EdgeFalling);
     interruptGpio.setDirection(GPIO::DirectionIn);
+    interruptGpio.setWakeupSource(GPIO::Wakeup);
     QObject::connect(&interruptGpio, &GPIO::onDataReady, this, &Fring::onInterrupt);
 
     homeButtonState = -1;
@@ -418,6 +419,17 @@ void Fring::startFirmwareUpdate(const QString filename)
     });
 
     updateThread->start();
+}
+
+void Fring::setWakeupTime(uint32_t s)
+{
+    struct FringCommandRead rdCmd = {};
+    struct FringCommandWrite wrCmd = {};
+
+    wrCmd.reg = FRING_REG_SET_WAKEUP_TIME;
+    wrCmd.wakeupTime.seconds = s;
+
+    transfer(&wrCmd, offsetof(struct FringCommandWrite, wakeupTime) + sizeof(wrCmd.wakeupTime.seconds), &rdCmd, 1);
 }
 
 FringUpdateThread::FringUpdateThread(Fring *fring, const QString &filename) : fring(fring), file(filename), semaphore()

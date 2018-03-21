@@ -13,7 +13,8 @@ enum {
     FRING_REG_READ_FIRMWARE_UPDATE_RESULT = 0x09,
     FRING_REG_READ_LOG_MESSAGE            = 0x0a,
     FRING_REG_SET_SERIAL                  = 0x0b,
-    FRING_REG_SET_SOM_SUSPEND             = 0x0c,
+    FRING_REG_SET_WAKEUP_TIME             = 0x0c,
+    FRING_REG_READ_WAKEUP_REASON          = 0x0d,
 };
 
 enum {
@@ -109,6 +110,10 @@ struct FringCommandRead {
             uint32_t status;
         } updateStatus;
 
+        struct {
+            uint32_t reason;
+        } wakeupReason;
+
         uint8_t unused[0];
     };
 }  _packed_;
@@ -159,8 +164,8 @@ struct FringCommandWrite {
         } firmwareUpdate;
 
         struct {
-            uint32_t wakeup_time;
-        } somSuspend;
+            uint32_t seconds;
+        } wakeupTime;
 
         struct {
             uint8_t serial[12];

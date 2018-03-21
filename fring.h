@@ -38,6 +38,7 @@ public slots:
     bool setLedFlashing(int id, float r, float g, float b, float onPhase, float offPhase);
     bool setLedPulsating(int id, float r, float g, float b, float frequency);
     void startFirmwareUpdate(const QString filename);
+    void setWakeupTime(uint32_t s);
 
 private slots:
     bool setLed(const FringCommandWrite *wrCmd);
