@@ -26,11 +26,17 @@ public:
     int getBoardRevisionA() const { return boardRevisionA; }
     int getBoardRevisionB() const { return boardRevisionB; }
 
+    enum WakeupReason {
+        WakeupReasonHomebutton  = 0x01,
+        WakeupReasonRTC
+    };
+
 signals:
     void homeButtonChanged(bool state);
     void ambientLightChanged(float value);
     void batteryStateChanged(float level, float chargeCurrent, float temperature, float timeToEmpty, float timeToFull);
     void logMessageReceived(const QString &message);
+    void wakeupReasonChanged(WakeupReason w);
 
 public slots:
     bool setLedOff(int id);
@@ -71,6 +77,7 @@ private:
     bool readDeviceStatus();
     bool readBatteryStatus();
     bool readLogMessage();
+    bool readWakeupReason();
     uint32_t calculateCRC(uint32_t crc, const char *buf, size_t len);
 
     FringUpdateThread *updateThread;

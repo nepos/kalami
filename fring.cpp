@@ -366,6 +366,29 @@ bool Fring::readLogMessage()
     return true;
 }
 
+bool Fring::readWakeupReason()
+{
+    struct FringCommandRead rdCmd = {};
+    struct FringCommandWrite wrCmd = {};
+
+    wrCmd.reg = FRING_REG_READ_WAKEUP_REASON;
+    if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.wakeupReason))) {
+        qWarning(FringLog) << "Unable to transfer command!";
+        return false;
+    }
+
+    WakeupReason r = (rdCmd.wakeupReason.reason == 0 ?
+                WakeupReasonHomebutton :
+                WakeupReasonRTC);
+    QString strReason = (r == WakeupReasonHomebutton ? "Home Button" : "RTC");
+    qInfo(FringLog) << "WakeupReason: " << strReason;
+
+    emit wakeupReasonChanged(r);
+
+    return true;
+}
+
+
 void Fring::onInterrupt(GPIO::Value v)
 {
     Q_UNUSED(v);
@@ -394,6 +417,11 @@ void Fring::onInterrupt(GPIO::Value v)
         else
             qWarning(FringLog) << "Firmware update interrupt with no update in progress? Uh-oh.";
     }
+
+    if (status & FRING_INTERRUPT_WAKEUP) {
+        readWakeupReason();
+    }
+
 }
 
 void Fring::startFirmwareUpdate(const QString filename)
