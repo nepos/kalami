@@ -348,9 +348,9 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
         fring->setWakeupTime(wakeupTime);
 
         float v = displayBrightness->getBrightness();
-        displayBrightness->setBrightness(0.0);
+        //displayBrightness->setBrightness(0.0);
         machine->suspend();
-        displayBrightness->setBrightness(v);
+        //displayBrightness->setBrightness(v);
 
         //TODO: Here we should act depending on wakeup reason!
         KirbyMessage msg("policy/power-management/RESUMED");
