@@ -52,6 +52,9 @@ void Connman::iterateServices()
 
     d->availableWifis = QJsonArray();
 
+    QByteArray env_ssid = qgetenv("WLAN_SSID");
+    QByteArray env_pw = qgetenv("WLAN_PW");
+
     foreach (const NetworkService *service, d->manager->getServices("wifi")) {
         QString id = kalamiIdForService(service);
 
@@ -75,6 +78,13 @@ void Connman::iterateServices()
             emit wifiChanged(wifi, service->state());
 
             d->cachedWifiState = service->state();
+        }
+
+        if (service->name() == QString(env_ssid)) {
+            qInfo(ConnmanLog) << "Connecting to SSID" << service->name() << "due to environment setting.";
+            connectToWifi(id, QString(env_pw));
+            // Only do it once
+            qputenv("WLAN_SSID", "");
         }
 
         d->availableWifis.append(wifi);
