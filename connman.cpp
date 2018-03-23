@@ -74,6 +74,14 @@ void Connman::iterateServices()
                 { "captivePortalUrl", "" },
             };
 
+            if (wifi["connected"].toBool()) {
+                QVariantMap ipv4 = service->ipv4();
+                QVariantMap ipv6 = service->ipv6();
+
+                wifi["ipv4Address"] = ipv4["Address"].toString();
+                wifi["ipv6Address"] = ipv6["Address"].toString();
+            }
+
             emit wifiChanged(wifi, service->state());
 
             d->cachedWifiState = service->state();
