@@ -37,6 +37,8 @@ struct ConnmanPrivate {
     QString cachedPassphrase;
     QString cachedWifiId;
     QString cachedWifiState;
+    QString preconfiguredSSID;
+    QString preconfiguredPassword;
 };
 
 QString Connman::kalamiIdForService(const NetworkService *service)
@@ -51,9 +53,6 @@ void Connman::iterateServices()
     Q_D(Connman);
 
     d->availableWifis = QJsonArray();
-
-    QByteArray env_ssid = qgetenv("WLAN_SSID");
-    QByteArray env_pw = qgetenv("WLAN_PW");
 
     foreach (const NetworkService *service, d->manager->getServices("wifi")) {
         QString id = kalamiIdForService(service);
@@ -80,11 +79,12 @@ void Connman::iterateServices()
             d->cachedWifiState = service->state();
         }
 
-        if (service->name() == QString(env_ssid)) {
-            qInfo(ConnmanLog) << "Connecting to SSID" << service->name() << "due to environment setting.";
-            connectToWifi(id, QString(env_pw));
-            // Only do it once
-            qputenv("WLAN_SSID", "");
+        // If there is a preconfigured SSID, try to connect to it once
+        if (!d->preconfiguredSSID.isEmpty() && d->preconfiguredSSID == service->name()) {
+            qInfo(ConnmanLog) << "Connecting to preconfigured SSID" << service->name();
+            connectToWifi(id, QString(d->preconfiguredPassword));
+            d->preconfiguredSSID.clear();
+            d->preconfiguredPassword.clear();
         }
 
         d->availableWifis.append(wifi);
@@ -111,7 +111,7 @@ void Connman::checkState()
     foreach (NetworkService *service, d->manager->getServices("wifi")) {
         QString id = kalamiIdForService(service);
 
-        if (id == d->currentWifiId) {
+        if (!d->currentWifiId.isEmpty() && id == d->currentWifiId) {
             qInfo(ConnmanLog) << "Check timer: service" << service->name() << "state" << service->state();
 
             if (service->state() == "idle" ||
@@ -137,6 +137,8 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
     d->cachedWifiId = QString();
     d->cachedPassphrase = QString();
     d->cachedWifiState = QString();
+    d->preconfiguredSSID = QString::fromLocal8Bit(qgetenv("WLAN_SSID"));
+    d->preconfiguredPassword = QString::fromLocal8Bit(qgetenv("WLAN_PW"));
 
     d->checkTimer->setSingleShot(false);
     d->checkTimer->setInterval(5000);
@@ -217,7 +219,7 @@ bool Connman::disconnectFromWifi(const QString &wifiId)
 {
     Q_D(Connman);
 
-    d->currentWifiId = QString();
+    d->currentWifiId.clear();
 
     foreach (NetworkService *service, d->manager->getServices("wifi")) {
         QString id = kalamiIdForService(service);
