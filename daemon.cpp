@@ -171,6 +171,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         if (wifi["kalamiId"].toString() != pendingWifiId)
             return;
 
+        qInfo(DaemonLog) << "reporting wifiChanged. pending" << pendingWifiMessage;
+
         if (pendingWifiMessage) {
             bool send = false;
 
