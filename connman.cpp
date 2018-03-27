@@ -31,12 +31,12 @@ struct ConnmanPrivate {
     ConnmanPrivate() {};
     NetworkManager *manager;
     QString currentWifiId;
+    QString currentWifiCachedPassphrase;
+    QString currentWifiLastReportedState;
+    QString currentWifiLastCheckState;
     UserAgent *agent;
     QTimer *checkTimer;
     QJsonArray availableWifis;
-    QString cachedPassphrase;
-    QString cachedWifiId;
-    QString cachedWifiState;
     QString preconfiguredSSID;
     QString preconfiguredPassword;
 };
@@ -66,15 +66,18 @@ void Connman::iterateServices()
 
         qInfo(ConnmanLog) << "Wifi" << service->name() << "Strength" << service->strength() << "State" << service->state();
 
-        if (id == d->cachedWifiId && service->state() != d->cachedWifiState) {
+        if (id == d->currentWifiId && service->state() != d->currentWifiLastReportedState) {
+            bool online = service->state() == "online";
+            bool connected = online || service->state() == "ready";
+
             QJsonObject wifi {
                 { "kalamiId", kalamiIdForService(service) },
-                { "connected", service->state() == "ready" || service->state() == "online" },
-                { "online", service->state() == "online" },
+                { "connected", connected },
+                { "online", online },
                 { "captivePortalUrl", "" },
             };
 
-            if (wifi["connected"].toBool()) {
+            if (online) {
                 QVariantMap ipv4 = service->ipv4();
                 QVariantMap ipv6 = service->ipv6();
 
@@ -84,7 +87,7 @@ void Connman::iterateServices()
 
             emit wifiChanged(wifi, service->state());
 
-            d->cachedWifiState = service->state();
+            d->currentWifiLastReportedState = service->state();
         }
 
         // If there is a preconfigured SSID, try to connect to it once
@@ -120,17 +123,25 @@ void Connman::checkState()
         QString id = kalamiIdForService(service);
 
         if (!d->currentWifiId.isEmpty() && id == d->currentWifiId) {
-            qInfo(ConnmanLog) << "Check timer: service" << service->name() << "state" << service->state();
+            qInfo(ConnmanLog) << "Check timer: service" << service->name()
+                              << "state" << service->state()
+                              << "last state" << d->currentWifiLastCheckState;
 
-            if (service->state() == "idle" ||
-                service->state() == "association" ||
-                service->state() == "configuration" ||
-                service->state() == "ready") {
+            if (service->state() != d->currentWifiLastCheckState) {
+                if (service->state() == "idle" ||
+                    service->state() == "association" ||
+                    service->state() == "configuration" ||
+                    service->state() == "ready") {
 
-                service->requestDisconnect();
-                service->requestConnect();
+                    service->requestDisconnect();
+                    service->requestConnect();
+                }
             }
+
+            d->currentWifiLastCheckState = service->state();
         }
+
+        return;
     }
 }
 
@@ -140,16 +151,16 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
 
     d->manager = new NetworkManager(this);
     d->currentWifiId = QString();
+    d->currentWifiLastCheckState = QString();
     d->checkTimer = new QTimer(this);
     d->availableWifis = QJsonArray();
-    d->cachedWifiId = QString();
-    d->cachedPassphrase = QString();
-    d->cachedWifiState = QString();
+    d->currentWifiCachedPassphrase = QString();
+    d->currentWifiLastReportedState = QString();
     d->preconfiguredSSID = QString::fromLocal8Bit(qgetenv("WLAN_SSID"));
     d->preconfiguredPassword = QString::fromLocal8Bit(qgetenv("WLAN_PW"));
 
     d->checkTimer->setSingleShot(false);
-    d->checkTimer->setInterval(5000);
+    d->checkTimer->setInterval(10000);
     QObject::connect(d->checkTimer, &QTimer::timeout, this, &Connman::checkState);
 
     QObject::connect(d->manager, &NetworkManager::stateChanged, [this, d]() {
@@ -187,7 +198,7 @@ Connman::Connman(QObject *parent) : QObject(parent), d_ptr(new ConnmanPrivate)
         Q_UNUSED(fields);
 
         QVariantMap reply;
-        reply.insert("Passphrase", d->cachedPassphrase);
+        reply.insert("Passphrase", d->currentWifiCachedPassphrase);
         d->agent->sendUserReply(reply);
     });
 }
@@ -204,18 +215,20 @@ bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
 {
     Q_D(Connman);
 
-    d->cachedPassphrase = passphrase;
-    d->cachedWifiId = wifiId;
-    d->cachedWifiState.clear();
-
     foreach (NetworkService *service, d->manager->getServices("wifi")) {
         QString id = kalamiIdForService(service);
 
         if (id == wifiId) {
             d->currentWifiId = id;
+            d->currentWifiCachedPassphrase = passphrase;
+            d->currentWifiLastReportedState.clear();
+            d->currentWifiLastCheckState.clear();
+
             service->setAutoConnect(false);
             service->requestConnect();
+            iterateServices();
             d->checkTimer->start();
+
             return true;
         }
     }
@@ -228,6 +241,7 @@ bool Connman::disconnectFromWifi(const QString &wifiId)
     Q_D(Connman);
 
     d->currentWifiId.clear();
+    d->currentWifiLastCheckState.clear();
 
     foreach (NetworkService *service, d->manager->getServices("wifi")) {
         QString id = kalamiIdForService(service);
