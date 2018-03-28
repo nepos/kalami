@@ -70,3 +70,15 @@ float BrightnessControl::getBrightness()
 
     return  (float) val / (float) maxBrightness;
 }
+
+void BrightnessControl::suspend()
+{
+    brightnessBeforeSuspend = getBrightness();
+    setBrightness(0);
+}
+
+void BrightnessControl::resume()
+{
+    setBrightness(brightnessBeforeSuspend);
+}
+

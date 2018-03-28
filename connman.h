@@ -19,12 +19,15 @@ public:
     void start();
     bool connectToWifi(const QString &wifiId, const QString &passphrase);
     bool disconnectFromWifi(const QString &wifiId);
+    void suspend();
+    void resume();
 
 signals:
     void availableWifisUpdated(const QJsonArray &list);
     void wifiChanged(const QJsonObject &wifi, const QString &state);
 
 private slots:
+    bool disconnectFromWifiById(const QString &wifiId);
     void iterateServices();
     void enableWifi();
     void checkState();

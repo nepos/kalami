@@ -236,12 +236,9 @@ bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
     return false;
 }
 
-bool Connman::disconnectFromWifi(const QString &wifiId)
+bool Connman::disconnectFromWifiById(const QString &wifiId)
 {
     Q_D(Connman);
-
-    d->currentWifiId.clear();
-    d->currentWifiLastCheckState.clear();
 
     foreach (NetworkService *service, d->manager->getServices("wifi")) {
         QString id = kalamiIdForService(service);
@@ -255,3 +252,50 @@ bool Connman::disconnectFromWifi(const QString &wifiId)
 
     return false;
 }
+
+bool Connman::disconnectFromWifi(const QString &wifiId)
+{
+    Q_D(Connman);
+
+    d->currentWifiId.clear();
+    d->currentWifiLastCheckState.clear();
+    d->checkTimer->stop();
+
+    return disconnectFromWifiById(wifiId);
+}
+
+void Connman::suspend()
+{
+    Q_D(Connman);
+
+    d->checkTimer->stop();
+
+    if (!d->currentWifiId.isEmpty())
+        disconnectFromWifiById(d->currentWifiId);
+}
+
+void Connman::resume()
+{
+    Q_D(Connman);
+
+    enableWifi();
+
+    if (d->currentWifiId.isEmpty())
+        return;
+
+    foreach (NetworkService *service, d->manager->getServices("wifi")) {
+        QString id = kalamiIdForService(service);
+
+        if (id == d->currentWifiId) {
+            d->currentWifiLastReportedState.clear();
+            d->currentWifiLastCheckState.clear();
+
+            service->setAutoConnect(false);
+            service->requestConnect();
+            iterateServices();
+            d->checkTimer->start();
+            return;
+        }
+    }
+}
+

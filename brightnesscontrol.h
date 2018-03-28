@@ -35,7 +35,11 @@ public:
     bool setBrightness(float value);
     float getBrightness();
 
+    void suspend();
+    void resume();
+
 private:
     QFile brightnessFile;
     int maxBrightness;
+    float brightnessBeforeSuspend;
 };
