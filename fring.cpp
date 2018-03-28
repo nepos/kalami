@@ -377,6 +377,10 @@ bool Fring::readWakeupReason()
         return false;
     }
 
+    QString s;
+    s = s.sprintf("WakeupReason: %08X", rdCmd.wakeupReason.reason);
+    qInfo(FringLog) << s;
+
     WakeupReason r = (rdCmd.wakeupReason.reason == 0 ?
                 WakeupReasonHomebutton :
                 WakeupReasonRTC);
