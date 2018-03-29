@@ -47,7 +47,7 @@ public slots:
     void setWakeupTime(uint32_t s);
 
 private slots:
-    bool setLed(const FringCommandWrite *wrCmd);
+    bool setLed(const FringProtocol::CommandWrite *wrCmd);
     void onInterrupt(GPIO::Value v);
 
 private:
@@ -84,12 +84,12 @@ private:
 
     QString batteryLogFileName;
 
-    struct FringCommandWrite ledCache[2];
+    FringProtocol::CommandWrite ledCache[2];
     bool ledCacheValid;
 
 protected:
     friend class FringUpdateThread;
-    bool transfer(const struct FringCommandWrite *wrCmd, size_t wrSize, const FringCommandRead *rdCmd = 0, size_t rdSize = 0);
+    bool transfer(const FringProtocol::CommandWrite *wrCmd, size_t wrSize, const FringProtocol::CommandRead *rdCmd = 0, size_t rdSize = 0);
 };
 
 class FringUpdateThread : public QThread

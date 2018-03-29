@@ -52,12 +52,12 @@ bool Fring::initialize()
     if (!client.open(Fring::I2CBus, Fring::I2CAddr))
         return false;
 
-    struct FringCommandRead rdCmd = {};
-    struct FringCommandWrite wrCmd = {};
+    FringProtocol::CommandRead rdCmd = {};
+    FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = FRING_REG_ID;
-    wrCmd.protocolVersion.version = 1;
-    if (!transfer(&wrCmd, offsetof(struct FringCommandWrite, protocolVersion) + sizeof(wrCmd.protocolVersion),
+    wrCmd.reg = FringProtocol::FRING_REG_ID;
+    wrCmd.protocol.version = 1;
+    if (!transfer(&wrCmd, offsetof(FringProtocol::CommandWrite, protocol) + sizeof(wrCmd.protocol),
                   &rdCmd, sizeof(rdCmd.id)))
         return false;
 
@@ -72,18 +72,18 @@ bool Fring::initialize()
 
     QStringList bootFlagsStrings;
 
-    wrCmd.reg = FRING_REG_READ_BOOT_INFO;
+    wrCmd.reg = FringProtocol::FRING_REG_READ_BOOT_INFO;
     if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.bootInfo)))
         return false;
 
     uint32_t bootFlags = qFromLittleEndian(rdCmd.bootInfo.flags);
 
-    if (bootFlags & FRING_BOOT_STATUS_FIRMWARE_B)
+    if (bootFlags & FringProtocol::FRING_BOOT_STATUS_FIRMWARE_B)
         bootFlagsStrings << "booted from B";
     else
         bootFlagsStrings << "booted from A";
 
-    if (bootFlags & FRING_BOOT_STATUS_BETA)
+    if (bootFlags & FringProtocol::FRING_BOOT_STATUS_BETA)
         bootFlagsStrings << "beta version";
 
     firmwareVersion = qFromLittleEndian(rdCmd.bootInfo.version);
@@ -101,15 +101,15 @@ bool Fring::initialize()
         for (int i = 0; i < ba.size(); ++i)
             ba[i] = (char) (qrand() & 0xff);
 
-        wrCmd.reg = FRING_REG_SET_SERIAL;
-        memcpy(&wrCmd.setSerial.serial, ba.constData(), sizeof(wrCmd.setSerial.serial));
+        wrCmd.reg = FringProtocol::FRING_REG_SET_SERIAL;
+        memcpy(&wrCmd.serial.serial, ba.constData(), sizeof(wrCmd.serial.serial));
         qInfo(FringLog) << "Setting firmware device serial:" << ba.toHex();
-        transfer(&wrCmd, offsetof(struct FringCommandWrite, setSerial) + sizeof(wrCmd.setSerial.serial));
+        transfer(&wrCmd, offsetof(FringProtocol::CommandWrite, serial) + sizeof(wrCmd.serial.serial));
     }
 
     deviceSerial = QString(ba.toHex());
 
-    wrCmd.reg = FRING_REG_READ_BOARD_REVISION;
+    wrCmd.reg = FringProtocol::FRING_REG_READ_BOARD_REVISION;
     if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.boardRevision)))
         return false;
 
@@ -123,7 +123,7 @@ bool Fring::initialize()
     // Check for firmware updates
     QDir firmwareDir = QDir("/app/firmware/fring/");
     QStringList firmwareFiles = firmwareDir.entryList(QDir::Files);
-    QString updateSuffix = (bootFlags & FRING_BOOT_STATUS_FIRMWARE_B) ? "bin-a" : "bin-b";
+    QString updateSuffix = (bootFlags & FringProtocol::FRING_BOOT_STATUS_FIRMWARE_B) ? "bin-a" : "bin-b";
 
     foreach (QString firmwareFile, firmwareFiles) {
         QStringList parts = firmwareFile.split(".");
@@ -151,10 +151,10 @@ const QString &Fring::getDeviceSerial()
     return deviceSerial;
 }
 
-bool Fring::transfer(const struct FringCommandWrite *wrCmd, size_t wrSize,
-                     const struct FringCommandRead *rdCmd, size_t rdSize)
+bool Fring::transfer(const FringProtocol::CommandWrite *wrCmd, size_t wrSize,
+                     const FringProtocol::CommandRead *rdCmd, size_t rdSize)
 {
-    struct FringCommandRead rdCmdDummy;
+    FringProtocol::CommandRead rdCmdDummy;
 
     // There's a bug in either the qcom i2c host driver or the firmware that causes
     // transfers to fail unless there is at least one byte read back in a 2nd command.
@@ -171,7 +171,7 @@ bool Fring::transfer(const struct FringCommandWrite *wrCmd, size_t wrSize,
     return true;
 }
 
-bool Fring::setLed(const struct FringCommandWrite *wrCmd)
+bool Fring::setLed(const FringProtocol::CommandWrite *wrCmd)
 {
     int id = !!wrCmd->led.id;
 
@@ -181,27 +181,27 @@ bool Fring::setLed(const struct FringCommandWrite *wrCmd)
     memcpy(&ledCache[id].led, &wrCmd->led, sizeof(wrCmd->led));
     ledCacheValid = true;
 
-    return transfer(wrCmd, offsetof(struct FringCommandWrite, led) + sizeof(wrCmd->led));
+    return transfer(wrCmd, offsetof(FringProtocol::CommandWrite, led) + sizeof(wrCmd->led));
 }
 
 bool Fring::setLedOff(int id)
 {
-    struct FringCommandWrite wrCmd = {};
+    FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = FRING_REG_SET_LED;
+    wrCmd.reg = FringProtocol::FRING_REG_SET_LED;
     wrCmd.led.id = id;
-    wrCmd.led.mode = FRING_LED_MODE_OFF;
+    wrCmd.led.mode = FringProtocol::FRING_LED_MODE_OFF;
 
     return setLed(&wrCmd);
 }
 
 bool Fring::setLedOn(int id, float r, float g, float b)
 {
-    struct FringCommandWrite wrCmd = {};
+    FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = FRING_REG_SET_LED;
+    wrCmd.reg = FringProtocol::FRING_REG_SET_LED;
     wrCmd.led.id = id;
-    wrCmd.led.mode = FRING_LED_MODE_ON;
+    wrCmd.led.mode = FringProtocol::FRING_LED_MODE_ON;
     wrCmd.led.on.r = 255.0f * r;
     wrCmd.led.on.g = 255.0f * g;
     wrCmd.led.on.b = 255.0f * b;
@@ -211,11 +211,11 @@ bool Fring::setLedOn(int id, float r, float g, float b)
 
 bool Fring::setLedFlashing(int id, float r, float g, float b, float onPhase, float offPhase)
 {
-    struct FringCommandWrite wrCmd = {};
+    FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = FRING_REG_SET_LED;
+    wrCmd.reg = FringProtocol::FRING_REG_SET_LED;
     wrCmd.led.id = id;
-    wrCmd.led.mode = FRING_LED_MODE_FLASHING;
+    wrCmd.led.mode = FringProtocol::FRING_LED_MODE_FLASHING;
     wrCmd.led.flashing.r = 255.0f * r;
     wrCmd.led.flashing.g = 255.0f * g;
     wrCmd.led.flashing.b = 255.0f * b;
@@ -227,11 +227,11 @@ bool Fring::setLedFlashing(int id, float r, float g, float b, float onPhase, flo
 
 bool Fring::setLedPulsating(int id, float r, float g, float b, float frequency)
 {
-    struct FringCommandWrite wrCmd = {};
+    FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = FRING_REG_SET_LED;
+    wrCmd.reg = FringProtocol::FRING_REG_SET_LED;
     wrCmd.led.id = id;
-    wrCmd.led.mode = FRING_LED_MODE_PULSATING;
+    wrCmd.led.mode = FringProtocol::FRING_LED_MODE_PULSATING;
     wrCmd.led.pulsating.r = 255.0f * r;
     wrCmd.led.pulsating.g = 255.0f * g;
     wrCmd.led.pulsating.b = 255.0f * b;
@@ -242,16 +242,16 @@ bool Fring::setLedPulsating(int id, float r, float g, float b, float frequency)
 
 bool Fring::readDeviceStatus()
 {
-    struct FringCommandRead rdCmd = {};
-    struct FringCommandWrite wrCmd = {};
+    FringProtocol::CommandRead rdCmd = {};
+    FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = FRING_REG_READ_DEVICE_STATUS;
+    wrCmd.reg = FringProtocol::FRING_REG_READ_DEVICE_STATUS;
     if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.deviceStatus)))
         return false;
 
     uint32_t status = qFromLittleEndian(rdCmd.deviceStatus.status);
 
-    bool home = !!(status & FRING_DEVICE_STATUS_HOME_BUTTON);
+    bool home = !!(status & FringProtocol::FRING_DEVICE_STATUS_HOME_BUTTON);
 
     if (homeButtonState != home) {
         homeButtonState = !!home;
@@ -268,7 +268,7 @@ bool Fring::readDeviceStatus()
     if (hardwareErrors)
         qWarning(FringLog) << "Detected hardware errors: " << QString::number(hardwareErrors, 16);
 
-    batteryPresent = !(hardwareErrors & (FRING_HWERR_BATTERY_NOT_RESPONDING | FRING_HWERR_BATTERY_INIT_ERROR));
+    batteryPresent = !(hardwareErrors & (FringProtocol::FRING_HWERR_BATTERY_NOT_RESPONDING | FringProtocol::FRING_HWERR_BATTERY_INIT_ERROR));
 
     qInfo(FringLog) << "Device status upate:";
     qInfo(FringLog) << QString::asprintf("  Status                : 0x%08x", rdCmd.deviceStatus.status);
@@ -283,10 +283,10 @@ bool Fring::readDeviceStatus()
 
 bool Fring::readBatteryStatus()
 {
-    struct FringCommandRead rdCmd = {};
-    struct FringCommandWrite wrCmd = {};
+    FringProtocol::CommandRead rdCmd = {};
+    FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = FRING_REG_READ_BATTERY_STATUS;
+    wrCmd.reg = FringProtocol::FRING_REG_READ_BATTERY_STATUS;
     if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.batteryStatus)))
         return false;
 
@@ -351,10 +351,10 @@ bool Fring::readBatteryStatus()
 
 bool Fring::readLogMessage()
 {
-    struct FringCommandWrite wrCmd = {};
+    FringProtocol::CommandWrite wrCmd = {};
     char buf[16];
 
-    wrCmd.reg = FRING_REG_READ_LOG_MESSAGE;
+    wrCmd.reg = FringProtocol::FRING_REG_READ_LOG_MESSAGE;
 
     if (!client.transfer((uint8_t *) &wrCmd, 1, (uint8_t *) buf, sizeof(buf))) {
         qWarning(FringLog) << "Unable to transfer command!";
@@ -368,10 +368,10 @@ bool Fring::readLogMessage()
 
 bool Fring::readWakeupReason()
 {
-    struct FringCommandRead rdCmd = {};
-    struct FringCommandWrite wrCmd = {};
+    FringProtocol::CommandRead rdCmd = {};
+    FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = FRING_REG_READ_WAKEUP_REASON;
+    wrCmd.reg = FringProtocol::FRING_REG_READ_WAKEUP_REASON;
     if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.wakeupReason))) {
         qWarning(FringLog) << "Unable to transfer command!";
         return false;
@@ -397,32 +397,32 @@ void Fring::onInterrupt(GPIO::Value v)
 {
     Q_UNUSED(v);
 
-    struct FringCommandRead rdCmd = {};
-    struct FringCommandWrite wrCmd = {};
+    FringProtocol::CommandRead rdCmd = {};
+    FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = FRING_REG_READ_INTERRUPT_STATUS;
+    wrCmd.reg = FringProtocol::FRING_REG_READ_INTERRUPT_STATUS;
     if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.interruptStatus)))
         return;
 
     uint32_t status = qFromLittleEndian(rdCmd.interruptStatus.status);
 
-    if (status & FRING_INTERRUPT_DEVICE_STATUS)
+    if (status & FringProtocol::FRING_INTERRUPT_DEVICE_STATUS)
         readDeviceStatus();
 
-    if (status & FRING_INTERRUPT_BATTERY_STATUS)
+    if (status & FringProtocol::FRING_INTERRUPT_BATTERY_STATUS)
         readBatteryStatus();
 
-    if (status & FRING_INTERRUPT_LOG_MESSAGE)
+    if (status & FringProtocol::FRING_INTERRUPT_LOG_MESSAGE)
         readLogMessage();
 
-    if (status & FRING_INTERRUPT_FIRMWARE_UPDATE) {
+    if (status & FringProtocol::FRING_INTERRUPT_FIRMWARE_UPDATE) {
         if (updateThread)
             updateThread->interrupt();
         else
             qWarning(FringLog) << "Firmware update interrupt with no update in progress? Uh-oh.";
     }
 
-    if (status & FRING_INTERRUPT_WAKEUP) {
+    if (status & FringProtocol::FRING_INTERRUPT_WAKEUP) {
         readWakeupReason();
     }
 
@@ -455,13 +455,13 @@ void Fring::startFirmwareUpdate(const QString filename)
 
 void Fring::setWakeupTime(uint32_t s)
 {
-    struct FringCommandRead rdCmd = {};
-    struct FringCommandWrite wrCmd = {};
+    FringProtocol::CommandRead rdCmd = {};
+    FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = FRING_REG_SET_WAKEUP_TIME;
+    wrCmd.reg = FringProtocol::FRING_REG_SET_WAKEUP_TIME;
     wrCmd.wakeupTime.seconds = s;
 
-    transfer(&wrCmd, offsetof(struct FringCommandWrite, wakeupTime) + sizeof(wrCmd.wakeupTime.seconds), &rdCmd, 1);
+    transfer(&wrCmd, offsetof(FringProtocol::CommandWrite, wakeupTime) + sizeof(wrCmd.wakeupTime.seconds), &rdCmd, 1);
 }
 
 FringUpdateThread::FringUpdateThread(Fring *fring, const QString &filename) : fring(fring), file(filename), semaphore()
@@ -497,13 +497,13 @@ void FringUpdateThread::run()
     uint32_t offset = 0;
     qint64 r;
     static const size_t maxChunkSize = 32;
-    struct FringCommandWrite *wrCmd;
+    FringProtocol::CommandWrite *wrCmd;
 
     size_t wrSize =
-            offsetof(struct FringCommandWrite, firmwareUpdate)
+            offsetof(FringProtocol::CommandWrite, firmwareUpdate)
             + sizeof(wrCmd->firmwareUpdate)
             + maxChunkSize;
-    wrCmd = (struct FringCommandWrite *) alloca(wrSize);
+    wrCmd = (FringProtocol::CommandWrite *) alloca(wrSize);
 
     if (!file.open(QFile::ReadOnly)) {
         qWarning(FringLog()) << "Unable to open file" << file.fileName();
@@ -511,7 +511,7 @@ void FringUpdateThread::run()
         return;
     }
 
-    wrCmd->reg = FRING_REG_PUSH_FIRMWARE_UPDATE;
+    wrCmd->reg = FringProtocol::FRING_REG_PUSH_FIRMWARE_UPDATE;
 
     qInfo(FringLog) << "Transmitting firmware file" << file.fileName() << "size" << file.size();
 
@@ -545,7 +545,7 @@ void FringUpdateThread::run()
         // Wait for interrupt
         semaphore.acquire();
 
-        if (interruptStatus != FRING_UPDATE_RESULT_OK) {
+        if (interruptStatus != FringProtocol::FRING_UPDATE_RESULT_OK) {
             qWarning(FringLog) << "Firmware returned bad code in response to update command:" << interruptStatus;
             emit failed();
             return;
@@ -559,10 +559,10 @@ void FringUpdateThread::run()
 
 void FringUpdateThread::interrupt()
 {
-    struct FringCommandRead rdCmd = {};
-    struct FringCommandWrite wrCmd = {};
+    FringProtocol::CommandRead rdCmd = {};
+    FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = FRING_REG_READ_FIRMWARE_UPDATE_RESULT;
+    wrCmd.reg = FringProtocol::FRING_REG_READ_FIRMWARE_UPDATE_RESULT;
     if (!fring->transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.updateStatus)))
         return;
 
