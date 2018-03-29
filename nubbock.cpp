@@ -32,18 +32,32 @@ Nubbock::Nubbock(QObject *parent) :
     socket.connectToServer(endpoint);
 }
 
-void  Nubbock::setTransform(const QString &t)
+void Nubbock::setTransform(const QString &t)
 {
     transform = t;
+    sendState();
+}
 
-    if (socket.isWritable())
-        sendState();
+void Nubbock::suspend()
+{
+    suspended = true;
+    sendState();
+}
+
+void Nubbock::resume()
+{
+    suspended = true;
+    sendState();
 }
 
 bool Nubbock::sendState(void)
 {
+    if (!socket.isWritable())
+        return false;
+
     QJsonObject obj({
-                        { "transform", transform }
+                        { "transform", transform },
+                        { "suspended", suspended },
                     });
 
     QByteArray ba = QJsonDocument(obj).toJson(QJsonDocument::Compact);

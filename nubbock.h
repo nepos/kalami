@@ -15,10 +15,13 @@ public:
 
 public slots:
     void setTransform(const QString &t);
+    void suspend();
+    void resume();
 
 private:
     QString endpoint;
     QString transform;
+    bool suspended;
     QLocalSocket socket;
     bool sendState(void);
 };

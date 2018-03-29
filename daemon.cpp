@@ -349,14 +349,22 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
         // its som_state to SUSPENDED, based on that call.
         fring->setWakeupTime(wakeupTime);
 
-        displayBrightness->suspend();
         connman->suspend();
+        nubbock->suspend();
+        displayBrightness->suspend();
+
+        // Give Nubbock and the display backlight regulator some time to settle
+        QThread::sleep(1);
+
+        // This will actually put the kernel to sleep
         machine->suspend();
+
+        //TODO: Here we should act depending on wakeup reason!
 
         connman->resume();
         displayBrightness->resume();
+        nubbock->resume();
 
-        //TODO: Here we should act depending on wakeup reason!
         KirbyMessage msg("policy/power-management/RESUMED");
         kirby->sendMessage(msg);
     }
