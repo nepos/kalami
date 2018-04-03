@@ -40,11 +40,11 @@ BrightnessControl::~BrightnessControl()
 {
 }
 
-bool BrightnessControl::setBrightness(float value)
+bool BrightnessControl::setBrightnessInteger(int value)
 {
     if (brightnessFile.exists() &&
         brightnessFile.open(QIODevice::WriteOnly | QIODevice::Unbuffered)) {
-        QString str = QString::number((int) (value * (float) maxBrightness));
+        QString str = QString::number(value);
         qInfo(BrightnessControlLog) << "Setting brightness of" << brightnessFile.fileName()
                                     << "to" << str;
         str += "\n";
@@ -58,27 +58,32 @@ bool BrightnessControl::setBrightness(float value)
     }
 }
 
-float BrightnessControl::getBrightness()
+bool BrightnessControl::setBrightness(qreal value)
 {
-    int val = 0;
+    return setBrightnessInteger(value * (qreal) maxBrightness);
+}
 
-    if (brightnessFile.open(QIODevice::ReadOnly)) {
+int BrightnessControl::getBrightnessInteger()
+{
+    if (brightnessFile.exists() &&
+        brightnessFile.open(QIODevice::ReadOnly)) {
         QString value = brightnessFile.readLine();
-        val = value.toInt();
+        int val = value.toInt();
         brightnessFile.close();
+        return val;
     }
 
-    return  (float) val / (float) maxBrightness;
+    return 0;
 }
 
 void BrightnessControl::suspend()
 {
-    brightnessBeforeSuspend = getBrightness();
+    brightnessBeforeSuspend = getBrightnessInteger();
     setBrightness(0);
 }
 
 void BrightnessControl::resume()
 {
-    setBrightness(brightnessBeforeSuspend);
+    setBrightnessInteger(brightnessBeforeSuspend);
 }
 

@@ -32,14 +32,16 @@ class BrightnessControl : public QObject
 public:
     BrightnessControl(const QString &rootPath, QObject *parent = 0);
     ~BrightnessControl();
-    bool setBrightness(float value);
-    float getBrightness();
+    bool setBrightness(qreal value);
 
     void suspend();
     void resume();
 
 private:
+    bool setBrightnessInteger(int value);
+    int getBrightnessInteger();
+
     QFile brightnessFile;
     int maxBrightness;
-    float brightnessBeforeSuspend;
+    int brightnessBeforeSuspend;
 };
