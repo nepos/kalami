@@ -93,7 +93,7 @@ void Connman::iterateServices()
         // If there is a preconfigured SSID, try to connect to it once
         if (!d->preconfiguredSSID.isEmpty() && d->preconfiguredSSID == service->name()) {
             qInfo(ConnmanLog) << "Connecting to preconfigured SSID" << service->name();
-            connectToWifi(id, QString(d->preconfiguredPassword));
+            connectToWifi(id, QString(d->preconfiguredPassword), false);
             d->preconfiguredSSID.clear();
             d->preconfiguredPassword.clear();
         }
@@ -211,7 +211,7 @@ void Connman::start()
     enableWifi();
 }
 
-bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
+bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase, bool iterateImmediately)
 {
     Q_D(Connman);
 
@@ -226,7 +226,10 @@ bool Connman::connectToWifi(const QString &wifiId, const QString &passphrase)
 
             service->setAutoConnect(false);
             service->requestConnect();
-            iterateServices();
+
+            if (iterateImmediately)
+                iterateServices();
+
             d->checkTimer->start();
 
             return true;

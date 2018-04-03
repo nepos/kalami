@@ -17,7 +17,7 @@ class Connman : public QObject
 public:
     explicit Connman(QObject *parent = 0);
     void start();
-    bool connectToWifi(const QString &wifiId, const QString &passphrase);
+    bool connectToWifi(const QString &wifiId, const QString &passphrase, bool iterateImmediately = true);
     bool disconnectFromWifi(const QString &wifiId);
     void suspend();
     void resume();
