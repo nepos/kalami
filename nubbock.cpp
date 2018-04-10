@@ -46,7 +46,7 @@ void Nubbock::suspend()
 
 void Nubbock::resume()
 {
-    suspended = true;
+    suspended = false;
     sendState();
 }
 
