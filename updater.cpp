@@ -73,6 +73,9 @@ void Updater::downloadFinished()
     QNetworkReply *reply = (QNetworkReply *) sender();
     QByteArray content = reply->readAll();
 
+    pendingReply = NULL;
+    reply->deleteLater();
+
     switch (state) {
     case Updater::StateDownloadJson: {
         QJsonParseError jsonError;
@@ -135,7 +138,7 @@ void Updater::downloadFinished()
 
         if (l.length() != 0) {
             emit checkFailed("Cannot parse update version from server" + availableUpdate.version);
-            return;
+            break;
         }
 
         unsigned long version = l[1].toULong();
@@ -153,11 +156,10 @@ void Updater::downloadFinished()
 
         break;
     }
+
     default:
         break;
     }
-
-    //reply->deleteLater();
 }
 
 void Updater::check(const QString &updateChannel)
