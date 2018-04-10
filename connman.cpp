@@ -119,6 +119,8 @@ void Connman::checkState()
 {
     Q_D(Connman);
 
+    return;
+
     foreach (NetworkService *service, d->manager->getServices("wifi")) {
         QString id = kalamiIdForService(service);
 
