@@ -134,14 +134,14 @@ void Connman::checkState()
                     service->state() == "ready") {
 
                     service->requestDisconnect();
-                    service->requestConnect();
+                    d->currentWifiLastCheckState.clear();
+                } else {
+                    d->currentWifiLastCheckState = service->state();
                 }
             }
 
-            d->currentWifiLastCheckState = service->state();
+            return;
         }
-
-        return;
     }
 }
 
