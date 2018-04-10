@@ -55,6 +55,11 @@ KirbyConnection::KirbyConnection(const QUrl &uri, QObject *parent) :
 
 void KirbyConnection::sendMessage(const KirbyMessage &message)
 {
+    if (!socket.isValid()) {
+        qWarning() << "Unable to send Kirby message: socket not open";
+        return;
+    }
+
     const QJsonObject obj = message.toJson();
     qInfo(KirbyConnectionLog) << ">" << obj;
     QByteArray ba = QJsonDocument(obj).toJson(QJsonDocument::Compact);
