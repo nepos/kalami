@@ -30,7 +30,6 @@ private slots:
     bool disconnectFromWifiById(const QString &wifiId);
     void iterateServices();
     void enableWifi();
-    void checkState();
 
 private:
     ConnmanPrivate *d_ptr;
