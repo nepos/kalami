@@ -14,8 +14,8 @@ public:
     explicit BlockDevice(const QString path, QObject *parent = 0);
     ~BlockDevice();
 
-    QString fileName() const { return file.fileName(); };
-    qint64 maxSize() { return deviceMaxSize; };
+    QString fileName() const { return file.fileName(); }
+    qint64 maxSize() { return deviceMaxSize; }
     bool open(QFile::OpenMode m = QIODevice::ReadOnly);
     void close();
     char *map();
