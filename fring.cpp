@@ -378,14 +378,16 @@ bool Fring::readWakeupReason()
         return false;
     }
 
-    QString s;
-    s = s.sprintf("WakeupReason: %08X", rdCmd.wakeupReason.reason);
-    qInfo(FringLog) << s;
+    QString strReason = "None";
+    WakeupReason r = WAKEUP_REASON_NONE;
+    if (rdCmd.wakeupReason.reason == WAKEUP_REASON_HOMEBUTTON) {
+        r = WAKEUP_REASON_HOMEBUTTON;
+        strReason = "Homebutton";
+    } else if (rdCmd.wakeupReason.reason == WAKEUP_REASON_RTC) {
+        r = WAKEUP_REASON_RTC;
+        strReason = "RTC";
+    }
 
-    WakeupReason r = (rdCmd.wakeupReason.reason == 0 ?
-                WakeupReasonHomebutton :
-                WakeupReasonRTC);
-    QString strReason = (r == WakeupReasonHomebutton ? "Home Button" : "RTC");
     qInfo(FringLog) << "WakeupReason: " << strReason;
 
     emit wakeupReasonChanged(r);

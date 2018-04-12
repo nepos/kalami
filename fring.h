@@ -27,8 +27,9 @@ public:
     int getBoardRevisionB() const { return boardRevisionB; }
 
     enum WakeupReason {
-        WakeupReasonHomebutton  = 0x01,
-        WakeupReasonRTC
+        WAKEUP_REASON_NONE = 1,
+        WAKEUP_REASON_HOMEBUTTON,
+        WAKEUP_REASON_RTC
     };
 
 signals:
