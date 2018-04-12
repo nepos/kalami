@@ -338,7 +338,7 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
 
     if (message.type() == "policy/power-management/SUSPEND") {
 
-        int wakeupTime = 0;
+        int wakeupTime = 60;
 
         if (payload.contains("wakeup_time"))
             wakeupTime = payload["wakeup_time"].toInt();
