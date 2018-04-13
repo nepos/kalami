@@ -32,10 +32,10 @@ Nubbock::Nubbock(QObject *parent) :
     socket.connectToServer(endpoint);
 }
 
-void Nubbock::setTransform(const QString &t)
+bool Nubbock::setTransform(enum Transform t)
 {
     transform = t;
-    sendState();
+    return sendState();
 }
 
 void Nubbock::suspend()
@@ -56,7 +56,7 @@ bool Nubbock::sendState(void)
         return false;
 
     QJsonObject obj({
-                        { "transform", transform },
+                        { "transform", transform == Nubbock::TRANSFORM_90 ? "90" : "270" },
                         { "suspended", suspended },
                     });
 

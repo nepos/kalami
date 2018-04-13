@@ -132,12 +132,10 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         case Accelerometer::Standing:
         default:
             msg.setPayload(QJsonObject{{ "orientation", "standing" }});
-            nubbock->setTransform("90");
             break;
 
         case Accelerometer::Laying:
             msg.setPayload(QJsonObject{{ "orientation", "laying" }});
-            nubbock->setTransform("270");
             break;
 
             kirby->sendMessage(msg);
@@ -269,6 +267,18 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
     if (message.type() == "policy/display/SET_BRIGHTNESS") {
         KirbyMessage *response = message.makeResponse();
         ret = displayBrightness->setBrightness(payload["value"].toDouble());
+        response->setResponseError(!ret);
+        kirby->sendMessage(*response);
+        delete response;
+    }
+
+    if (message.type() == "policy/screen_rotation/SET_ROTATION") {
+        KirbyMessage *response = message.makeResponse();
+        int rotation = payload["value"].toInt();
+
+        ret = nubbock->setTransform(rotation == 0 ?
+                                        Nubbock::TRANSFORM_90 :
+                                        Nubbock::TRANSFORM_270);
         response->setResponseError(!ret);
         kirby->sendMessage(*response);
         delete response;

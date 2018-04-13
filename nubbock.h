@@ -13,14 +13,19 @@ class Nubbock : public QObject
 public:
     explicit Nubbock(QObject *parent = nullptr);
 
+    enum Transform {
+        TRANSFORM_90,
+        TRANSFORM_270,
+    };
+
 public slots:
-    void setTransform(const QString &t);
+    bool setTransform(enum Transform t);
     void suspend();
     void resume();
 
 private:
     QString endpoint;
-    QString transform;
+    enum Transform transform;
     bool suspended;
     QLocalSocket socket;
     bool sendState(void);
