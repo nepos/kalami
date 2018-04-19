@@ -9,7 +9,8 @@ Q_LOGGING_CATEGORY(NubbockLog, "Nubbock")
 Nubbock::Nubbock(QObject *parent) :
     QObject(parent),
     transform(),
-    socket(this)
+    socket(this),
+    suspended(false)
 {
     endpoint = "/run/nubbock/socket";
 
