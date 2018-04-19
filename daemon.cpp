@@ -244,6 +244,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qWarning(DaemonLog) << "MediaCtl failed to initialize";
 
     mediaCtl->setConfig(0, MediaCtl::UYVY8_2X8_1920x1080);
+    mediaCtl->setConfig(1, MediaCtl::UYVY8_2X8_1920x1080);
 }
 
 void Daemon::cancelResponse(KirbyMessage **msg)
