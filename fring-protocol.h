@@ -179,7 +179,7 @@ struct FirmwareUpdate {
 } _packed_;
 
 struct WakeupTime {
-    uint32_t seconds;
+    uint32_t miliseconds;
 } _packed_;
 
 struct Serial {

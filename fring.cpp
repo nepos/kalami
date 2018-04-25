@@ -378,19 +378,7 @@ bool Fring::readWakeupReason()
         return false;
     }
 
-    QString strReason = "None";
-    WakeupReason r = WAKEUP_REASON_NONE;
-    if (rdCmd.wakeupReason.reason == WAKEUP_REASON_HOMEBUTTON) {
-        r = WAKEUP_REASON_HOMEBUTTON;
-        strReason = "Homebutton";
-    } else if (rdCmd.wakeupReason.reason == WAKEUP_REASON_RTC) {
-        r = WAKEUP_REASON_RTC;
-        strReason = "RTC";
-    }
-
-    qInfo(FringLog) << "WakeupReason: " << strReason;
-
-    emit wakeupReasonChanged(r);
+    emit wakeupReasonChanged(static_cast<WakeupReason>(rdCmd.wakeupReason.reason));
 
     return true;
 }
@@ -456,15 +444,15 @@ void Fring::startFirmwareUpdate(const QString filename)
     updateThread->start();
 }
 
-void Fring::setWakeupTime(uint32_t s)
+void Fring::setWakeupMs(uint32_t ms)
 {
     FringProtocol::CommandRead rdCmd = {};
     FringProtocol::CommandWrite wrCmd = {};
 
     wrCmd.reg = FringProtocol::FRING_REG_SET_WAKEUP_TIME;
-    wrCmd.wakeupTime.seconds = s;
+    wrCmd.wakeupTime.miliseconds = ms;
 
-    transfer(&wrCmd, offsetof(FringProtocol::CommandWrite, wakeupTime) + sizeof(wrCmd.wakeupTime.seconds), &rdCmd, 1);
+    transfer(&wrCmd, offsetof(FringProtocol::CommandWrite, wakeupTime) + sizeof(wrCmd.wakeupTime.miliseconds), &rdCmd, 1);
 }
 
 FringUpdateThread::FringUpdateThread(Fring *fring, const QString &filename) : fring(fring), file(filename), semaphore()

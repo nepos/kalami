@@ -233,6 +233,31 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             kirby->sendMessage(msg);
         });
 
+        QObject::connect(fring, &Fring::wakeupReasonChanged, [this](Fring::WakeupReason reason) {
+
+            QString strReason = "unknown";
+            //TODO: How do we behave in these cases?!
+            if (reason == Fring::WAKEUP_REASON_RTC) {
+                strReason = "rtc";
+                connman->resume();
+
+            } else if (reason == Fring::WAKEUP_REASON_HOMEBUTTON) {
+                strReason = "homebutton";
+                connman->resume();
+                displayBrightness->resume();
+                nubbock->resume();
+
+            }
+
+            KirbyMessage msg("policy/power-management/RESUMED", QJsonObject {
+                                 { "wakeupReason", strReason },
+                             });
+
+            qInfo(DaemonLog) << "Wakeup reason: " << strReason;
+
+            kirby->sendMessage(msg);
+        });
+
         QObject::connect(fring, &Fring::logMessageReceived, [this](const QString &message) {
             qInfo(DaemonLog) << "Message from fring:" << message;
         });
@@ -349,14 +374,14 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
 
     if (message.type() == "policy/power-management/SUSPEND") {
 
-        int wakeupTime = 60;
+        int wakeupMs = 0;
 
-        if (payload.contains("wakeup_time"))
-            wakeupTime = payload["wakeup_time"].toInt();
+        if (payload.contains("wakeupMs"))
+            wakeupMs = payload["wakeupMs"].toInt();
 
         // Set wakeuptime in any case (0 = disabled), since fring also sets
         // its som_state to SUSPENDED, based on that call.
-        fring->setWakeupTime(wakeupTime);
+        fring->setWakeupMs(wakeupMs);
 
         connman->suspend();
         nubbock->suspend();
@@ -368,14 +393,7 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
         // This will actually put the kernel to sleep
         machine->suspend();
 
-        //TODO: Here we should act depending on wakeup reason!
-
-        connman->resume();
-        displayBrightness->resume();
-        nubbock->resume();
-
-        KirbyMessage msg("policy/power-management/RESUMED");
-        kirby->sendMessage(msg);
+        // For resume, see slot wakeupReasonChanged.
     }
 
     if (message.type() == "policy/bootstrap/BOOTSTRAP_INTERNAL_MEMORY") {
