@@ -298,7 +298,7 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
         delete response;
     }
 
-    if (message.type() == "policy/screen_rotation/SET_ROTATION") {
+    if (message.type() == "policy/display/SET_ROTATION") {
         KirbyMessage *response = message.makeResponse();
         int rotation = payload["value"].toInt();
 
