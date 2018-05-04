@@ -1,5 +1,5 @@
 /***
-  Copyright (c) 2017 Nepos GmbH
+  Copyright (c) 2017,2018 Nepos GmbH
 
   Authors: Daniel Mack <daniel@nepos.io>
 
@@ -22,8 +22,6 @@
 #include <QtCore/QCommandLineOption>
 
 #include "daemon.h"
-#include "machine.h"
-#include "updater.h"
 
 int main(int argc, char *argv[])
 {
