@@ -137,9 +137,9 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         case Accelerometer::Laying:
             msg.setPayload(QJsonObject{{ "orientation", "laying" }});
             break;
-
-            kirby->sendMessage(msg);
         }
+
+        kirby->sendMessage(msg);
     });
 
     accelerometer->emitCurrent();
