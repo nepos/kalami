@@ -49,6 +49,7 @@ public:
 private slots:
     void kirbyMessageReceived(const KirbyMessage &message);
     void cancelResponse(KirbyMessage **msg);
+    void sendDeviceInformation();
 
 private:
     Accelerometer *accelerometer;

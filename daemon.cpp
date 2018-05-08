@@ -196,6 +196,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     connman->start();
 
     // Websocket connection
+    QObject::connect(kirby, &KirbyConnection::connected, this, &Daemon::sendDeviceInformation);
     QObject::connect(kirby, &KirbyConnection::messageReceived, this, &Daemon::kirbyMessageReceived);
 
     // D-Bus connection
@@ -283,6 +284,26 @@ void Daemon::cancelResponse(KirbyMessage **msg)
     m->setResponseError(true);
     kirby->sendMessage(*m);
     delete m;
+}
+
+void Daemon::sendDeviceInformation()
+{
+    KirbyMessage msg("policy/device_information/DEVICE_INFORMATION",
+                     QJsonObject {
+                         { "model", machine->getModelName() },
+                         { "osVersion", QString::number(machine->getOsVersionNumber()) },
+                         { "osChannel", machine->getOsChannel() },
+                         { "bootSource", (machine->getBootSource() == Machine::BOOTSOURCE_INTERNAL ? "internal" : "external") },
+                         { "bootConfig", (machine->getBootConfig() == Machine::BOOTCONFIG_A ? "A" : "B") },
+                         { "tentativeBoot", machine->isTentativeBoot() },
+                         { "firmwareVersion", fring->getFirmwareVersion() },
+                         { "hardwareErrors", QString::number(fring->getHardwareErrors()) },
+                         { "deviceSerial", fring->getDeviceSerial() },
+                         { "boardRevisionA", fring->getBoardRevisionA() },
+                         { "boardRevisionB", fring->getBoardRevisionB() },
+                     });
+
+        kirby->sendMessage(msg);
 }
 
 void Daemon::kirbyMessageReceived(const KirbyMessage &message)
@@ -406,28 +427,6 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
     if (message.type() == "policy/bootstrap/BOOTSTRAP_INTERNAL_MEMORY") {
         cancelResponse(&pendingBootstrapInternalMessage);
         pendingBootstrapInternalMessage = message.makeResponse();
-    }
-
-    if (message.type() == "policy/device_information/DEVICE_INFORMATION") {
-        KirbyMessage *response = message.makeResponse();
-
-        QJsonObject info {
-            { "model", machine->getModelName() },
-            { "osVersion", QString::number(machine->getOsVersionNumber()) },
-            { "osChannel", machine->getOsChannel() },
-            { "bootSource", (machine->getBootSource() == Machine::BOOTSOURCE_INTERNAL ? "internal" : "external") },
-            { "bootConfig", (machine->getBootConfig() == Machine::BOOTCONFIG_A ? "A" : "B") },
-            { "tentativeBoot", machine->isTentativeBoot() },
-            { "firmwareVersion", fring->getFirmwareVersion() },
-            { "hardwareErrors", QString::number(fring->getHardwareErrors()) },
-            { "deviceSerial", fring->getDeviceSerial() },
-            { "boardRevisionA", fring->getBoardRevisionA() },
-            { "boardRevisionB", fring->getBoardRevisionB() },
-        };
-
-        response->setPayload(info);
-        kirby->sendMessage(*response);
-        delete response;
     }
 
     Q_UNUSED(ret);

@@ -34,6 +34,7 @@ public:
     explicit KirbyConnection(const QUrl &uri, QObject *parent = 0);
 
 signals:
+    void connected();
     void messageReceived(const KirbyMessage &message);
 
 public slots:

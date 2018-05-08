@@ -29,6 +29,7 @@ KirbyConnection::KirbyConnection(const QUrl &uri, QObject *parent) :
 {
     QObject::connect(&socket, &QWebSocket::connected, [this]() {
         qInfo(KirbyConnectionLog) << "Now connected to Kirby at" << socket.requestUrl();
+        emit connected();
     });
 
     QObject::connect(&socket, &QWebSocket::disconnected, [this, uri]() {
