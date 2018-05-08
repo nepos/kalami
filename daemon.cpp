@@ -106,19 +106,19 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     QObject::connect(updater, &Updater::updateSucceeded, [this]() {
         qInfo(DaemonLog) << "Update succeeded!";
-        KirbyMessage msg("policy/update/UPDATE_FINISHED",
+        KirbyMessage msg("policy/update/FINISHED",
                          QJsonObject{{ "updateSuccessful", true }});
     });
 
     QObject::connect(updater, &Updater::updateFailed, [this]() {
         qInfo(DaemonLog) << "Update failed!";
-        KirbyMessage msg("policy/update/UPDATE_FINISHED",
+        KirbyMessage msg("policy/update/FINISHED",
                          QJsonObject{{ "updateSuccessful", false }});
     });
 
     QObject::connect(updater, &Updater::updateProgress, [this](float progress) {
         qInfo(DaemonLog) << "Updater progress:" << progress;
-        KirbyMessage msg("policy/update/UPDATE_PROGRESS",
+        KirbyMessage msg("policy/update/PROGRESS",
                          QJsonObject{{ "progress", progress }});
         kirby->sendMessage(msg);
     });
@@ -288,7 +288,7 @@ void Daemon::cancelResponse(KirbyMessage **msg)
 
 void Daemon::sendDeviceInformation()
 {
-    KirbyMessage msg("policy/device_information/DEVICE_INFORMATION",
+    KirbyMessage msg("policy/device/DEVICE_INFORMATION",
                      QJsonObject {
                          { "model", machine->getModelName() },
                          { "osVersion", QString::number(machine->getOsVersionNumber()) },
