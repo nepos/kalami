@@ -303,7 +303,7 @@ void Daemon::sendDeviceInformation()
                          { "boardRevisionB", fring->getBoardRevisionB() },
                      });
 
-        kirby->sendMessage(msg);
+    kirby->sendMessage(msg);
 }
 
 void Daemon::kirbyMessageReceived(const KirbyMessage &message)
