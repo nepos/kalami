@@ -372,8 +372,15 @@ void Daemon::kirbyMessageReceived(const KirbyMessage &message)
         delete response;
     }
 
-    if (message.type() == "policy/power-management/SUSPEND") {
+    if (message.type() == "policy/power-management/SHUTDOWN") {
+        machine->powerOff();
+    }
 
+    if (message.type() == "policy/power-management/REBOOT") {
+        machine->restart();
+    }
+
+    if (message.type() == "policy/power-management/SUSPEND") {
         int wakeupMs = 0;
 
         if (payload.contains("wakeupMs"))
