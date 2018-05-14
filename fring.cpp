@@ -264,9 +264,14 @@ bool Fring::readDeviceStatus()
         emit ambientLightChanged(ambientLightValue / 255.0);
     }
 
-    hardwareErrors = qFromLittleEndian(rdCmd.deviceStatus.hardwareErrors);
-    if (hardwareErrors)
-        qWarning(FringLog) << "Detected hardware errors: " << QString::number(hardwareErrors, 16);
+    uint32_t errors = qFromLittleEndian(rdCmd.deviceStatus.hardwareErrors);
+    if (errors != hardwareErrors) {
+        if (errors)
+            qWarning(FringLog) << "Detected hardware errors: " << QString::number(errors, 16);
+
+        hardwareErrors = errors;
+        emit hardwareErrorsChanged();
+    }
 
     batteryPresent = !(hardwareErrors & (FringProtocol::FRING_HWERR_BATTERY_NOT_RESPONDING | FringProtocol::FRING_HWERR_BATTERY_INIT_ERROR));
 

@@ -38,6 +38,7 @@ signals:
     void batteryStateChanged(float level, float chargeCurrent, float temperature, float timeToEmpty, float timeToFull);
     void logMessageReceived(const QString &message);
     void wakeupReasonChanged(WakeupReason w);
+    void hardwareErrorsChanged();
 
 public slots:
     bool setLedOff(int id);

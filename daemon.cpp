@@ -234,8 +234,9 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             kirby->sendMessage(msg);
         });
 
-        QObject::connect(fring, &Fring::wakeupReasonChanged, [this](Fring::WakeupReason reason) {
+        QObject::connect(fring, &Fring::hardwareErrorsChanged, this, &Daemon::sendDeviceInformation);
 
+        QObject::connect(fring, &Fring::wakeupReasonChanged, [this](Fring::WakeupReason reason) {
             QString strReason = "unknown";
             //TODO: How do we behave in these cases?!
             if (reason == Fring::WAKEUP_REASON_RTC) {
