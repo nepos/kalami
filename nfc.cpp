@@ -20,6 +20,8 @@
 #include <QDebug>
 #include <QNearFieldManager>
 #include <QNdefMessage>
+#include <QNdefNfcTextRecord>
+#include <QNdefFilter>
 
 #include "nfc.h"
 
@@ -34,21 +36,16 @@ Nfc::Nfc(QObject *parent) :
         return;
     }
 
-    /*
+
     QNdefFilter filter;
 
-    //filter.setOrderMatch(false);
-    //filter.appendRecord<QNdefNfcTextRecord>(1, UINT_MAX);
-    //filter.appendRecord<QNdefNfcUriRecord>();
-    // type parameter cannot specify substring so filter for "image/" below
-    //filter.appendRecord(QNdefRecord::Mime, QByteArray(), 0, 1);
-
+    filter.setOrderMatch(false);
+    filter.appendRecord<QNdefNfcTextRecord>(1, UINT_MAX);
     int result = manager->registerNdefMessageHandler(filter, this,
                                                      SLOT(handleMessage(QNdefMessage, QNearFieldTarget*)));
 
     if (result < 0)
         qWarning(NfcLog) << "Platform does not support NDEF message handler registration";
-    */
 
     if (!manager->startTargetDetection()) {
         qWarning(NfcLog) << "Can not start target Detection";
@@ -68,8 +65,8 @@ void Nfc::targetDetected(QNearFieldTarget *target)
 
     qInfo(NfcLog) << "Found Tag: " << target->uid();
 
-    connect(target, SIGNAL(ndefMessageRead(QNdefMessage)), this, SLOT(handlePolledNdefMessage(QNdefMessage)));
-    target->readNdefMessages();
+    //connect(target, SIGNAL(ndefMessageRead(QNdefMessage)), this, SLOT(handlePolledNdefMessage(QNdefMessage)));
+    //target->readNdefMessages();
 }
 
 void Nfc::targetLost(QNearFieldTarget *target)
