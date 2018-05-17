@@ -93,8 +93,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         machine->verifyBootConfig();
     });
 
-    QObject::connect(updater, &Updater::checkFailed, [this]() {
-        qInfo(DaemonLog) << "Update check failed!";
+    QObject::connect(updater, &Updater::checkFailed, [this](const QString &error) {
+        qInfo(DaemonLog) << "Update check failed!" << error;
 
         if (pendingUpdateCheckMessage) {
             pendingUpdateCheckMessage->setResponseError(true);
