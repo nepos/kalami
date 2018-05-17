@@ -10,7 +10,8 @@ KirbyMessage::KirbyMessage(const QJsonObject json)
 KirbyMessage::KirbyMessage(const QString type, const QJsonValue payload, const QJsonObject meta) :
     _type(type),
     _payload(payload),
-    _meta(meta)
+    _meta(meta),
+    _error(false)
 {
     if (!_meta["commType"].isString())
         _meta["commType"] = "one-way";
@@ -26,7 +27,7 @@ void KirbyMessage::setPayload(const QJsonValue &payload)
 
 void KirbyMessage::setResponseError(bool error)
 {
-    _meta["error"] = error;
+    _error = error;
 }
 
 const QJsonObject KirbyMessage::toJson() const {
@@ -39,6 +40,8 @@ const QJsonObject KirbyMessage::toJson() const {
 
     if (!_meta.isEmpty())
         o["meta"] = _meta;
+
+    o["error"] = _error;
 
     return o;
 }

@@ -26,4 +26,5 @@ private:
     QString _type;
     QJsonValue _payload;
     QJsonObject _meta;
+    bool _error;
 };
