@@ -110,6 +110,7 @@ void Updater::downloadFinished()
         request.setMaximumRedirectsAllowed(0);
 
         state = Updater::StateDownloadSignature;
+        networkAccessManager.setNetworkAccessible(QNetworkAccessManager::Accessible);
         pendingReply = networkAccessManager.get(request);
         QObject::connect(pendingReply, &QNetworkReply::finished, this, &Updater::downloadFinished);
 
@@ -201,6 +202,7 @@ void Updater::check(const QString &updateChannel)
         pendingReply->abort();
 
     state = Updater::StateDownloadJson;
+    networkAccessManager.setNetworkAccessible(QNetworkAccessManager::Accessible);
     pendingReply = networkAccessManager.get(request);
     QObject::connect(pendingReply, &QNetworkReply::finished, this, &Updater::downloadFinished);
 }
@@ -295,6 +297,8 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
     qInfo(UpdaterLog) << "Downloading delta update from" << deltaUrl;
 
     QNetworkAccessManager networkAccessManager;
+    networkAccessManager.setNetworkAccessible(QNetworkAccessManager::Accessible);
+
     QNetworkRequest request(deltaUrl);
     request.setAttribute(QNetworkRequest::SpdyAllowedAttribute, true);
 #if QT_VERSION >= 0x050900
@@ -381,6 +385,8 @@ bool UpdateThread::downloadFullImage(const QUrl &url, const QString &outputPath)
     bool ret = false;
 
     QNetworkAccessManager networkAccessManager;
+    networkAccessManager.setNetworkAccessible(QNetworkAccessManager::Accessible);
+
     QNetworkRequest request(url);
     request.setAttribute(QNetworkRequest::SpdyAllowedAttribute, true);
 #if QT_VERSION >= 0x050900
