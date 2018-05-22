@@ -329,9 +329,7 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
     decoder.SetMaximumTargetFileSize(output.maxSize());
     decoder.StartDecoding(buf, dict.size(), output.map(), output.maxSize());
 
-    QObject::connect(reply, &QNetworkReply::readyRead, [this, &loop, &decoder, &error]() {
-        QNetworkReply *reply = (QNetworkReply *) sender();
-
+    QObject::connect(reply, &QNetworkReply::readyRead, [this, &loop, &decoder, &error, &reply]() {
         if (reply->error() != QNetworkReply::NoError) {
             qInfo(UpdaterLog) << "Error downloading file: " << reply->errorString();
             reply->abort();
@@ -348,8 +346,7 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
     });
 
     connect(reply, static_cast<void(QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error),
-          [this, &loop, &error](QNetworkReply::NetworkError code){
-        QNetworkReply *reply = (QNetworkReply *) sender();
+          [this, &loop, &error, &reply](QNetworkReply::NetworkError code){
         Q_UNUSED(code);
 
         qInfo(UpdaterLog) << "Error downloading" << reply->url() << ":" << reply->errorString();
@@ -407,9 +404,7 @@ bool UpdateThread::downloadFullImage(const QUrl &url, const QString &outputPath)
 
     qInfo(UpdaterLog) << "Downloading full image from" << url;
 
-    QObject::connect(reply, &QNetworkReply::readyRead, [this, &output]() {
-        QNetworkReply *reply = (QNetworkReply *) sender();
-
+    QObject::connect(reply, &QNetworkReply::readyRead, [this, &output, &reply]() {
         if (reply->error() != QNetworkReply::NoError) {
             qInfo(UpdaterLog) << "Error downloading file: " << reply->error();
             reply->abort();
@@ -421,8 +416,7 @@ bool UpdateThread::downloadFullImage(const QUrl &url, const QString &outputPath)
     });
 
     connect(reply, static_cast<void(QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error),
-          [this, &loop](QNetworkReply::NetworkError code){
-        QNetworkReply *reply = (QNetworkReply *) sender();
+          [this, &loop, &reply](QNetworkReply::NetworkError code){
         Q_UNUSED(code);
 
         qInfo(UpdaterLog) << "Error downloading" << reply->url() << ":" << reply->errorString();
@@ -480,6 +474,9 @@ bool UpdateThread::downloadAndVerify(ImageReader::ImageType type,
                                      const QUrl &deltaImageUrl,
                                      const QString &sha512)
 {
+    qInfo(UpdaterLog) << "Installing update to" << outputPath
+                      << "using" << dictionaryPath << "as update seed";
+
     if (downloadDeltaImage(type, deltaImageUrl, dictionaryPath, outputPath) &&
         verifyImage(type, outputPath, sha512))
         return true;
