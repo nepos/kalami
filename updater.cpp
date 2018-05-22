@@ -137,8 +137,8 @@ void Updater::downloadFinished()
 
         QStringList l = availableUpdate.version.split("-");
 
-        if (l.length() != 0) {
-            emit checkFailed("Cannot parse update version from server" + availableUpdate.version);
+        if (l.length() != 2) {
+            emit checkFailed("Cannot parse update version from server: " + availableUpdate.version);
             break;
         }
 
