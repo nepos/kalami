@@ -260,6 +260,5 @@ void Machine::restart()
 
 void Machine::powerOff()
 {
-    qInfo(MachineLog) << "Power off!";
-    //reboot(LINUX_REBOOT_CMD_POWER_OFF);
+    reboot(LINUX_REBOOT_CMD_POWER_OFF);
 }
