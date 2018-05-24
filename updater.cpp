@@ -323,14 +323,6 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
     request.setAttribute(QNetworkRequest::SpdyAllowedAttribute, true);
     request.setAttribute(QNetworkRequest::HTTP2AllowedAttribute, true);
 
-    QNetworkReply *reply = networkAccessManager.get(request);
-    reply->setReadBufferSize(1024 * 1024);
-
-    // We need to move these objects to the thread we're running in. Otherwise, the handler for the reply signals
-    // will fire in the main thread, leading to memory corruption in reply->readAll()
-    networkAccessManager.moveToThread(thread());
-    reply->moveToThread(thread());
-
     BlockDevice output(outputPath);
     if (!output.open(QFile::ReadWrite))
         return false;
@@ -342,6 +334,14 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
     const char *buf = (const char *) dict.map();
     if (buf == nullptr)
         return false;
+
+    QNetworkReply *reply = networkAccessManager.get(request);
+    reply->setReadBufferSize(1024 * 1024);
+
+    // We need to move these objects to the thread we're running in. Otherwise, the handler for the reply signals
+    // will fire in the main thread, leading to memory corruption in reply->readAll()
+    networkAccessManager.moveToThread(thread());
+    reply->moveToThread(thread());
 
     open_vcdiff::VCDiffStreamingDecoder decoder;
     decoder.SetMaximumTargetFileSize(output.maxSize());
