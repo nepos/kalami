@@ -320,9 +320,7 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
 
     QNetworkRequest request(deltaUrl);
     request.setAttribute(QNetworkRequest::SpdyAllowedAttribute, true);
-#if QT_VERSION >= 0x050900
     request.setAttribute(QNetworkRequest::HTTP2AllowedAttribute, true);
-#endif
 
     QNetworkReply *reply = networkAccessManager.get(request);
     reply->setReadBufferSize(1024 * 1024);
@@ -405,9 +403,7 @@ bool UpdateThread::downloadFullImage(const QUrl &url, const QString &outputPath)
 
     QNetworkRequest request(url);
     request.setAttribute(QNetworkRequest::SpdyAllowedAttribute, true);
-#if QT_VERSION >= 0x050900
     request.setAttribute(QNetworkRequest::HTTP2AllowedAttribute, true);
-#endif
 
     QNetworkReply *reply = networkAccessManager.get(request);
     reply->setReadBufferSize(1024 * 1024);
