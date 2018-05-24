@@ -394,6 +394,8 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
     timer.start(5 * 60 * 1000);
     loop.exec();
 
+    reply->deleteLater();
+
     return ret && !error;
 }
 
@@ -458,6 +460,8 @@ bool UpdateThread::downloadFullImage(const QUrl &url, const QString &outputPath)
     timer.start(10 * 60 * 1000);
 
     loop.exec();
+
+    reply->deleteLater();
 
     return ret;
 }
