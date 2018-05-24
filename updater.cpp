@@ -230,19 +230,23 @@ bool Updater::install()
 
     thread = new UpdateThread(this);
 
-    QObject::connect(thread, &UpdateThread::succeeded, [this]() {
+    QObject::connect(thread, &UpdateThread::succeeded, this, [this]() {
         installedUpdateVersion = availableUpdate.version;
         machine->setAltBootConfig();
+        thread->wait();
+        thread = NULL;
         emit updateSucceeded();
-    });
+    }, Qt::QueuedConnection);
 
-    QObject::connect(thread, &UpdateThread::failed, [this]() {
+    QObject::connect(thread, &UpdateThread::failed, this, [this]() {
+        thread->wait();
+        thread = NULL;
         emit updateFailed();
-    });
+    }, Qt::QueuedConnection);
 
     QObject::connect(thread, &UpdateThread::progress, this, [this](double v) {
         emit updateProgress(v);
-    });
+    }, Qt::QueuedConnection);
 
     thread->start();
 
