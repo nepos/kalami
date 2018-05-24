@@ -216,7 +216,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             kirby->sendMessage(msg);
         });
 
-        QObject::connect(fring, &Fring::batteryStateChanged, [this](float level, float chargeCurrent, float temperature, float timeToEmpty, float timeToFull) {
+        QObject::connect(fring, &Fring::batteryStateChanged, [this](double level, double chargeCurrent, double temperature, double timeToEmpty, double timeToFull) {
             KirbyMessage msg("policy/battery/STATE_CHANGED", QJsonObject {
                                  { "level", level },
                                  { "chargingCurrent", chargeCurrent },
@@ -227,7 +227,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
             kirby->sendMessage(msg);
         });
 
-        QObject::connect(fring, &Fring::ambientLightChanged, [this](float value) {
+        QObject::connect(fring, &Fring::ambientLightChanged, [this](double value) {
             KirbyMessage msg("policy/battery/AMBIENT_LIGHT_CHANGED", QJsonObject {
                                  { "value", value },
                              });

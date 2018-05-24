@@ -195,7 +195,7 @@ bool Fring::setLedOff(int id)
     return setLed(&wrCmd);
 }
 
-bool Fring::setLedOn(int id, float r, float g, float b)
+bool Fring::setLedOn(int id, double r, double g, double b)
 {
     FringProtocol::CommandWrite wrCmd = {};
 
@@ -209,7 +209,7 @@ bool Fring::setLedOn(int id, float r, float g, float b)
     return setLed(&wrCmd);
 }
 
-bool Fring::setLedFlashing(int id, float r, float g, float b, float onPhase, float offPhase)
+bool Fring::setLedFlashing(int id, double r, double g, double b, double onPhase, double offPhase)
 {
     FringProtocol::CommandWrite wrCmd = {};
 
@@ -225,7 +225,7 @@ bool Fring::setLedFlashing(int id, float r, float g, float b, float onPhase, flo
     return setLed(&wrCmd);
 }
 
-bool Fring::setLedPulsating(int id, float r, float g, float b, float frequency)
+bool Fring::setLedPulsating(int id, double r, double g, double b, double frequency)
 {
     FringProtocol::CommandWrite wrCmd = {};
 
@@ -317,11 +317,11 @@ bool Fring::readBatteryStatus()
         batteryTimeToEmpty = rdCmd.batteryStatus.averageTimeToEmpty;
         batteryTimeToFull = rdCmd.batteryStatus.averageTimeToFull;
 
-        emit batteryStateChanged((float) batteryLevel / 100.f,
-                                 (float) batteryChargeCurrent * 0.05f,
-                                 (float) batteryTemperature  * 0.5f,
-                                 (float) batteryTimeToEmpty,
-                                 (float) batteryTimeToFull);
+        emit batteryStateChanged((double) batteryLevel / 100.f,
+                                 (double) batteryChargeCurrent * 0.05f,
+                                 (double) batteryTemperature  * 0.5f,
+                                 (double) batteryTimeToEmpty,
+                                 (double) batteryTimeToFull);
     }
 
     if (!batteryLogFileName.isEmpty()) {
@@ -336,7 +336,7 @@ bool Fring::readBatteryStatus()
 
             QStringList l;
             l << QString::number(time->elapsed());
-            l << QString::number((float) rdCmd.batteryStatus.chargeCurrent * 0.05f);
+            l << QString::number((double) rdCmd.batteryStatus.chargeCurrent * 0.05f);
             l << QString::number(rdCmd.batteryStatus.level);
             l << QString::number(rdCmd.batteryStatus.temp);
             l << QString::number(rdCmd.batteryStatus.remainingCapacity);
@@ -442,7 +442,7 @@ void Fring::startFirmwareUpdate(const QString filename)
         qInfo(FringLog) << "Update thread failed.";
     });
 
-    QObject::connect(updateThread, &FringUpdateThread::progress, [this](float v) {
+    QObject::connect(updateThread, &FringUpdateThread::progress, [this](double v) {
         qInfo(FringLog) << "Update thread progress:" << v;
     });
 
@@ -547,7 +547,7 @@ void FringUpdateThread::run()
             return;
         }
 
-        emit progress((float) offset / (float) file.size());
+        emit progress((double) offset / (double) file.size());
     } while(r > 0);
 
     emit succeeded();

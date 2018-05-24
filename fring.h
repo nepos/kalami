@@ -34,17 +34,17 @@ public:
 
 signals:
     void homeButtonChanged(bool state);
-    void ambientLightChanged(float value);
-    void batteryStateChanged(float level, float chargeCurrent, float temperature, float timeToEmpty, float timeToFull);
+    void ambientLightChanged(double value);
+    void batteryStateChanged(double level, double chargeCurrent, double temperature, double timeToEmpty, double timeToFull);
     void logMessageReceived(const QString &message);
     void wakeupReasonChanged(WakeupReason w);
     void hardwareErrorsChanged();
 
 public slots:
     bool setLedOff(int id);
-    bool setLedOn(int id, float r, float g, float b);
-    bool setLedFlashing(int id, float r, float g, float b, float onPhase, float offPhase);
-    bool setLedPulsating(int id, float r, float g, float b, float frequency);
+    bool setLedOn(int id, double r, double g, double b);
+    bool setLedFlashing(int id, double r, double g, double b, double onPhase, double offPhase);
+    bool setLedPulsating(int id, double r, double g, double b, double frequency);
     void startFirmwareUpdate(const QString filename);
     void setWakeupMs(uint32_t ms);
 
@@ -107,7 +107,7 @@ public slots:
     void interrupt();
 
 signals:
-    void progress(float progress);
+    void progress(double progress);
     void succeeded();
     void failed();
 
