@@ -480,7 +480,15 @@ bool UpdateThread::verifyImage(ImageReader::ImageType type, const QString &path,
         emitProgress(false, (float) pos / (float) image.size());
     }
 
-    return hash.result().toHex() == sha512;
+    if (hash.result().toHex() == sha512) {
+        qInfo(UpdaterLog) << "Image verification for" << path
+                          << "succeeded: " << sha512;
+        return true;
+    }
+
+    qInfo(UpdaterLog) << "Image verification for" << path << "failed."
+                      << hash.result().toHex() << "!=" << sha512;
+    return false;
 }
 
 bool UpdateThread::downloadAndVerify(ImageReader::ImageType type,
