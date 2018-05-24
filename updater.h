@@ -72,6 +72,7 @@ private:
     QNetworkAccessManager networkAccessManager;
     QNetworkReply *pendingReply;
     struct AvailableUpdate availableUpdate;
+    QString installedUpdateVersion;
     UpdateThread *thread;
 };
 

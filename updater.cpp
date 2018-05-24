@@ -20,6 +20,8 @@ Updater::Updater(const Machine *machine, QObject *parent) :
     pendingReply = NULL;
     thread = NULL;
     state = Updater::StateUndefined;
+    installedUpdateVersion = QString();
+    availableUpdate.version = QString();
 }
 
 Updater::~Updater()
@@ -144,16 +146,25 @@ void Updater::downloadFinished()
 
         unsigned long version = l[1].toULong();
 
+        if (installedUpdateVersion == availableUpdate.version) {
+            emit alreadyUpToDate();
+            break;
+        }
+
         if (l[0] != machine->getOsChannel()) {
             qInfo(UpdaterLog) << "Channel of update" << l[0]
                               << "differs from current device channel" << machine->getOsChannel();
             qInfo(UpdaterLog) << "Forcing update to" << availableUpdate.version;
             emit updateAvailable(availableUpdate.version);
-        } else if (version > machine->getOsVersionNumber()) {
-            emit updateAvailable(availableUpdate.version);
-        } else {
-            emit alreadyUpToDate();
+            break;
         }
+
+        if (version > machine->getOsVersionNumber()) {
+            emit updateAvailable(availableUpdate.version);
+            break;
+        }
+
+        emit alreadyUpToDate();
 
         break;
     }
@@ -209,7 +220,7 @@ void Updater::check(const QString &updateChannel)
 
 bool Updater::install()
 {
-    if (availableUpdate.version == 0)
+    if (availableUpdate.version.isEmpty())
         return false;
 
     if (thread) {
@@ -221,6 +232,7 @@ bool Updater::install()
     thread = new UpdateThread(this);
 
     QObject::connect(thread, &UpdateThread::succeeded, [this]() {
+        installedUpdateVersion = availableUpdate.version;
         machine->setAltBootConfig();
         emit updateSucceeded();
     });
