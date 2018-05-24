@@ -350,14 +350,19 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
     QObject::connect(reply, &QNetworkReply::readyRead, [this, &loop, &decoder, &error, &reply]() {
         if (reply->error() != QNetworkReply::NoError) {
             qInfo(UpdaterLog) << "Error downloading file: " << reply->errorString();
-            reply->abort();
+            error = true;
+            return;
+        }
+
+        QVariant status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+        if (status.toInt() == 404) {
+            qInfo(UpdaterLog) << "Error 404 downloading file";
             error = true;
             return;
         }
 
         const QByteArray data = reply->readAll();
         if (!decoder.DecodeChunkToInterface(data.constData(), data.size())) {
-            reply->abort();
             error = true;
             loop.quit();
         }
@@ -368,7 +373,6 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
         Q_UNUSED(code);
 
         qInfo(UpdaterLog) << "Error downloading" << reply->url() << ":" << reply->errorString();
-        reply->abort();
         error = true;
         loop.quit();
     });
