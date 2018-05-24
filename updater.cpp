@@ -10,6 +10,8 @@
 #include <QTimer>
 #include <QFileInfo>
 
+#include <math.h>
+
 #include "updater.h"
 
 Q_LOGGING_CATEGORY(UpdaterLog, "Updater")
@@ -241,7 +243,7 @@ bool Updater::install()
         emit updateFailed();
     });
 
-    QObject::connect(thread, &UpdateThread::progress, [this](float v) {
+    QObject::connect(thread, &UpdateThread::progress, this, [this](double v) {
         emit updateProgress(v);
     });
 
@@ -259,11 +261,12 @@ bool Updater::install()
 
 UpdateThread::UpdateThread(const Updater *updater, QObject *parent) :
     QThread(parent),
-    updater(updater)
+    updater(updater),
+    lastEmittedProgress(-1)
 {
 }
 
-void UpdateThread::emitProgress(bool isDownload, float v)
+void UpdateThread::emitProgress(bool isDownload, double v)
 {
     //
     // segment the progress indicator into 4 parts:
@@ -277,7 +280,7 @@ void UpdateThread::emitProgress(bool isDownload, float v)
     if (v < 0.0f || v > 1.0f)
         return;
 
-    float p = 0.0f;
+    double p = 0.0f;
 
     switch (state) {
     case UpdateThread::DownloadBootimgState:
@@ -292,8 +295,12 @@ void UpdateThread::emitProgress(bool isDownload, float v)
         p += 0.25;
 
     p += v/4;
+    p = round(p * 100) / 100;
 
-    emit progress(p);
+    if (p != lastEmittedProgress)
+        emit progress(p);
+
+    lastEmittedProgress = p;
 }
 
 bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,

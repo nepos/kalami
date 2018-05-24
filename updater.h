@@ -56,7 +56,7 @@ signals:
     void checkFailed(const QString &error);
     void updateSucceeded();
     void updateFailed();
-    void updateProgress(float progress);
+    void updateProgress(double progress);
 
 public slots:
     void check(const QString &updateChannel);
@@ -85,7 +85,7 @@ public:
     void run() Q_DECL_OVERRIDE;
 
 signals:
-    void progress(float progress);
+    void progress(double progress);
     void succeeded();
     void failed();
 
@@ -98,7 +98,8 @@ private:
 
     enum State state;
     const Updater *updater;
-    void emitProgress(bool isDownload, float v);
+    double lastEmittedProgress;
+    void emitProgress(bool isDownload, double v);
     bool downloadDeltaImage(ImageReader::ImageType type, const QUrl &deltaUrl, const QString &dictionaryPath, const QString &outputPath);
     bool downloadFullImage(const QUrl &source, const QString &outputPath);
     bool verifyImage(ImageReader::ImageType type, const QString &path, const QString &sha512);
