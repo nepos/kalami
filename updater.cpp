@@ -225,11 +225,8 @@ bool Updater::install()
     if (availableUpdate.version.isEmpty())
         return false;
 
-    if (thread) {
-        thread->quit();
-        thread->deleteLater();
-        thread = NULL;
-    }
+    if (thread)
+        return false;
 
     thread = new UpdateThread(this);
 
