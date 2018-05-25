@@ -415,7 +415,7 @@ bool UpdateThread::downloadFullImage(const QUrl &url, const QString &outputPath)
     request.setAttribute(QNetworkRequest::HTTP2AllowedAttribute, true);
 
     QNetworkReply *reply = networkAccessManager.get(request);
-    reply->setReadBufferSize(1024 * 1024);
+    reply->setReadBufferSize(32 * 1024);
 
     // We need to move these objects to the thread we're running in. Otherwise, the handler for the reply signals
     // will fire in the main thread, leading to memory corruption in reply->readAll()
@@ -530,6 +530,8 @@ void UpdateThread::run()
 {
     const AvailableUpdate *update = updater->getAvailableUpdate();
     bool ret;
+
+    QThread::currentThread()->setPriority(QThread::LowestPriority);
 
     state = UpdateThread::DownloadBootimgState;
     ret = downloadAndVerify(ImageReader::AndroidBootType,
