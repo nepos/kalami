@@ -255,7 +255,7 @@ void Machine::suspend()
 
 void Machine::restart()
 {
-    reboot(LINUX_REBOOT_CMD_RESTART);
+    //reboot(LINUX_REBOOT_CMD_RESTART);
 }
 
 void Machine::powerOff()
