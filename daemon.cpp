@@ -108,12 +108,14 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
         qInfo(DaemonLog) << "Update succeeded!";
         KirbyMessage msg("policy/update/FINISHED",
                          QJsonObject{{ "updateSuccessful", true }});
+        kirby->sendMessage(msg);
     });
 
     QObject::connect(updater, &Updater::updateFailed, [this]() {
         qInfo(DaemonLog) << "Update failed!";
         KirbyMessage msg("policy/update/FINISHED",
                          QJsonObject{{ "updateSuccessful", false }});
+        kirby->sendMessage(msg);
     });
 
     QObject::connect(updater, &Updater::updateProgress, [this](double progress) {
