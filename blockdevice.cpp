@@ -29,8 +29,11 @@ bool BlockDevice::open(QFile::OpenMode m)
     int ret;
     struct stat stat;
 
-    if (!file.open(m))
+    if (!file.open(m)) {
+        qWarning(BlockDeviceLog) << "Error opening" << file.fileName()
+                                 << ":" << file.errorString();
         return false;
+    }
 
     ret = fstat(file.handle(), &stat);
     if (ret < 0)

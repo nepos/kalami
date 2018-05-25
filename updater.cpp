@@ -149,6 +149,8 @@ void Updater::downloadFinished()
         unsigned long version = l[1].toULong();
 
         if (installedUpdateVersion == availableUpdate.version) {
+            qInfo(UpdaterLog) << "Update to new version" << installedUpdateVersion
+                              << "succeeded already previously.";
             emit alreadyUpToDate();
             break;
         }
