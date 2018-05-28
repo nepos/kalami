@@ -26,7 +26,7 @@ public slots:
 private:
     QString endpoint;
     enum Transform transform;
-    bool suspended;
     QLocalSocket socket;
+    bool suspended;
     bool sendState(void);
 };
