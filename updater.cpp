@@ -230,7 +230,7 @@ bool Updater::install()
     if (thread)
         return false;
 
-    thread = new UpdateThread(this);
+    thread = new UpdateThread(this, 100);
 
     QObject::connect(thread, &UpdateThread::succeeded, this, [this]() {
         installedUpdateVersion = availableUpdate.version;
@@ -262,10 +262,11 @@ bool Updater::install()
 // sums from. It emits signals for success, failure and progress updates.
 //
 
-UpdateThread::UpdateThread(const Updater *updater, QObject *parent) :
+UpdateThread::UpdateThread(const Updater *updater, unsigned throttleUsecPerKb, QObject *parent) :
     QThread(parent),
     updater(updater),
-    lastEmittedProgress(-1)
+    lastEmittedProgress(-1),
+    throttleDelay(throttleUsecPerKb)
 {
 }
 
@@ -347,6 +348,7 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
 
     open_vcdiff::VCDiffStreamingDecoder decoder;
     decoder.SetMaximumTargetFileSize(output.maxSize());
+    decoder.SetThrottleTime(throttleDelay);
     decoder.StartDecoding(buf, dict.size(), output.map(), output.maxSize());
 
     QObject::connect(reply, &QNetworkReply::readyRead, [this, &loop, &decoder, &error, &reply]() {
@@ -393,7 +395,7 @@ bool UpdateThread::downloadDeltaImage(ImageReader::ImageType type,
 
     QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
     timer.setSingleShot(true);
-    timer.start(5 * 60 * 1000);
+    timer.start(10 * 60 * 1000);
     loop.exec();
 
     reply->deleteLater();
@@ -482,10 +484,11 @@ bool UpdateThread::verifyImage(ImageReader::ImageType type, const QString &path,
         return false;
 
     while (pos < image.size()) {
-        qint64 l = qMin((qint64) 10 * 1024 * 1024, (qint64) (image.size() - pos));
+        qint64 l = qMin((qint64) 1024 * 1024, (qint64) (image.size() - pos));
         hash.addData(buf, l);
         pos += l;
         buf += l;
+        QThread::usleep(throttleDelay * 1024);
 
         emitProgress(false, (float) pos / (float) image.size());
     }

@@ -81,7 +81,7 @@ class UpdateThread : public QThread
     Q_OBJECT
 
 public:
-    UpdateThread(const Updater *updater, QObject *parent = 0);
+    UpdateThread(const Updater *updater, unsigned throttleUsecPerKb, QObject *parent = 0);
     void run() Q_DECL_OVERRIDE;
 
 signals:
@@ -99,6 +99,7 @@ private:
     enum State state;
     const Updater *updater;
     double lastEmittedProgress;
+    unsigned int throttleDelay;
     void emitProgress(bool isDownload, double v);
     bool downloadDeltaImage(ImageReader::ImageType type, const QUrl &deltaUrl, const QString &dictionaryPath, const QString &outputPath);
     bool downloadFullImage(const QUrl &source, const QString &outputPath);
