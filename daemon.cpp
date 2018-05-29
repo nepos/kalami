@@ -201,13 +201,6 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     QObject::connect(kirby, &KirbyConnection::connected, this, &Daemon::sendDeviceInformation);
     QObject::connect(kirby, &KirbyConnection::messageReceived, this, &Daemon::kirbyMessageReceived);
 
-    // D-Bus connection
-    QDBusConnection bus = QDBusConnection::systemBus();
-    if (bus.isConnected())
-        qInfo(DaemonLog) << "Connected to D-Bus as" << bus.baseService();
-    else
-        qWarning(DaemonLog) << "D-Bus connection failed:" << bus.lastError();
-
     // fring
     if (fring->initialize()) {
         QObject::connect(fring, &Fring::homeButtonChanged, [this](bool state) {

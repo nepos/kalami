@@ -1,5 +1,7 @@
 #include <QDebug>
 #include <QFile>
+#include <QtDBus/QDBusConnection>
+#include <QtDBus/QDBusMessage>
 
 #include <unistd.h>
 #include <sys/reboot.h>
@@ -255,10 +257,20 @@ void Machine::suspend()
 
 void Machine::restart()
 {
-    reboot(LINUX_REBOOT_CMD_RESTART);
+    QDBusMessage m =
+            QDBusMessage::createMethodCall("org.freedesktop.systemd1",
+                                           "/org/freedesktop/systemd1",
+                                           "org.freedesktop.systemd1.Manager",
+                                           "Reboot");
+    QDBusConnection::systemBus().call(m);
 }
 
 void Machine::powerOff()
 {
-    reboot(LINUX_REBOOT_CMD_POWER_OFF);
+    QDBusMessage m =
+            QDBusMessage::createMethodCall("org.freedesktop.systemd1",
+                                           "/org/freedesktop/systemd1",
+                                           "org.freedesktop.systemd1.Manager",
+                                           "PowerOff");
+    QDBusConnection::systemBus().call(m);
 }
