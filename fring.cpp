@@ -434,17 +434,17 @@ void Fring::startFirmwareUpdate(const QString filename)
 
     updateThread = new FringUpdateThread(this, filename);
 
-    QObject::connect(updateThread, &FringUpdateThread::succeeded, [this]() {
+    QObject::connect(updateThread, &FringUpdateThread::succeeded, this, [this]() {
         qInfo(FringLog) << "Update thread succeeded.";
-    });
+    }, Qt::QueuedConnection);
 
-    QObject::connect(updateThread, &FringUpdateThread::failed, [this]() {
+    QObject::connect(updateThread, &FringUpdateThread::failed, this, [this]() {
         qInfo(FringLog) << "Update thread failed.";
-    });
+    }, Qt::QueuedConnection);
 
-    QObject::connect(updateThread, &FringUpdateThread::progress, [this](double v) {
+    QObject::connect(updateThread, &FringUpdateThread::progress, this, [this](double v) {
         qInfo(FringLog) << "Update thread progress:" << v;
-    });
+    }, Qt::QueuedConnection);
 
     updateThread->start();
 }
