@@ -55,7 +55,7 @@ bool Fring::initialize()
     FringProtocol::CommandRead rdCmd = {};
     FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_ID);
+    wrCmd.reg = FringProtocol::FRING_REG_ID;
     wrCmd.protocol.version = 1;
     if (!transfer(&wrCmd, offsetof(FringProtocol::CommandWrite, protocol) + sizeof(wrCmd.protocol),
                   &rdCmd, sizeof(rdCmd.id)))
@@ -72,7 +72,7 @@ bool Fring::initialize()
 
     QStringList bootFlagsStrings;
 
-    wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_READ_BOOT_INFO);
+    wrCmd.reg = FringProtocol::FRING_REG_READ_BOOT_INFO;
     if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.bootInfo)))
         return false;
 
@@ -101,7 +101,7 @@ bool Fring::initialize()
         for (int i = 0; i < ba.size(); ++i)
             ba[i] = (char) (qrand() & 0xff);
 
-        wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_SET_SERIAL);
+        wrCmd.reg = FringProtocol::FRING_REG_SET_SERIAL;
         memcpy(&wrCmd.serial.serial, ba.constData(), sizeof(wrCmd.serial.serial));
         qInfo(FringLog) << "Setting firmware device serial:" << ba.toHex();
         transfer(&wrCmd, offsetof(FringProtocol::CommandWrite, serial) + sizeof(wrCmd.serial.serial));
@@ -109,7 +109,7 @@ bool Fring::initialize()
 
     deviceSerial = QString(ba.toHex());
 
-    wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_READ_BOARD_REVISION);
+    wrCmd.reg = FringProtocol::FRING_REG_READ_BOARD_REVISION;
     if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.boardRevision)))
         return false;
 
@@ -188,7 +188,7 @@ bool Fring::setLedOff(int id)
 {
     FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_SET_LED);
+    wrCmd.reg = FringProtocol::FRING_REG_SET_LED;
     wrCmd.led.id = id;
     wrCmd.led.mode = FringProtocol::FRING_LED_MODE_OFF;
 
@@ -199,7 +199,7 @@ bool Fring::setLedOn(int id, double r, double g, double b)
 {
     FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_SET_LED);
+    wrCmd.reg = FringProtocol::FRING_REG_SET_LED;
     wrCmd.led.id = id;
     wrCmd.led.mode = FringProtocol::FRING_LED_MODE_ON;
     wrCmd.led.on.r = 255.0f * r;
@@ -213,7 +213,7 @@ bool Fring::setLedFlashing(int id, double r, double g, double b, double onPhase,
 {
     FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_SET_LED);
+    wrCmd.reg = FringProtocol::FRING_REG_SET_LED;
     wrCmd.led.id = id;
     wrCmd.led.mode = FringProtocol::FRING_LED_MODE_FLASHING;
     wrCmd.led.flashing.r = 255.0f * r;
@@ -229,7 +229,7 @@ bool Fring::setLedPulsating(int id, double r, double g, double b, double frequen
 {
     FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_SET_LED);
+    wrCmd.reg = FringProtocol::FRING_REG_SET_LED;
     wrCmd.led.id = id;
     wrCmd.led.mode = FringProtocol::FRING_LED_MODE_PULSATING;
     wrCmd.led.pulsating.r = 255.0f * r;
@@ -245,7 +245,7 @@ bool Fring::readDeviceStatus()
     FringProtocol::CommandRead rdCmd = {};
     FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_READ_DEVICE_STATUS);
+    wrCmd.reg = FringProtocol::FRING_REG_READ_DEVICE_STATUS;
     if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.deviceStatus)))
         return false;
 
@@ -291,7 +291,7 @@ bool Fring::readBatteryStatus()
     FringProtocol::CommandRead rdCmd = {};
     FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_READ_BATTERY_STATUS);
+    wrCmd.reg = FringProtocol::FRING_REG_READ_BATTERY_STATUS;
     if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.batteryStatus)))
         return false;
 
@@ -360,7 +360,7 @@ bool Fring::readLogMessage()
     FringProtocol::CommandWrite wrCmd = {};
     char buf[16];
 
-    wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_READ_LOG_MESSAGE);
+    wrCmd.reg = FringProtocol::FRING_REG_READ_LOG_MESSAGE;
 
     if (!client.transfer((uint8_t *) &wrCmd, 1, (uint8_t *) buf, sizeof(buf))) {
         qWarning(FringLog) << "Unable to transfer command!";
@@ -377,7 +377,7 @@ bool Fring::readWakeupReason()
     FringProtocol::CommandRead rdCmd = {};
     FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_READ_WAKEUP_REASON);
+    wrCmd.reg = FringProtocol::FRING_REG_READ_WAKEUP_REASON;
     if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.wakeupReason))) {
         qWarning(FringLog) << "Unable to transfer command!";
         return false;
@@ -396,7 +396,7 @@ void Fring::onInterrupt(GPIO::Value v)
     FringProtocol::CommandRead rdCmd = {};
     FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_READ_INTERRUPT_STATUS);
+    wrCmd.reg = FringProtocol::FRING_REG_READ_INTERRUPT_STATUS;
     if (!transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.interruptStatus)))
         return;
 
@@ -454,7 +454,7 @@ void Fring::setWakeupMs(uint32_t ms)
     FringProtocol::CommandRead rdCmd = {};
     FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_SET_WAKEUP_TIME);
+    wrCmd.reg = FringProtocol::FRING_REG_SET_WAKEUP_TIME;
     wrCmd.wakeupTime.miliseconds = ms;
 
     transfer(&wrCmd, offsetof(FringProtocol::CommandWrite, wakeupTime) + sizeof(wrCmd.wakeupTime.miliseconds), &rdCmd, 1);
@@ -507,7 +507,7 @@ void FringUpdateThread::run()
         return;
     }
 
-    wrCmd->reg = qToLittleEndian(FringProtocol::FRING_REG_PUSH_FIRMWARE_UPDATE);
+    wrCmd->reg = FringProtocol::FRING_REG_PUSH_FIRMWARE_UPDATE;
 
     qInfo(FringLog) << "Transmitting firmware file" << file.fileName() << "size" << file.size();
 
@@ -558,7 +558,7 @@ void FringUpdateThread::interrupt()
     FringProtocol::CommandRead rdCmd = {};
     FringProtocol::CommandWrite wrCmd = {};
 
-    wrCmd.reg = qToLittleEndian(FringProtocol::FRING_REG_READ_FIRMWARE_UPDATE_RESULT);
+    wrCmd.reg = FringProtocol::FRING_REG_READ_FIRMWARE_UPDATE_RESULT;
     if (!fring->transfer(&wrCmd, 1, &rdCmd, sizeof(rdCmd.updateStatus)))
         return;
 

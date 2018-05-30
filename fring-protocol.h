@@ -46,7 +46,7 @@ enum {
     FRING_INTERRUPT_BATTERY_STATUS  = 0x02,
     FRING_INTERRUPT_LOG_MESSAGE     = 0x04,
     FRING_INTERRUPT_FIRMWARE_UPDATE = 0x08,
-    FRING_INTERRUPT_WAKEUP          = 0x10
+    FRING_INTERRUPT_WAKEUP      = 0x10
 };
 
 enum {
@@ -187,7 +187,7 @@ struct Serial {
 } _packed_;
 
 struct CommandWrite {
-    uint32_t reg;
+    uint8_t reg;
     union {
         Protocol protocol;
         Led led;
