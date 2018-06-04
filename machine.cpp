@@ -3,10 +3,12 @@
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusMessage>
 
-#include <unistd.h>
 #include <sys/reboot.h>
-#include <linux/reboot.h>
 #include <sys/utsname.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
+#include <unistd.h>
 
 #include "machine.h"
 #include "gptparser.h"
@@ -104,6 +106,39 @@ Machine::Machine(QObject *parent) :
                       << "os version" << QString::number(osVersionNumber)
                       << "serial" << deviceSerial;
 
+    // We need to find out which device we were booted from. We know it's a mmc block
+    // device, but as we boot by UUID, we don't know whether it's /dev/mmcblk0 or /dev/mmcblk1.
+
+    struct stat statbuf;
+    ret = stat("/", &statbuf);
+    if (ret < 0) {
+        qWarning(MachineLog) << "Error stat()ing / !";
+        return;
+    }
+
+    QString p = QString::asprintf("/sys/dev/block/%d:%d",
+                                  major(statbuf.st_dev), minor(statbuf.st_dev));
+
+    QFile uevent(p);
+    if (uevent.open(QIODevice::ReadOnly)) {
+        for (;;) {
+            QString line = uevent.readLine();
+            if (line.isEmpty())
+                break;
+
+            QStringList parts = line.split("=");
+            if (parts.count() != 2)
+                continue;
+
+            if (parts[0] == "DEVNAME")
+                bootDevPrefix = parts[1].mid(0, strlen("/dev/mmcblkX"));
+        }
+
+        uevent.close();
+    }
+
+    QString currentRootfsUUID;
+
     QFile cmdlineFile("/proc/cmdline");
     if (cmdlineFile.open(QIODevice::ReadOnly)) {
         QStringList cmdline = QString(cmdlineFile.readLine().data()).split(' ');
@@ -112,31 +147,41 @@ Machine::Machine(QObject *parent) :
         for (int i = 0; i < cmdline.size(); ++i) {
             QString c = cmdline.at(i);
 
-            if (c.startsWith("root="))
-                currentRootfsDevice = c.mid(5);
+            if (c.startsWith("root=PARTUUID="))
+                currentRootfsUUID = c.mid(strlen("root=PARTUUID="));
         }
     }
 
-    bootSource = currentRootfsDevice.startsWith("/dev/mmcblk0") ?
-                BootSource::BOOTSOURCE_INTERNAL :
-                BootSource::BOOTSOURCE_EXTERNAL;
+    if (currentRootfsUUID == "5ee54693-b9c5-4367-a52e-3361c165c800") {
+        bootSource = BootSource::BOOTSOURCE_INTERNAL;
+        currentBootConfig = Machine::BOOTCONFIG_A;
+    }
 
-    bootDevPrefix = currentRootfsDevice.mid(0, strlen("/dev/mmcblk0"));
+    if (currentRootfsUUID == "5ee54693-b9c5-4367-a52e-3361c165c801") {
+        bootSource = BootSource::BOOTSOURCE_INTERNAL;
+        currentBootConfig = Machine::BOOTCONFIG_B;
+    }
+
+    if (currentRootfsUUID == "5ee54693-b9c5-4367-a52e-3361c165c810") {
+        bootSource = BootSource::BOOTSOURCE_EXTERNAL;
+        currentBootConfig = Machine::BOOTCONFIG_A;
+    }
+
+    if (currentRootfsUUID == "5ee54693-b9c5-4367-a52e-3361c165c811") {
+        bootSource = BootSource::BOOTSOURCE_EXTERNAL;
+        currentBootConfig = Machine::BOOTCONFIG_B;
+    }
+
     GPTParser parser(bootDevPrefix);
 
-    int bootDevIndex = currentRootfsDevice.mid(strlen("/dev/mmcblk0p")).toInt();
-    QString bootDevParitionName = parser.nameOfPartition(bootDevIndex);
-
-    if (bootDevParitionName == "rootfs-a") {
+    if (currentBootConfig == Machine::BOOTCONFIG_A) {
         altRootfsDevice = parser.deviceNameForPartitionName("rootfs-b");
         currentBootDevice = parser.deviceNameForPartitionName("boot-a");
         altBootDevice = parser.deviceNameForPartitionName("boot-b");
-        currentBootConfig = Machine::BOOTCONFIG_A;
     } else {
         altRootfsDevice = parser.deviceNameForPartitionName("rootfs-a");
         currentBootDevice = parser.deviceNameForPartitionName("boot-b");
         altBootDevice = parser.deviceNameForPartitionName("boot-a");
-        currentBootConfig = Machine::BOOTCONFIG_B;
     }
 
     bootConfigDevice = parser.deviceNameForPartitionName("bootcfg");
