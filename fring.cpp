@@ -7,6 +7,8 @@
 #include "gpio.h"
 #include "crc32table.h"
 
+#include <math.h>
+
 Q_LOGGING_CATEGORY(FringLog, "Fring")
 
 const int Fring::GPIONr = 8;
@@ -460,7 +462,8 @@ void Fring::setWakeupMs(uint32_t ms)
     transfer(&wrCmd, offsetof(FringProtocol::CommandWrite, wakeupTime) + sizeof(wrCmd.wakeupTime.miliseconds), &rdCmd, 1);
 }
 
-FringUpdateThread::FringUpdateThread(Fring *fring, const QString &filename) : fring(fring), file(filename), semaphore()
+FringUpdateThread::FringUpdateThread(Fring *fring, const QString &filename) :
+     lastEmittedProgress(0), fring(fring), file(filename), semaphore()
 {
 }
 
@@ -468,6 +471,17 @@ FringUpdateThread::~FringUpdateThread()
 {
     if (file.isOpen())
         file.close();
+}
+
+void FringUpdateThread::emitProgress(double v)
+{
+    if (v < 0.0f || v > 1.0f)
+        return;
+
+    v = round(v * 100) / 100;
+
+    if (v != lastEmittedProgress)
+        emit progress(v);
 }
 
 uint32_t FringUpdateThread::calculateCRC(uint32_t crc, const char *buf, size_t len)
@@ -547,7 +561,7 @@ void FringUpdateThread::run()
             return;
         }
 
-        emit progress((double) offset / (double) file.size());
+        emitProgress((double) offset / (double) file.size());
     } while(r > 0);
 
     emit succeeded();

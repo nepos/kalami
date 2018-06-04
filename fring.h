@@ -113,8 +113,11 @@ signals:
 
 private:
     int interruptStatus;
+    double lastEmittedProgress;
     Fring *fring;
     QFile file;
     QSemaphore semaphore;
     uint32_t calculateCRC(uint32_t crc, const char *buf, size_t len);
+
+    void emitProgress(double v);
 };
