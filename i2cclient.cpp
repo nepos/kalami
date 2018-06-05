@@ -41,6 +41,11 @@ bool I2CClient::ping()
     return transfer(NULL, 0, NULL, 0);
 }
 
+bool I2CClient::isOpen() const
+{
+    return file.isOpen();
+}
+
 bool I2CClient::transfer(uint8_t *sendBuf, size_t sendSize , uint8_t *receiveBuf, size_t receiveSize)
 {
     if (!file.isOpen())

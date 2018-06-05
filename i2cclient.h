@@ -17,6 +17,7 @@ public:
     bool open(int bus, int address);
     bool ping();
     bool transfer(uint8_t *sendBuf, size_t sendSize, uint8_t *receiveBuf, size_t receiveSize);
+    bool isOpen() const;
 
 private:
     int address;
