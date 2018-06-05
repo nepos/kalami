@@ -482,6 +482,8 @@ void FringUpdateThread::emitProgress(double v)
 
     if (v != lastEmittedProgress)
         emit progress(v);
+
+    lastEmittedProgress = v;
 }
 
 uint32_t FringUpdateThread::calculateCRC(uint32_t crc, const char *buf, size_t len)
@@ -541,9 +543,9 @@ void FringUpdateThread::run()
         wrCmd->firmwareUpdate.length = qToLittleEndian(r);
         wrCmd->firmwareUpdate.offset = qToLittleEndian(offset);
 
-        QString str;
-        str.sprintf("Transmitting %lld bytes, offset %d, crc %08x", r, offset, crc);
-        qInfo(FringLog) << str;
+//        QString str;
+//        str.sprintf("Transmitting %lld bytes, offset %d, crc %08x", r, offset, crc);
+//        qInfo(FringLog) << str;
 
         if (!fring->transfer(wrCmd, wrSize)) {
             emit failed();
