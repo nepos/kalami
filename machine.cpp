@@ -19,17 +19,22 @@ Machine::Machine(QObject *parent) :
     QObject(parent),
     bootstrapProcess(this)
 {
-    struct utsname uts;
-    int ret;
-
     QObject::connect(&bootstrapProcess, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
                      [this](int exitCode, QProcess::ExitStatus exitStatus) {
         emit bootstrapInternalMemoryFinished(exitCode == 0 && exitStatus == QProcess::NormalExit);
     });
+}
+
+bool Machine::init()
+{
+    struct utsname uts;
+    int ret;
 
     ret = uname(&uts);
-    if (ret < 0)
+    if (ret < 0) {
         qInfo() << "Unable to get uname():" << strerror(-errno);
+        return false;
+    }
 
     architecture = uts.machine;
     kernelVersion = uts.release;
@@ -64,28 +69,31 @@ Machine::Machine(QObject *parent) :
 
     osVersionNumber = 0;
     QFile os("/etc/os-release");
-    if (os.open(QIODevice::ReadOnly)) {
-        while (!os.atEnd()) {
-            QString line = os.readLine();
+    if (!os.open(QIODevice::ReadOnly)) {
+        qWarning(MachineLog) << "Unable to open" << os.fileName() << os.errorString();
+        return false;
+    }
 
-            while (line.endsWith('\n') || line.endsWith('"'))
-                line.chop(1);
+    while (!os.atEnd()) {
+        QString line = os.readLine();
 
-            if (line.startsWith("VERSION_ID=")) {
-                osVersion = line.mid(12);
-                QStringList l = osVersion.split("-");
+        while (line.endsWith('\n') || line.endsWith('"'))
+            line.chop(1);
 
-                if (l.length() == 2) {
-                    osChannel = l[0];
-                    osVersionNumber = l[1].toULong();
-                } else {
-                    qWarning(MachineLog) << "Unable to parse VERSION_ID field in /etc/os-release" << osVersion;
-                }
+        if (line.startsWith("VERSION_ID=")) {
+            osVersion = line.mid(12);
+            QStringList l = osVersion.split("-");
+
+            if (l.length() == 2) {
+                osChannel = l[0];
+                osVersionNumber = l[1].toULong();
+            } else {
+                qWarning(MachineLog) << "Unable to parse VERSION_ID field in /etc/os-release" << osVersion;
             }
         }
-
-        os.close();
     }
+
+    os.close();
 
     QFile machineIdFile("/etc/machine-id");
     if (machineIdFile.open(QIODevice::ReadOnly)) {
@@ -106,6 +114,10 @@ Machine::Machine(QObject *parent) :
                       << "os version" << QString::number(osVersionNumber)
                       << "serial" << deviceSerial;
 
+    // skip rootfs detection logic for development machines
+    if (model != Machine::NEPOS1)
+        return true;
+
     // We need to find out which device we were booted from. We know it's a mmc block
     // device, but as we boot by UUID, we don't know whether it's /dev/mmcblk0 or /dev/mmcblk1.
 
@@ -113,14 +125,17 @@ Machine::Machine(QObject *parent) :
     ret = stat("/", &statbuf);
     if (ret < 0) {
         qWarning(MachineLog) << "Error stat()ing / !";
-        return;
+        return false;
     }
 
-    QString p = QString::asprintf("/sys/dev/block/%d:%d",
+    QString p = QString::asprintf("/sys/dev/block/%d:%d/uevent",
                                   major(statbuf.st_dev), minor(statbuf.st_dev));
-
     QFile uevent(p);
-    if (uevent.open(QIODevice::ReadOnly)) {
+
+    if (!uevent.open(QIODevice::ReadOnly)) {
+        qWarning(MachineLog) << "Unable to open" << uevent.fileName() << uevent.errorString();
+        return false;
+    } else {
         for (;;) {
             QString line = uevent.readLine();
             if (line.isEmpty())
@@ -140,7 +155,10 @@ Machine::Machine(QObject *parent) :
     QString currentRootfsUUID;
 
     QFile cmdlineFile("/proc/cmdline");
-    if (cmdlineFile.open(QIODevice::ReadOnly)) {
+    if (!cmdlineFile.open(QIODevice::ReadOnly)) {
+        qWarning(MachineLog) << "Unable to open" << cmdlineFile.fileName() << cmdlineFile.errorString();
+        return false;
+    } else {
         QStringList cmdline = QString(cmdlineFile.readLine().data()).split(' ');
         cmdlineFile.close();
 
@@ -189,6 +207,8 @@ Machine::Machine(QObject *parent) :
     qInfo(MachineLog) << "Boot config" << (currentBootConfig == Machine::BOOTCONFIG_A ? "A" : "B");
     qInfo(MachineLog) << "Current rootfs on" << currentRootfsDevice << "boot image on" << currentBootDevice;
     qInfo(MachineLog) << "Alt rootfs on" << altRootfsDevice << "alt boot image on" << altBootDevice;
+
+    return true;
 }
 
 void Machine::setDeviceSerial(const QString &serial)

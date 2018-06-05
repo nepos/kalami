@@ -52,6 +52,13 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     pendingUpdateCheckMessage(NULL),
     pendingBootstrapInternalMessage(NULL)
 {
+}
+
+bool Daemon::init()
+{
+    if (!machine->init())
+        return false;
+
     // Defaults
     fring->setLedOff(0);
     fring->setLedOff(1);
@@ -267,6 +274,8 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
 
     mediaCtl->setConfig(0, MediaCtl::UYVY8_2X8_1920x1080);
     mediaCtl->setConfig(1, MediaCtl::UYVY8_2X8_1920x1080);
+
+    return true;
 }
 
 void Daemon::cancelResponse(KirbyMessage **msg)

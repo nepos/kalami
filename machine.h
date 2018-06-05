@@ -30,6 +30,8 @@ public:
         BOOTCONFIG_B
     };
 
+    bool init();
+
     enum Model getModel()                   const { return model;           }
     const QString &getOsVersion()           const { return osVersion;       }
     const QString &getOsChannel()           const { return osChannel;       }

@@ -40,5 +40,8 @@ int main(int argc, char *argv[])
 
     Daemon d(QUrl(parser.value(serverOption)), &app);
 
+    if (!d.init())
+        return EXIT_FAILURE;
+
     return app.exec();
 }

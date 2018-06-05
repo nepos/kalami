@@ -44,7 +44,8 @@ class Daemon : public QObject
     Q_OBJECT
 public:
     explicit Daemon(QUrl serverUri, QObject *parent = 0);
-    ~Daemon();
+    ~Daemon();   
+    bool init();
 
 private slots:
     void kirbyMessageReceived(const KirbyMessage &message);
