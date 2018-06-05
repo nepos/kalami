@@ -134,8 +134,8 @@ void Updater::downloadFinished()
         state = Updater::StateVerifySignature;
 
         if (!verifySignature("/tmp/update.json", "/tmp/update.json.sig")) {
-            memset(&availableUpdate, 0, sizeof(availableUpdate));
-            qWarning() << "Unable to verify signature!";
+            availableUpdate.version.clear();
+            qWarning(UpdaterLog) << "Unable to verify signature!";
             break;
         }
 
