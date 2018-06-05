@@ -146,7 +146,7 @@ bool Machine::init()
                 continue;
 
             if (parts[0] == "DEVNAME")
-                bootDevPrefix = parts[1].mid(0, strlen("/dev/mmcblkX"));
+                bootDevPrefix = QString("/dev/%1").arg(parts[1].mid(0, strlen("mmcblkX")));
         }
 
         uevent.close();
@@ -193,12 +193,14 @@ bool Machine::init()
     GPTParser parser(bootDevPrefix);
 
     if (currentBootConfig == Machine::BOOTCONFIG_A) {
-        altRootfsDevice = parser.deviceNameForPartitionName("rootfs-b");
+        currentRootfsDevice = parser.deviceNameForPartitionName("rootfs-a");
         currentBootDevice = parser.deviceNameForPartitionName("boot-a");
+        altRootfsDevice = parser.deviceNameForPartitionName("rootfs-b");
         altBootDevice = parser.deviceNameForPartitionName("boot-b");
     } else {
-        altRootfsDevice = parser.deviceNameForPartitionName("rootfs-a");
+        currentRootfsDevice = parser.deviceNameForPartitionName("rootfs-b");
         currentBootDevice = parser.deviceNameForPartitionName("boot-b");
+        altRootfsDevice = parser.deviceNameForPartitionName("rootfs-a");
         altBootDevice = parser.deviceNameForPartitionName("boot-a");
     }
 
