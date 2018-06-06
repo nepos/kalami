@@ -219,9 +219,8 @@ void Machine::setDeviceSerial(const QString &serial)
 
 bool Machine::eligibleForUpdate() const
 {
-//    Make sure to enable this check before release!
-//    if (bootSource != BootSource::BOOTSOURCE_INTERNAL)
-//        return false;
+    if (bootSource != BootSource::BOOTSOURCE_INTERNAL)
+        return false;
 
     return true;
 }
