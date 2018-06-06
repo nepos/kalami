@@ -136,12 +136,10 @@ bool Machine::init()
         qWarning(MachineLog) << "Unable to open" << uevent.fileName() << uevent.errorString();
         return false;
     } else {
-        for (;;) {
+        while (!uevent.atEnd()) {
             QString line = uevent.readLine();
-            if (line.isEmpty())
-                break;
-
             QStringList parts = line.split("=");
+
             if (parts.count() != 2)
                 continue;
 
