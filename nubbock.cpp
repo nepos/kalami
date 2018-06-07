@@ -62,7 +62,7 @@ bool Nubbock::sendState(void)
                     });
 
     QByteArray ba = QJsonDocument(obj).toJson(QJsonDocument::Compact);
-    ba.append(0);
+    ba.append('\0');
     qint64 r = socket.write(ba.constData(), ba.length());
 
     return r == ba.length();
