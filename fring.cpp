@@ -2,6 +2,7 @@
 #include <QDir>
 #include <QThread>
 #include <QTime>
+#include <QTimer>
 
 #include "fring.h"
 #include "gpio.h"
@@ -51,8 +52,10 @@ Fring::Fring(QObject *parent) :
 
 bool Fring::initialize()
 {
-    if (!client.open(Fring::I2CBus, Fring::I2CAddr))
-        return false;
+    if (!client.isOpen()) {
+        if (!client.open(Fring::I2CBus, Fring::I2CAddr))
+            return false;
+    }
 
     FringProtocol::CommandRead rdCmd = {};
     FringProtocol::CommandWrite wrCmd = {};
@@ -437,7 +440,16 @@ void Fring::startFirmwareUpdate(const QString filename)
     updateThread = new FringUpdateThread(this, filename);
 
     QObject::connect(updateThread, &FringUpdateThread::succeeded, this, [this]() {
-        qInfo(FringLog) << "Update thread succeeded.";
+        qInfo(FringLog) << "Update thread succeeded. Restarting fring...";
+
+        QTimer::singleShot(3000, [this]() {
+            if (initialize())
+                qInfo(FringLog) << "Successfully restarted fring.";
+            else
+                qInfo(FringLog) << "Error restarting fring.";
+        });
+
+
     }, Qt::QueuedConnection);
 
     QObject::connect(updateThread, &FringUpdateThread::failed, this, [this]() {
@@ -463,7 +475,7 @@ void Fring::setWakeupMs(uint32_t ms)
 }
 
 FringUpdateThread::FringUpdateThread(Fring *fring, const QString &filename) :
-     lastEmittedProgress(0), fring(fring), file(filename), semaphore()
+    lastEmittedProgress(0), fring(fring), file(filename), semaphore()
 {
 }
 
@@ -543,9 +555,9 @@ void FringUpdateThread::run()
         wrCmd->firmwareUpdate.length = qToLittleEndian(r);
         wrCmd->firmwareUpdate.offset = qToLittleEndian(offset);
 
-//        QString str;
-//        str.sprintf("Transmitting %lld bytes, offset %d, crc %08x", r, offset, crc);
-//        qInfo(FringLog) << str;
+        //        QString str;
+        //        str.sprintf("Transmitting %lld bytes, offset %d, crc %08x", r, offset, crc);
+        //        qInfo(FringLog) << str;
 
         if (!fring->transfer(wrCmd, wrSize)) {
             emit failed();
