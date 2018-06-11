@@ -237,7 +237,7 @@ bool Machine::setAltBootConfig() const
         return false;
 
     // When changing the boot config, use the lower-case letter. The bootloader will
-    // turn it into the upper-case version and negative it, but still boot into the
+    // turn it into the upper-case version and negate it, but still boot into the
     // alternative rootfs. verifyBootConfig() can detect this mismatch and make the
     // new version permanent.
 
