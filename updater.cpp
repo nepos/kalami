@@ -184,8 +184,7 @@ void Updater::check(const QString &updateChannel)
     QString model;
 
     if (!machine->eligibleForUpdate()) {
-        qInfo(UpdaterLog) << "Machine is not eligible for updates!";
-        emit updateFailed();
+        emit checkFailed("Machine is not eligible for updates!");
         return;
     }
 
