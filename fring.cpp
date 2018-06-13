@@ -440,9 +440,10 @@ void Fring::startFirmwareUpdate(const QString filename)
     updateThread = new FringUpdateThread(this, filename);
 
     QObject::connect(updateThread, &FringUpdateThread::succeeded, this, [this]() {
-        qInfo(FringLog) << "Update thread succeeded. Restarting fring...";
+        qInfo(FringLog) << "Update thread succeeded.";
+        qInfo(FringLog) << "Waiting for Fring to reappear...";
 
-        QTimer::singleShot(3000, [this]() {
+        QTimer::singleShot(10000, [this]() {
             if (initialize())
                 qInfo(FringLog) << "Successfully restarted fring.";
             else
