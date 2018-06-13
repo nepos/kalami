@@ -82,7 +82,9 @@ class UpdateThread : public QThread
 
 public:
     UpdateThread(const Updater *updater, unsigned throttleUsecPerKb, QObject *parent = 0);
-    void run() Q_DECL_OVERRIDE;
+
+protected:
+    virtual void run() Q_DECL_OVERRIDE;
 
 signals:
     void progress(double progress);
