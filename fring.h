@@ -41,6 +41,7 @@ signals:
     void hardwareErrorsChanged();
 
 public slots:
+    void enableFirmwareUpdates() { firmwareUpdatesEnabled = true; };
     bool setLedOff(int id);
     bool setLedOn(int id, double r, double g, double b);
     bool setLedFlashing(int id, double r, double g, double b, double onPhase, double offPhase);
@@ -64,6 +65,7 @@ private:
     int boardRevisionA;
     int boardRevisionB;
     QString deviceSerial;
+    bool firmwareUpdatesEnabled;
 
     int homeButtonState;
     int batteryPresent;

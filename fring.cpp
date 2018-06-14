@@ -20,6 +20,7 @@ Fring::Fring(QObject *parent) :
     QObject(parent),
     client(this),
     interruptGpio(Fring::GPIONr, this),
+    firmwareUpdatesEnabled(false),
     updateThread(0),
     batteryLogFileName()
 {
@@ -124,6 +125,9 @@ bool Fring::initialize()
     qInfo(FringLog) << "Successfully initialized, firmware version" << firmwareVersion
                     << bootFlagsStrings.join(", ")
                     << "board revisions" << boardRevisionA << boardRevisionB;
+
+    if (!firmwareUpdatesEnabled)
+        return true;
 
     // Check for firmware updates
     QDir firmwareDir = QDir("/app/firmware/fring/");
@@ -450,11 +454,12 @@ void Fring::startFirmwareUpdate(const QString filename)
                 qInfo(FringLog) << "Error restarting fring.";
         });
 
-
+        firmwareUpdatesEnabled = false;
     }, Qt::QueuedConnection);
 
     QObject::connect(updateThread, &FringUpdateThread::failed, this, [this]() {
         qInfo(FringLog) << "Update thread failed.";
+        firmwareUpdatesEnabled = false;
     }, Qt::QueuedConnection);
 
     QObject::connect(updateThread, &FringUpdateThread::progress, this, [this](double v) {

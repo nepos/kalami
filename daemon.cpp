@@ -209,6 +209,9 @@ bool Daemon::init()
     QObject::connect(kirby, &KirbyConnection::messageReceived, this, &Daemon::kirbyMessageReceived);
 
     // fring
+    if (machine->eligibleForUpdate())
+            fring->enableFirmwareUpdates();
+
     if (fring->initialize()) {
         QObject::connect(fring, &Fring::homeButtonChanged, [this](bool state) {
             KirbyMessage msg("policy/homebutton/STATE_CHANGED", QJsonObject {
