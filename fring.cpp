@@ -134,6 +134,9 @@ bool Fring::initialize()
     QStringList firmwareFiles = firmwareDir.entryList(QDir::Files);
     QString updateSuffix = (bootFlags & FringProtocol::FRING_BOOT_STATUS_FIRMWARE_B) ? "bin-a" : "bin-b";
 
+    int availableVersion = firmwareVersion;
+    QString newestFirmwareFile;
+
     foreach (QString firmwareFile, firmwareFiles) {
         QStringList parts = firmwareFile.split(".");
 
@@ -143,13 +146,16 @@ bool Fring::initialize()
             if (suffix != updateSuffix)
                 continue;
 
-            int availableVersion = parts.first().toInt();
-
-            if (availableVersion > firmwareVersion) {
-                qInfo(FringLog) << "Newer firmware available (" + firmwareFile + "). Starting update.";
-                startFirmwareUpdate(firmwareDir.absolutePath() + "/" + firmwareFile);
+            if (parts.first().toInt() > availableVersion) {
+                availableVersion = parts.first().toInt();
+                newestFirmwareFile = firmwareFile;
             }
         }
+    }
+
+    if (availableVersion > firmwareVersion) {
+        qInfo(FringLog) << "Newer firmware available (" + newestFirmwareFile + "). Starting update.";
+        startFirmwareUpdate(firmwareDir.absolutePath() + "/" + newestFirmwareFile);
     }
 
     return true;
