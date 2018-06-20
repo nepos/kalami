@@ -23,8 +23,70 @@
 
 #include "daemon.h"
 
+#define NORMAL  "\033[0m"
+
+#define RED_HI  "\033[1;31m"
+#define RED_LO  "\033[0;31m"
+
+#define BLUE_HI  "\033[1;34m"
+#define BLUE_LO  "\033[0;34m"
+
+#define GRAY_HI  "\033[1;37m"
+#define GRAY_LO  "\033[0;37m"
+
+#define YELLOW_HI "\033[1;33m"
+#define YELLOW_LO "\033[0;33m"
+
+
+void kalamiMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+    /*
+     * Kalami Log Levels:
+     *
+     * 0 -> Fatal (Red)
+     * 1 -> Critical (Red)
+     * 2 -> Warning (Blue)
+     * 3 -> Info (No color)
+     * 4 - > Debug (Gray)
+     *
+    */
+    bool ok = false;
+    static int logLevel = qEnvironmentVariable("KALAMI_LOG_LEVEL", "0").toInt(&ok) ;
+    if (!ok)
+        logLevel = 4;
+
+    switch (type) {
+    case QtDebugMsg:
+        if (logLevel < 4)
+            return;
+        fprintf(stderr, GRAY_HI "%s: " GRAY_LO "%s\n" NORMAL, context.category, msg.toUtf8().data());
+        break;
+    case QtInfoMsg:
+        if (logLevel < 3)
+            return;
+        fprintf(stderr, NORMAL "%s: " NORMAL "%s\n" NORMAL, context.category, msg.toUtf8().data());
+        break;
+    case QtWarningMsg:
+        if (logLevel < 2)
+            return;
+        fprintf(stderr, YELLOW_HI "%s: " YELLOW_LO "%s\n" NORMAL, context.category, msg.toUtf8().data());
+        break;
+    case QtCriticalMsg:
+        if (logLevel < 1)
+            return;
+        fprintf(stderr, RED_HI "%s: " RED_LO "%s\n" NORMAL, context.category, msg.toUtf8().data());
+        break;
+    case QtFatalMsg:
+        fprintf(stderr, RED_HI "%s: " RED_LO "%s\n" NORMAL, context.category, msg.toUtf8().data());
+        break;
+    }
+}
+
+
 int main(int argc, char *argv[])
 {
+    qInstallMessageHandler(kalamiMessageOutput);
+
     QCoreApplication app(argc, argv);
     QCommandLineParser parser;
 
