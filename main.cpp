@@ -51,7 +51,7 @@ void kalamiMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
      *
     */
     bool ok = false;
-    static int logLevel = qEnvironmentVariable("KALAMI_LOG_LEVEL", "0").toInt(&ok) ;
+    static int logLevel = QString(qgetenv("KALAMI_LOG_LEVEL")).toInt(&ok) ;
     if (!ok)
         logLevel = 4;
 
