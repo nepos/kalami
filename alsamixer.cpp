@@ -31,9 +31,10 @@ ALSAMixer::ALSAMixer(const QString &deviceName, QObject *parent) :
     int ret;
     Q_D(ALSAMixer);
 
-    memset(d, 0, sizeof(ALSAMixerPrivate));
     d->masterCurrent = -INFINITY;
     d->masterScale = 1.0f;
+    d->masterMin = 0;
+    d->masterMax = 0;
 
     ret = snd_mixer_open(&d->handle, 0);
     if (ret < 0) {
