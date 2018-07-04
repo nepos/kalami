@@ -233,7 +233,7 @@ bool Daemon::init()
         });
 
         QObject::connect(fring, &Fring::ambientLightChanged, [this](double value) {
-            KirbyMessage msg("policy/battery/AMBIENT_LIGHT_CHANGED", QJsonObject {
+            KirbyMessage msg("policy/display/AMBIENT_LIGHT_CHANGED", QJsonObject {
                                  { "value", value },
                              });
             kirby->sendMessage(msg);
