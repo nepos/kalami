@@ -57,6 +57,7 @@ private:
     ALSAMixer *mixer;
     BrightnessControl *displayBrightness;
     InputDevice *rotaryInputDevice;
+    InputDevice *headsetInputDevice;
     Connman *connman;
     Machine *machine;
     MediaCtl *mediaCtl;

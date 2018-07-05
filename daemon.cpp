@@ -39,6 +39,7 @@ Daemon::Daemon(QUrl uri, QObject *parent) :
     mixer(new ALSAMixer("hw:0", this)),
     displayBrightness(new BrightnessControl("/sys/class/backlight/1a98000.dsi.0")),
     rotaryInputDevice(new InputDevice("/dev/input/by-path/platform-rotary-event")),
+    headsetInputDevice(new InputDevice("/dev/input/by-path/platform-7702000.sound-event")),
     connman(new Connman(this)),
     machine(new Machine(this)),
     mediaCtl(new MediaCtl(0, this)),
@@ -166,6 +167,14 @@ bool Daemon::init()
                              "policy/rotary/CW" :
                              "policy/rotary/CCW");
         kirby->sendMessage(msg);
+    });
+
+    QObject::connect(headsetInputDevice, &InputDevice::inputEvent, [this](int type, int code, int value) {
+        if (type == EV_SW && code == SW_HEADPHONE_INSERT) {
+            KirbyMessage msg("policy/headphones/STATE_CHANGED",
+                             QJsonObject({{ "connected", value > 0 }}));
+            kirby->sendMessage(msg);
+        }
     });
 
     // Connman connection
