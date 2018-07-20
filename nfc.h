@@ -25,7 +25,6 @@ signals:
 public slots:
     void targetDetected(QNearFieldTarget *target);
     void targetLost(QNearFieldTarget *target);
-    void handlePolledNdefMessage(QNdefMessage message);
     void handleMessage(QNdefMessage message, QNearFieldTarget *target);
 private:
     QNearFieldManager *manager;
