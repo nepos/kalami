@@ -21,6 +21,7 @@
 #include <QNearFieldManager>
 #include <QNdefMessage>
 #include <QNdefNfcTextRecord>
+#include <QNdefNfcUriRecord>
 #include <QNdefFilter>
 #include <QUrl>
 #include <QJsonArray>
@@ -32,7 +33,8 @@ Q_LOGGING_CATEGORY(NfcLog, "Nfc")
 
 Nfc::Nfc(QObject *parent) :
     QObject(parent),
-    manager(new QNearFieldManager(this))
+    manager(new QNearFieldManager(this)),
+    pollingEnabled(false)
 {
     if (!manager->isAvailable()) {
         qWarning(NfcLog) << "NFC not available";
@@ -76,6 +78,17 @@ void Nfc::targetDetected(QNearFieldTarget *target)
                 records.append(QJsonObject {
                                    { "type", "text" },
                                    { "payload", textRecord.text() },
+                               });
+            }
+
+            if (record.isRecordType<QNdefNfcUriRecord>()) {
+                QNdefNfcUriRecord uriRecord(record);
+
+                qInfo(NfcLog) << "Found URI record!" << uriRecord.uri();
+
+                records.append(QJsonObject {
+                                   { "type", "uri" },
+                                   { "payload", uriRecord.uri().toString() },
                                });
             }
         }
