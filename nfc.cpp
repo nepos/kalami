@@ -23,6 +23,8 @@
 #include <QNdefNfcTextRecord>
 #include <QNdefFilter>
 #include <QUrl>
+#include <QJsonArray>
+#include <QJsonObject>
 
 #include "nfc.h"
 
@@ -46,10 +48,6 @@ Nfc::Nfc(QObject *parent) :
     if (result < 0)
         qWarning(NfcLog) << "Platform does not support NDEF message handler registration";
 
-    if (!manager->startTargetDetection()) {
-        qWarning(NfcLog) << "Can not start target Detection";
-    }
-
     connect(manager, SIGNAL(targetDetected(QNearFieldTarget*)),
             this, SLOT(targetDetected(QNearFieldTarget*)));
     connect(manager, SIGNAL(targetLost(QNearFieldTarget*)),
@@ -68,12 +66,25 @@ void Nfc::targetDetected(QNearFieldTarget *target)
                   << "processing?" << target->isProcessingCommand();
 
     QObject::connect(target, &QNearFieldTarget::ndefMessageRead, [this](const QNdefMessage &message) {
+        QJsonArray records;
+
         foreach (const QNdefRecord &record, message) {
             if (record.isRecordType<QNdefNfcTextRecord>()) {
                 QNdefNfcTextRecord textRecord(record);
                 qInfo(NfcLog) << "Found text record!" << textRecord.text();
+
+                records.append(QJsonObject {
+                                   { "type", "text" },
+                                   { "payload", textRecord.text() },
+                               });
             }
         }
+
+        QJsonObject json {
+            { "records", records },
+        };
+
+        emit tagDetected(json);
     });
 
     QObject::connect(target, &QNearFieldTarget::error, [this](QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id) {
@@ -82,7 +93,6 @@ void Nfc::targetDetected(QNearFieldTarget *target)
     });
 
     manager->setTargetAccessModes(QNearFieldManager::NdefReadTargetAccess);
-    target->setKeepConnection(true);
     target->readNdefMessages();
 }
 
@@ -91,11 +101,11 @@ void Nfc::targetLost(QNearFieldTarget *target)
     if (target) {
         qInfo(NfcLog) << "Lost Tag: " << target->uid();
 
-        target->disconnect();
         target->deleteLater();
     }
 
-    manager->startTargetDetection();
+    if (pollingEnabled)
+        manager->startTargetDetection();
 }
 
 void Nfc::handleMessage(QNdefMessage message, QNearFieldTarget *target)
@@ -104,4 +114,22 @@ void Nfc::handleMessage(QNdefMessage message, QNearFieldTarget *target)
 
     if (target)
         qInfo(NfcLog) << "handle Message Tag: " << target->uid();
+}
+
+bool Nfc::setPollingEnabled(bool enabled)
+{
+    if (enabled == pollingEnabled)
+        return true;
+
+    if (enabled) {
+        if (!manager->startTargetDetection()) {
+            qWarning(NfcLog) << "Can not start target Detection";
+            return false;
+        }
+    } else
+        manager->stopTargetDetection();
+
+    pollingEnabled = enabled;
+
+    return true;
 }

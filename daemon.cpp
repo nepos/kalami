@@ -213,6 +213,14 @@ bool Daemon::init()
 
     connman->start();
 
+    // NFC
+    QObject::connect(nfc, &Nfc::tagDetected, [this](const QJsonObject &json) {
+        KirbyMessage msg("policy/nfc/TAG_DETECTED", json);
+        kirby->sendMessage(msg);
+    });
+
+    nfc->setPollingEnabled(true);
+
     // Websocket connection
     QObject::connect(kirby, &KirbyConnection::connected, this, &Daemon::sendDeviceInformation);
     QObject::connect(kirby, &KirbyConnection::messageReceived, this, &Daemon::kirbyMessageReceived);
@@ -262,7 +270,6 @@ bool Daemon::init()
                 connman->resume();
                 displayBrightness->resume();
                 nubbock->resume();
-
             }
 
             KirbyMessage msg("policy/power-management/RESUMED", QJsonObject {

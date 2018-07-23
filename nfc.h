@@ -18,14 +18,16 @@ class Nfc : public QObject
 public:
     explicit Nfc(QObject *parent = 0);
 
-
 signals:
-    void annotatedUrl(const QUrl &url, const QString &title, const QPixmap &pixmap);
+    void tagDetected(const QJsonObject &obj);
 
 public slots:
     void targetDetected(QNearFieldTarget *target);
     void targetLost(QNearFieldTarget *target);
     void handleMessage(QNdefMessage message, QNearFieldTarget *target);
+    bool setPollingEnabled(bool enabled);
+
 private:
     QNearFieldManager *manager;
+    bool pollingEnabled;
 };
